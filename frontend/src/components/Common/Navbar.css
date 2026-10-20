@@ -92,3 +92,62 @@
     transform: translateY(0);
   }
 }
+
+.tapgo-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid #fdd34d;
+  border-radius: 10px;
+  background: #fff8dc;
+  padding: 6px 12px;
+  color: #000000;
+  font: inherit;
+  font-weight: 700;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+.tapgo-download-btn:hover,
+.tapgo-download-btn:focus-visible {
+  background: #fdd34d;
+}
+
+.tapgo-download-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.tapgo-download-btn--block {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  padding: 10px 14px;
+}
+
+/* Narrow desktop / tablet widths: the full nav plus Login / Register leaves no room for a text button, so the
+   Download button shows its icon only (still labelled for screen readers) below 1100px. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .tapgo-download-btn:not(.tapgo-download-btn--block) .tapgo-download-label {
+    display: none;
+  }
+
+  .tapgo-download-btn:not(.tapgo-download-btn--block) {
+    padding: 6px 8px;
+  }
+}
+
+/* Tablet widths (md to lg): tighter nav spacing so everything fits on one line. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  header nav[aria-label='Primary navigation'] {
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  header nav[aria-label='Primary navigation'] > *,
+  header nav[aria-label='Primary navigation'] a,
+  header nav[aria-label='Primary navigation'] .tapgo-nav-link {
+    white-space: nowrap;
+  }
+}

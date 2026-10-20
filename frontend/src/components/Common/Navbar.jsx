@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useCurrentView, useNavigate } from '../../routes/navigation.jsx'
+import { APP_DOWNLOAD_FILE_NAME, resolveAppDownloadUrl } from '../../config/appDownload.js'
+import AppDownloadModal from './AppDownloadModal.jsx'
 import './Navbar.css'
 
 const contactDetails = [
@@ -20,6 +22,7 @@ const contactDetails = [
 function Navbar() {
   const [isContactOpen, setIsContactOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [downloadUrl, setDownloadUrl] = useState(null) // null = dialog closed, '' = coming soon, else the APK link
   const view = useCurrentView()
   const navigate = useNavigate()
 
@@ -48,6 +51,24 @@ function Navbar() {
 
   const handleContactClick = () => {
     setIsContactOpen((current) => !current)
+  }
+
+  // "Download the App": with a configured APK link the download starts at once and the install
+  // guidance opens; without one only the "coming soon" message is shown (nothing is downloaded).
+  const handleDownloadClick = () => {
+    setIsContactOpen(false)
+    setIsMobileMenuOpen(false)
+    const url = resolveAppDownloadUrl()
+    if (url) {
+      const link = document.createElement('a')
+      link.href = url
+      link.download = APP_DOWNLOAD_FILE_NAME
+      link.rel = 'noopener'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }
+    setDownloadUrl(url)
   }
 
   return (
@@ -97,6 +118,19 @@ function Navbar() {
                 </div>
               )}
             </div>
+
+            <button
+              className="tapgo-download-btn"
+              type="button"
+              onClick={handleDownloadClick}
+              aria-label="Download the App"
+              title="Download the App"
+            >
+              <span className="material-symbols-outlined" aria-hidden="true">
+                download
+              </span>
+              <span className="tapgo-download-label">Download the App</span>
+            </button>
           </nav>
 
           {/* Action Buttons & Mobile Hamburger */}
@@ -145,11 +179,18 @@ function Navbar() {
             <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-slate-900 font-bold">
               Contact Us
             </Link>
+            <button type="button" onClick={handleDownloadClick} className="tapgo-download-btn tapgo-download-btn--block">
+              <span className="material-symbols-outlined" aria-hidden="true">
+                download
+              </span>
+              Download the App
+            </button>
             <Link to="/lost-card" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-amber-600 font-bold">
               Lost Card Support (9321768503)
             </Link>
           </div>
         )}
+      {downloadUrl !== null && <AppDownloadModal url={downloadUrl} onClose={() => setDownloadUrl(null)} />}
       </header>
   )
 }

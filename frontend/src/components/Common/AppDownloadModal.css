@@ -1,0 +1,103 @@
+.tapgo-dl-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.tapgo-dl-dialog {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  border-radius: 20px;
+  background: #ffffff;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+}
+
+.tapgo-dl-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tapgo-dl-head .material-symbols-outlined {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #fdd34d;
+  color: #000000;
+  font-size: 26px;
+}
+
+.tapgo-dl-head h2 {
+  margin: 0;
+  color: #000000;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 800;
+}
+
+.tapgo-dl-body {
+  margin-top: 16px;
+  color: #1c1c1e;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.tapgo-dl-body p {
+  margin: 0 0 10px;
+}
+
+.tapgo-dl-body ol {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  list-style: decimal;
+}
+
+.tapgo-dl-body li + li {
+  margin-top: 8px;
+}
+
+.tapgo-dl-note {
+  font-size: 12px;
+  color: #44474c;
+}
+
+.tapgo-dl-again {
+  display: inline-block;
+  color: #000000;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: #fdd34d;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+.tapgo-dl-close {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #fdd34d;
+  padding: 12px 16px;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tapgo-dl-close:hover,
+.tapgo-dl-close:focus-visible {
+  background: #f5c518;
+}
