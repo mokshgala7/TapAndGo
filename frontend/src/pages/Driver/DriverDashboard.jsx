@@ -36,7 +36,7 @@ function KpiModal({ title, subtitle, onClose, children }) {
             <Icon style={{ fontSize: 18 }}>close</Icon>
           </button>
         </div>
-        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 4 }}>
+        <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '2px 4px 8px', margin: '0 -4px' }}>
           {children}
         </div>
         <div className="modal-actions" style={{ marginTop: 20 }}>
@@ -353,12 +353,12 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
 
       {/* KPI MODALS */}
       {kpiModal === 'today' && (
-        <KpiModal title="Today's Earnings History" subtitle={`Total Earned Today: ${inr(earnings.today)} (${todayTrips.length} trips)`} onClose={() => setKpiModal(null)}>
+        <KpiModal title="Today's Earnings History" subtitle={`Total Earned Today: ${inr(earnings.today)} (${todayTrips.length} ${todayTrips.length === 1 ? 'trip' : 'trips'})`} onClose={() => setKpiModal(null)}>
           {todayTrips.length === 0 ? (
             <p className="driver-empty">No trips completed today yet.</p>
           ) : (
             todayTrips.map((t) => (
-              <article className="ride" key={t.id} style={{ borderBottom: '1px solid var(--line)', padding: '12px 0' }}>
+              <article className="ride" key={t.id}>
                 <div>
                   <b>{t.passenger}</b>
                   <small>{t.route}</small>
