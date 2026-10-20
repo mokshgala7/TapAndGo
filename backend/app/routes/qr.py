@@ -37,6 +37,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import PaymentRequest, Transaction, User, Wallet
 from app.routes.auth import get_current_user
+from app.utils.email_service import send_ride_passenger_email, send_ride_driver_email
 from app.routes.wallet import (
     _credit,
     _debit,
@@ -418,6 +419,39 @@ def confirm_qr_payment(
 
     db.refresh(p_wallet)
     db.refresh(txn)
+
+    # Post-commit notifications (never affect the financial record). Replays and
+    # lost races return earlier, so each completed payment is notified once.
+    try:
+        if passenger.email:
+            send_ride_passenger_email(
+                to_email=passenger.email,
+                passenger_name=passenger.name,
+                fare=float(txn.amount),
+                driver_name=driver.name,
+                reference=txn.reference,
+                status="Successful",
+                vehicle_type=driver.vehicle_type,
+                vehicle_registration=driver.vehicle_registration,
+                payment_method=txn.payment_method,
+                balance_after=float(p_wallet.balance),
+                created_at=txn.created_at,
+            )
+    except Exception as e:
+        logger.warning(f"[QREmail] Passenger receipt failed: {e}")
+
+    try:
+        if driver.email:
+            send_ride_driver_email(
+                to_email=driver.email,
+                driver_name=driver.name,
+                fare=float(txn.amount),
+                passenger_name=passenger.name,
+                reference=txn.reference,
+                payment_method=txn.payment_method,
+            )
+    except Exception as e:
+        logger.warning(f"[QREmail] Driver credit receipt failed: {e}")
 
     return {
         "success": True,

@@ -725,7 +725,7 @@ def pay_fare(
                 status="Successful",
                 vehicle_type=driver.vehicle_type or data.vehicle_type,
                 vehicle_registration=driver.vehicle_registration or data.vehicle_number,
-                payment_method=f"Tap & Go Wallet ({data.payment_method or 'QR'})",
+                payment_method=txn.payment_method,
                 balance_after=float(p_wallet.balance),
                 created_at=txn.created_at,
             )
@@ -740,6 +740,7 @@ def pay_fare(
                 fare=float(fare_dec),
                 passenger_name=passenger.name,
                 reference=ref_code,
+                payment_method=txn.payment_method,
             )
     except Exception as e:
         logger.warning(f"[RideEmail] Driver credit receipt failed: {e}")

@@ -659,27 +659,27 @@ def _normalize_razorpay_method(raw_method: Optional[str]) -> str:
 def _normalize_ride_payment_mode(raw_method: Optional[str]) -> str:
     """
     Converts the ride payment_method value into a clear user-facing label.
-    E.g. 'QR' -> 'QR Scan', 'NFC' -> 'NFC / Card Tap'.
-    Falls back to the raw value if unrecognized.
+    E.g. 'QR' -> 'QR', 'NFC' / 'RFID' / 'CARD' -> 'Card'.
+    Falls back to the raw value if unrecognized (never guessed as QR or Card).
     """
     if not raw_method:
         return "Tap & Go Wallet"
     m = raw_method.strip()
     mapping = {
-        "QR":    "QR Scan",
-        "NFC":   "NFC / Card Tap",
-        "qr":    "QR Scan",
-        "nfc":   "NFC / Card Tap",
-        "wallet": "Tap & Go Wallet",
+        "QR":     "QR",
+        "CARD":   "Card",
+        "NFC":    "Card",
+        "RFID":   "Card",
+        "WALLET": "Tap & Go Wallet",
     }
+    label = mapping.get(m.upper())
+    if label:
+        return label
     # Handle composite strings like 'Tap & Go Wallet (QR)'
-    for key, label in mapping.items():
-        if m.upper() == key.upper():
-            return label
     if "(QR)" in m.upper():
-        return "Tap & Go Wallet \u2022 QR Scan"
+        return "QR"
     if "(NFC)" in m.upper():
-        return "Tap & Go Wallet \u2022 NFC / Card Tap"
+        return "Card"
     return m
 
 
@@ -1226,6 +1226,7 @@ def send_ride_passenger_email(
         html_content=html,
         email_type="ride_passenger_payment",
         reference=reference,
+        text_content=plain_text,
         attachments=attachments,
     )
 
@@ -1236,10 +1237,19 @@ def send_ride_driver_email(
     fare: float,
     passenger_name: str,
     reference: str,
+    payment_method: Optional[str] = None,
 ) -> bool:
     first_name = driver_name.split()[0] if driver_name else "Driver"
     formatted_fare = f"₹{fare:.2f}"
     now_str = datetime.utcnow().strftime("%d %B %Y, %I:%M %p UTC")
+    payment_mode_row = (
+        f"""
+        <tr>
+            <td style="padding:14px 18px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px;font-weight:600;">Payment Mode</td>
+            <td align="right" style="padding:14px 18px;border-bottom:1px solid #E5E7EB;color:#1C1C1E;font-size:13px;font-weight:700;">{_normalize_ride_payment_mode(payment_method)}</td>
+        </tr>"""
+        if payment_method else ""
+    )
 
     body = f"""
     <h2 style="margin:0 0 8px;font-size:22px;font-weight:900;color:#1C1C1E;letter-spacing:-0.3px;">
@@ -1257,7 +1267,7 @@ def send_ride_driver_email(
         <tr>
             <td style="padding:14px 18px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px;font-weight:600;">Passenger</td>
             <td align="right" style="padding:14px 18px;border-bottom:1px solid #E5E7EB;color:#1C1C1E;font-size:13px;font-weight:700;">{passenger_name}</td>
-        </tr>
+        </tr>{payment_mode_row}
         <tr>
             <td style="padding:14px 18px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px;font-weight:600;">Transaction ID</td>
             <td align="right" style="padding:14px 18px;border-bottom:1px solid #E5E7EB;color:#1C1C1E;font-size:12px;font-family:monospace;font-weight:700;">{reference}</td>
