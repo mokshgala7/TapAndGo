@@ -8,7 +8,7 @@
 // Accepted: an https:// link, or a path on this website that ends in .apk (e.g. '/downloads/TapAndGo.apk').
 // Refused on purpose (treated as "not configured"): http:// links, other schemes (javascript:, data: ...),
 // anything that is not an .apk file, and any file name containing "debug" (a debug build must never be public).
-export const APP_DOWNLOAD_URL = ''
+export const APP_DOWNLOAD_URL = 'https://github.com/mokshgala7/tapandgo-android-releases/releases/download/v1.0.0/TapAndGo-1.0.0.apk'
 
 export const APP_DOWNLOAD_FILE_NAME = 'TapAndGo.apk'
 
