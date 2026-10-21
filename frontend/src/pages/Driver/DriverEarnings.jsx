@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
 import { useDriverData } from '../../context/DriverContext.jsx'
+import { useAuth } from '../../context/AuthContext.jsx'
+import Pager from '../../components/Common/Pager.jsx'
+import StatementButton from '../../components/Common/StatementButton.jsx'
+import { usePaged } from '../../utils/usePaged.js'
 import { inr, CHART_VIEWS, tripStatusLabel } from './format.js'
 
 const Icon = ({ children, className = '' }) => (
@@ -62,7 +66,8 @@ function buildYearView(trips) {
 }
 
 function DriverEarnings({ flash }) {
-  const { trips, completedTrips, earnings, walletBalance, withdrawals, pendingWithdrawals, successfulWithdrawals } =
+  const { user } = useAuth()
+  const { trips, transactions, completedTrips, earnings, walletBalance, withdrawals, pendingWithdrawals, successfulWithdrawals } =
     useDriverData()
   const [view, setView] = useState('week')
   const canvasRef = useRef(null)
@@ -114,6 +119,9 @@ function DriverEarnings({ flash }) {
   }, [chartData])
 
   const sortedTrips = useMemo(() => [...trips].sort((a, b) => b.timestamp - a.timestamp), [trips])
+  // Ten rows per page for trips and for withdrawals.
+  const tripPages = usePaged(sortedTrips)
+  const withdrawalPages = usePaged(withdrawals)
 
   return (
     <>
@@ -208,7 +216,7 @@ function DriverEarnings({ flash }) {
         </div>
       </div>
 
-      <h2>Trips History</h2>
+      <h2 id={tripPages.anchorId} className="paged-anchor">Trips History</h2>
       <div className="chart-card" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
           <thead>
@@ -221,7 +229,7 @@ function DriverEarnings({ flash }) {
             </tr>
           </thead>
           <tbody>
-            {sortedTrips.map((trip) => (
+            {tripPages.pageItems.map((trip) => (
               <tr key={trip.id} style={{ borderBottom: '1px solid var(--line)' }}>
                 <td style={{ padding: '10px 8px', fontWeight: 700 }}>{trip.id}</td>
                 <td style={{ padding: '10px 8px' }}>{trip.passenger}</td>
@@ -235,10 +243,11 @@ function DriverEarnings({ flash }) {
           </tbody>
         </table>
       </div>
+      <Pager paged={tripPages} />
 
-      <h2>Withdrawal History</h2>
+      <h2 id={withdrawalPages.anchorId} className="paged-anchor">Withdrawal History</h2>
       {withdrawals.length === 0 && <p className="driver-empty">No withdrawals yet.</p>}
-      {withdrawals.map((w) => (
+      {withdrawalPages.pageItems.map((w) => (
         <article className="ride" key={w.id}>
           <div>
             <b>Withdrawal to bank</b>
@@ -251,14 +260,20 @@ function DriverEarnings({ flash }) {
           </div>
         </article>
       ))}
+      <Pager paged={withdrawalPages} />
 
-      <button
-        className="secondary-btn"
-        style={{ color: 'var(--text)', background: 'var(--card)', border: '1px solid var(--line)', width: '100%', marginTop: 16 }}
-        onClick={() => flash('Statement download will be available once the backend is connected.')}
-      >
-        Download Statement
-      </button>
+      <StatementButton
+        className="tg-statement-btn--block"
+        label="Download Statement (PDF)"
+        onError={flash}
+        getData={() => ({
+          holderName: user?.name,
+          email: user?.email,
+          role: 'driver',
+          balance: walletBalance,
+          transactions,
+        })}
+      />
     </>
   )
 }

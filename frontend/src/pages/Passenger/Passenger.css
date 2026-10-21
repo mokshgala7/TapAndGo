@@ -782,3 +782,13 @@
 }
 
 
+
+/* ---------- Paged history + statement download ---------- */
+.activity-statement {
+  margin: 6px 0 14px;
+}
+
+/* Changing page scrolls back to the top of the list, clear of the sticky header. */
+.paged-anchor {
+  scroll-margin-top: 92px;
+}

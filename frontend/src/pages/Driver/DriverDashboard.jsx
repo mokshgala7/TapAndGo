@@ -3,6 +3,8 @@ import { useAuth, hasValidBankDetails } from '../../context/AuthContext.jsx'
 import { useDriverData } from '../../context/DriverContext.jsx'
 import { formatRelativeTime } from '../Passenger/format.js'
 import { inr, tripStatusLabel } from './format.js'
+import Pager from '../../components/Common/Pager.jsx'
+import { usePaged } from '../../utils/usePaged.js'
 
 const Icon = ({ children, className = '' }) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
@@ -53,6 +55,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
   const { user } = useAuth()
   const { trips, transactions, completedTrips, reviews, rating, earnings, walletBalance } = useDriverData()
   const [kpiModal, setKpiModal] = useState(null)
+  const txPages = usePaged(transactions)
 
   const now = Date.now()
   const todayTrips = useMemo(() => completedTrips.filter((t) => now - t.timestamp <= 86400000), [completedTrips, now])
@@ -300,10 +303,11 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
       <div className="section-head" style={{ marginTop: 34 }}>
         <h2 style={{ margin: 0 }}>Transaction History</h2>
       </div>
+      <div id={txPages.anchorId} className="paged-anchor" />
       {transactions.length === 0 ? (
         <p className="driver-empty">No transactions yet.</p>
       ) : (
-        transactions.map((t) => (
+        txPages.pageItems.map((t) => (
           <article className="ride" key={t.id || t.reference} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6, padding: '14px 16px', marginBottom: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -332,6 +336,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
           </article>
         ))
       )}
+      <Pager paged={txPages} />
 
       <h2>What Passengers Say</h2>
       {reviews.length === 0 && <p className="driver-empty">No reviews yet.</p>}

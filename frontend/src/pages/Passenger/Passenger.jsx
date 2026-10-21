@@ -12,6 +12,9 @@ import NFCOrderHistoryModal from '../../components/NFC/NFCOrderHistoryModal.jsx'
 import DocumentViewerModal from '../../components/Common/DocumentViewerModal.jsx'
 import DocumentUploadModal from '../../components/Common/DocumentUploadModal.jsx'
 import BankModal from '../../components/Payment/BankModal.jsx'
+import Pager from '../../components/Common/Pager.jsx'
+import StatementButton from '../../components/Common/StatementButton.jsx'
+import { usePaged } from '../../utils/usePaged.js'
 import './Passenger.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.thetapandgo.in'
@@ -726,6 +729,8 @@ function Passenger() {
     () => transactions.filter((t) => Date.now() - t.timestamp <= rangeMsValue),
     [transactions, rangeMsValue],
   )
+  // Activity shows ten transactions per page; a new range starts at page 1.
+  const activityPages = usePaged(filteredTxns, range)
 
   if (!user) return null
   const recentTxns = transactions.slice(0, 4)
@@ -1020,7 +1025,27 @@ function Passenger() {
           </button>
         ))}
       </div>
-      {filteredTxns.length ? filteredTxns.map(renderTxnRow) : <p className="muted">No transactions in this range yet.</p>}
+      <div className="activity-statement">
+        <StatementButton
+          onError={flash}
+          getData={() => ({
+            holderName: user?.name,
+            email: user?.email,
+            role: 'passenger',
+            balance,
+            transactions,
+          })}
+        />
+      </div>
+      <div id={activityPages.anchorId} className="paged-anchor" />
+      {filteredTxns.length ? (
+        <>
+          {activityPages.pageItems.map(renderTxnRow)}
+          <Pager paged={activityPages} />
+        </>
+      ) : (
+        <p className="muted">No transactions in this range yet.</p>
+      )}
     </>
   )
 
