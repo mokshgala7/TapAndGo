@@ -1,13 +1,11 @@
-// Phone-only palette helper.
+// Emoji -> icon helper (all screen sizes).
 //
-// The mobile layout allows only white, yellow and black, but the website text contains
-// colour emoji. On phone widths this swaps them in place: an element that holds a single
-// emoji becomes the matching Material icon (monochrome, takes the text colour); an emoji
-// inside a sentence becomes a plain ✓ / ✕ / ! or is dropped. Text is edited in place
-// (no nodes are added or removed) so React's own updates keep working, and the observer
-// re-applies the swap whenever React rewrites a string. Nothing runs on desktop widths and
-// the original text is restored if the window is widened.
-const PHONE = '(max-width: 767px)'
+// Colour emoji clash with the Tap&Go look, so this swaps them in place: an element that
+// holds a single emoji becomes the matching Material icon (monochrome, takes the text
+// colour); an emoji inside a sentence becomes a plain ✓ / ✕ / ! or is dropped. Text is
+// edited in place (no nodes are added or removed) so React's own updates keep working, and
+// the observer re-applies the swap whenever React rewrites a string.
+const PHONE = 'all'
 const EMOJI = /(?:\p{Emoji_Presentation}|\p{Extended_Pictographic}️)(?:‍\p{Extended_Pictographic}️?)*/gu
 
 const ICONS = {
@@ -15,8 +13,11 @@ const ICONS = {
   '💸': 'payments', '📍': 'location_on', '📞': 'call', '📄': 'description', '📎': 'attach_file',
   '🎯': 'target', '⚡': 'bolt', '🎓': 'school', '💡': 'lightbulb', '🔄': 'sync', '🔒': 'lock',
   '🔓': 'lock_open', '🚖': 'local_taxi', '✅': 'check_circle', '❌': 'cancel', '⚠': 'warning',
+  '⏳': 'hourglass_top', '📱': 'smartphone', '🔷': 'diamond', '⏰': 'alarm', '📦': 'inventory_2', '👋': 'waving_hand',
 }
 const INLINE = { '✅': '✓', '❌': '✕', '⚠': '!' }
+// Keycap emoji (1️⃣) become a plain "1." in the text colour.
+const KEYCAP = /([0-9#*])\uFE0F?\u20E3/g
 const base = (emoji) => emoji.replace(/️/g, '')
 
 const converted = new Map() // text node -> original text
@@ -33,21 +34,29 @@ function tone(el) {
 }
 
 function convert(node) {
-  const text = node.nodeValue
-  if (!text || !EMOJI.test(text)) { EMOJI.lastIndex = 0; return }
-  EMOJI.lastIndex = 0
+  const original = node.nodeValue
+  if (!original) return
   const parent = node.parentElement
   if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA'].includes(parent.tagName)) return
+  const text = original.replace(KEYCAP, '$1.')
+  if (!EMOJI.test(text)) {
+    EMOJI.lastIndex = 0
+    if (text !== original) {
+      converted.set(node, original)
+      node.nodeValue = text
+    }
+    return
+  }
+  EMOJI.lastIndex = 0
   const only = text.trim().match(EMOJI)
   EMOJI.lastIndex = 0
   const icon = only && only.length === 1 && only[0] === text.trim() ? ICONS[base(only[0])] : null
+  converted.set(node, original)
   if (icon && parent.childNodes.length === 1) {
-    converted.set(node, text)
     node.nodeValue = icon
     parent.dataset.tgIcon = tone(parent)
     return
   }
-  converted.set(node, text)
   node.nodeValue = text.replace(EMOJI, (m) => INLINE[base(m)] ?? '')
 }
 

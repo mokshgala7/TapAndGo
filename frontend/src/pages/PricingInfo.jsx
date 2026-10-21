@@ -5,28 +5,27 @@ import { Link } from '../routes/navigation.jsx'
 
 export function PricingInfo() {
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col font-sans selection:bg-amber-200 selection:text-slate-900 antialiased">
+    <div className="bg-surface min-h-screen text-slate-900 flex flex-col font-sans antialiased">
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
-        <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <section className="relative border-b-2 border-slate-900 pb-10 pt-2 sm:pb-14">
           <div className="relative z-10 space-y-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider">
+            <div className="tg-kicker">
               <span className="material-symbols-outlined text-sm">payments</span>
               Pricing &amp; Fares
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+            <h1 className="max-w-4xl font-display text-[40px] font-extrabold leading-[1.02] tracking-[-0.04em] text-slate-900 sm:text-[60px]">
               Pricing &amp; Fare Information
             </h1>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+            <p className="max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
               Transparent information regarding ride fare processing, digital wallet transactions, and NFC card delivery on Tap&amp;Go.
             </p>
           </div>
         </section>
 
         {/* Fare Principles */}
-        <div className="bg-white rounded-2xl p-6 sm:p-10 shadow-sm border border-slate-200 space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
+        <div className="bg-white rounded-[22px] p-6 sm:p-10 border border-[#dcd4c6] space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-2">1. Ride Fare Structure</h2>
             <p>

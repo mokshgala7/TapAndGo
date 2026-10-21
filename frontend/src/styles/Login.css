@@ -1,13 +1,13 @@
 .tapgo-login {
-  --login-primary: #041627;
-  --login-text: #181c1e;
-  --login-muted: #44474c;
-  --login-surface: #f7fafc;
+  --login-primary: #1e1b16;
+  --login-text: #1e1b16;
+  --login-muted: #4e483f;
+  --login-surface: #f6f3ee;
   --login-card: #ffffff;
-  --login-soft: #f1f4f6;
-  --login-border: #e0e3e5;
-  --login-border-strong: #c4c6cd;
-  --login-accent: #feb700;
+  --login-soft: #f0ece4;
+  --login-border: #e7e1d6;
+  --login-border-strong: #d6cfc2;
+  --login-accent: #f5be24;
   min-height: 100vh;
   background: var(--login-surface);
   color: var(--login-text);
@@ -277,7 +277,7 @@
 }
 
 .login-input-box-error {
-  border-color: #ba1a1a !important;
+  border-color: #c8372d !important;
   background: #fff7f6 !important;
 }
 
@@ -396,7 +396,7 @@
 }
 
 .login-forgot:hover {
-  color: #7c5800;
+  color: #8a6400;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -464,7 +464,7 @@
 
 .login-success {
   margin-top: 12px;
-  color: #2f6f2f;
+  color: #12613a;
   font-weight: 700;
 }
 
@@ -585,7 +585,7 @@
   justify-content: center;
   padding: 3px 9px;
   border-radius: 6px;
-  background: #feb700;
+  background: #f5be24;
   color: #000;
   font-size: 10px;
   font-weight: 900;
@@ -821,3 +821,296 @@
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+ * Editorial redesign (warm Tap&Go look, shared with the home page).
+ * Flat brand surfaces, ruled lines and confident type instead of blobs,
+ * glows and floating cards. Same markup, same behaviour.
+ * ═════════════════════════════════════════════════════════════════ */
+.tapgo-login {
+  background: var(--tg-canvas) !important;
+  color: var(--tg-ink) !important;
+}
+
+.login-background {
+  display: none !important;
+}
+
+.login-main {
+  background: var(--tg-canvas) !important;
+  padding: 48px 24px 72px !important;
+}
+
+.login-layout {
+  max-width: 1240px !important;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr) !important;
+  gap: 56px !important;
+  align-items: center !important;
+}
+
+/* The whole illustration, at its own proportions, standing on the road. The card's
+   colour is the illustration's own background, so the picture has no visible edge. */
+.login-illustration-wrap {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: block !important;
+  padding: 28px 0 0 !important;
+  border-radius: 24px !important;
+  background: #fcfaf5 !important;
+  box-shadow: none !important;
+  border: 1px solid #dcd4c6 !important;
+  overflow: hidden !important;
+  position: relative !important;
+  animation: none !important;
+}
+
+/* no glow or strip under the picture */
+.login-illustration-wrap::before {
+  content: none !important;
+  display: none !important;
+}
+
+.login-illustration {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+.login-panel {
+  justify-content: center !important;
+}
+
+.login-brand {
+  margin-bottom: 20px !important;
+}
+
+/* one logo only: the logo image (the link keeps its "Tap&Go home" label) */
+.login-brand-logo {
+  width: auto !important;
+  height: 64px !important;
+}
+
+.login-brand-name {
+  display: none !important;
+}
+
+/* keep the browser's blue autofill fill off the white fields */
+.login-input-field:-webkit-autofill,
+.login-input-field:-webkit-autofill:hover,
+.login-input-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: var(--tg-ink) !important;
+  caret-color: var(--tg-ink) !important;
+}
+
+.login-brand-name {
+  font-family: var(--tg-font-display) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  color: var(--tg-ink) !important;
+}
+
+.login-brand-name span {
+  color: var(--tg-yellow-deep) !important;
+}
+
+.login-card {
+  background: #ffffff !important;
+  border: 1px solid #dcd4c6 !important;
+  border-radius: 24px !important;
+  box-shadow: none !important;
+  padding: 40px 40px 32px !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.login-progress {
+  background: var(--tg-yellow) !important;
+}
+
+.login-header {
+  text-align: left !important;
+}
+
+.login-header h1 {
+  font-family: var(--tg-font-display) !important;
+  font-size: 42px !important;
+  line-height: 1.02 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  color: var(--tg-ink) !important;
+}
+
+.login-header p {
+  margin-top: 10px !important;
+  color: var(--tg-ink-soft) !important;
+  font-size: 16px !important;
+}
+
+.login-field label {
+  color: var(--tg-ink) !important;
+  font-weight: 700 !important;
+}
+
+.login-input-box,
+.login-input-box:hover {
+  background: #ffffff !important;
+  border: 1.5px solid #d6cfc2 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease !important;
+}
+
+.login-input-box:focus-within {
+  border-color: var(--tg-ink) !important;
+  box-shadow: 0 0 0 4px rgba(253, 211, 77, 0.55) !important;
+}
+
+.login-input-box-error {
+  border-color: var(--tg-red) !important;
+}
+
+.login-input-icon {
+  color: var(--tg-ink-soft) !important;
+}
+
+.login-input-field {
+  color: var(--tg-ink) !important;
+  font-weight: 600 !important;
+}
+
+.login-input-field::placeholder {
+  color: var(--tg-ink-faint) !important;
+  font-weight: 500 !important;
+}
+
+.login-error {
+  color: var(--tg-red) !important;
+  font-weight: 600 !important;
+}
+
+.login-checkbox-box {
+  border: 1.5px solid #b9b0a2 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+}
+
+.login-checkbox input:checked + .login-checkbox-box {
+  background: var(--tg-yellow) !important;
+  border-color: var(--tg-ink) !important;
+}
+
+.login-checkbox input:checked + .login-checkbox-box .material-symbols-outlined {
+  color: var(--tg-ink) !important;
+}
+
+.login-forgot {
+  color: var(--tg-ink) !important;
+  text-decoration: underline !important;
+  text-decoration-color: var(--tg-yellow-deep) !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  font-weight: 700 !important;
+}
+
+.login-forgot:hover {
+  color: var(--tg-gold) !important;
+}
+
+.login-button {
+  min-height: 56px !important;
+  border-radius: 14px !important;
+  background: var(--tg-yellow) !important;
+  color: var(--tg-ink) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+  transition:
+    transform 160ms var(--tg-ease),
+    background-color 160ms ease !important;
+}
+
+.login-button:hover {
+  background: var(--tg-yellow-deep) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.login-button:active {
+  transform: scale(0.98) !important;
+}
+
+.login-button:disabled {
+  background: var(--tg-fill) !important;
+  color: var(--tg-ink-faint) !important;
+}
+
+.login-card-footer {
+  border-top: 1px solid #e4ded3 !important;
+  margin-top: 24px !important;
+  padding-top: 20px !important;
+  color: var(--tg-ink-soft) !important;
+}
+
+.login-card-footer a {
+  color: var(--tg-ink) !important;
+  font-weight: 800 !important;
+  text-decoration: underline !important;
+  text-decoration-color: var(--tg-yellow-deep) !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+}
+
+.login-success {
+  color: var(--tg-green) !important;
+}
+
+.login-trust {
+  color: var(--tg-ink-soft) !important;
+}
+
+.login-trust-divider {
+  background: #d6cfc2 !important;
+}
+
+@media (max-width: 960px) {
+  .login-layout {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .login-illustration-wrap {
+    max-width: 640px !important;
+    margin: 0 auto !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .login-main {
+    padding: 24px 16px 48px !important;
+  }
+  .login-illustration-wrap {
+    padding: 16px 0 0 !important;
+    border-radius: 20px !important;
+  }
+  .login-brand-logo {
+    height: 54px !important;
+  }
+  .login-card {
+    padding: 28px 22px 24px !important;
+    border-radius: 20px !important;
+  }
+  .login-header h1 {
+    font-size: 34px !important;
+  }
+}

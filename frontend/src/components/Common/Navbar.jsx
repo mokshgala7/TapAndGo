@@ -72,25 +72,25 @@ function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 sm:px-6 py-3 sm:py-4">
-          <Link className="text-xl sm:text-2xl font-bold text-black" to="/" aria-label="Tap&Go home">
-            Tap<span className="text-yellow-500">&amp;</span>Go
+    <header className="tapgo-header sticky top-0 z-50">
+        <div className="tapgo-header-bar mx-auto flex max-w-7xl items-center justify-between px-container-padding py-3.5">
+          <Link className="tapgo-wordmark text-[22px] sm:text-[26px]" to="/" aria-label="Tap&Go home">
+            Tap<span className="tapgo-amp">&amp;</span>Go
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden gap-6 lg:gap-8 text-sm font-semibold md:flex items-center" aria-label="Primary navigation">
-            <Link to="/">Home</Link>
-            <Link to="/about">About Us</Link>
-            <Link to="/payments">Payments</Link>
-            <button className="tapgo-nav-link" type="button" onClick={() => handleSectionClick('features')}>
+          <nav className="hidden gap-5 lg:gap-7 text-[15px] font-semibold md:flex items-center" aria-label="Primary navigation">
+            <Link className={`tapgo-pill-link${view === 'home' ? ' is-active' : ''}`} to="/">Home</Link>
+            <Link className={`tapgo-pill-link${view === 'about' ? ' is-active' : ''}`} to="/about">About Us</Link>
+            <Link className={`tapgo-pill-link${view === 'payments' ? ' is-active' : ''}`} to="/payments">Payments</Link>
+            <button className="tapgo-nav-link tapgo-pill-link" type="button" onClick={() => handleSectionClick('features')}>
               Features
             </button>
-            <Link to="/faq">FAQ</Link>
+            <Link className={`tapgo-pill-link${view === 'faq' ? ' is-active' : ''}`} to="/faq">FAQ</Link>
 
             <div className="tapgo-contact-menu">
               <button
-                className="tapgo-nav-link tapgo-contact-trigger"
+                className={`tapgo-nav-link tapgo-pill-link tapgo-contact-trigger${isContactOpen || view === 'contact' ? ' is-active' : ''}`}
                 type="button"
                 onClick={handleContactClick}
                 aria-expanded={isContactOpen}
@@ -110,8 +110,8 @@ function Navbar() {
                       <strong>{detail.value}</strong>
                     </div>
                   ))}
-                  <div className="pt-2 text-center border-t border-slate-100 mt-1">
-                    <Link to="/contact" onClick={() => setIsContactOpen(false)} className="text-xs text-slate-900 font-bold hover:underline">
+                  <div className="pt-3 text-center border-t border-slate-200 mt-1">
+                    <Link to="/contact" onClick={() => setIsContactOpen(false)} className="text-xs text-[#8a6400] font-bold hover:underline">
                       View Full Contact Details →
                     </Link>
                   </div>
@@ -136,18 +136,18 @@ function Navbar() {
           {/* Action Buttons & Mobile Hamburger */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
-              className="rounded-lg border border-slate-800 bg-transparent px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-slate-900 hover:bg-slate-50 transition-colors"
+              className="tapgo-btn-ghost px-3.5 sm:px-5 text-xs sm:text-sm"
               to="/login"
             >
               Login
             </Link>
-            <Link className="rounded-lg bg-yellow-400 hover:bg-yellow-500 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-black transition-colors" to="/register">
+            <Link className="tapgo-btn-yellow px-3.5 sm:px-5 text-xs sm:text-sm" to="/register">
               Register
             </Link>
 
             <button
               type="button"
-              className="md:hidden p-1.5 text-slate-700 hover:text-black rounded-lg focus:outline-none"
+              className="tapgo-menu-btn md:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle mobile menu"
             >
@@ -160,23 +160,23 @@ function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3 font-semibold text-sm">
-            <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
+          <div className="tapgo-mobile-drawer md:hidden px-container-padding py-3 space-y-1 font-semibold text-[16px]">
+            <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="tapgo-drawer-link">
               Home
             </Link>
-            <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
+            <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="tapgo-drawer-link">
               About Us
             </Link>
-            <Link to="/payments" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
+            <Link to="/payments" onClick={() => setIsMobileMenuOpen(false)} className="tapgo-drawer-link">
               How Payments Work
             </Link>
-            <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
+            <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="tapgo-drawer-link">
               Pricing &amp; Fares
             </Link>
-            <Link to="/faq" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
+            <Link to="/faq" onClick={() => setIsMobileMenuOpen(false)} className="tapgo-drawer-link">
               FAQ &amp; Support
             </Link>
-            <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-slate-900 font-bold">
+            <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="tapgo-drawer-link font-bold">
               Contact Us
             </Link>
             <button type="button" onClick={handleDownloadClick} className="tapgo-download-btn tapgo-download-btn--block">
@@ -185,7 +185,7 @@ function Navbar() {
               </span>
               Download the App
             </button>
-            <Link to="/lost-card" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-amber-600 font-bold">
+            <Link to="/lost-card" onClick={() => setIsMobileMenuOpen(false)} className="tapgo-drawer-link tapgo-drawer-link--alert">
               Lost Card Support (9321768503)
             </Link>
           </div>

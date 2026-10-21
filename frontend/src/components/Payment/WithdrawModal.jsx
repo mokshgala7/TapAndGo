@@ -111,23 +111,23 @@ export function WithdrawModal({ user, balance, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="w-full max-w-md bg-white rounded-[22px] shadow-2xl overflow-hidden border border-slate-900">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 flex items-center justify-between border-b border-slate-800">
+        <div className="bg-yellow-400 text-slate-900 p-5 flex items-center justify-between border-b border-slate-900/15">
           <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-sm">
+            <span className="w-8 h-8 rounded-lg bg-slate-900 text-yellow-400 flex items-center justify-center font-bold text-sm">
               🏦
             </span>
             <div>
-              <h3 className="font-bold text-base">Withdraw Funds</h3>
-              <p className="text-xs text-slate-400">Bank Transfer / UPI Payout</p>
+              <h3 className="font-display font-extrabold text-lg tracking-[-0.02em]">Withdraw Funds</h3>
+              <p className="text-xs text-[#5e4a10]">Bank Transfer / UPI Payout</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={loading}
-            className="text-slate-400 hover:text-white transition-colors p-1 text-lg font-bold"
+            className="text-slate-900 hover:text-slate-600 transition-colors p-1 text-lg font-bold"
           >
             ✕
           </button>
@@ -207,11 +207,11 @@ export function WithdrawModal({ user, balance, onClose, onSuccess }) {
               <button
                 type="submit"
                 disabled={loading || !hasBank && !hasUpi}
-                className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 rounded-[14px] bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-extrabold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>
-                    <span className="inline-block w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
+                    <span className="inline-block w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
                     Sending Security OTP...
                   </>
                 ) : (
@@ -268,11 +268,11 @@ export function WithdrawModal({ user, balance, onClose, onSuccess }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-2/3 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-2/3 py-3 rounded-[14px] bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-extrabold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
                     <>
-                      <span className="inline-block w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
+                      <span className="inline-block w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
                       Verifying...
                     </>
                   ) : (

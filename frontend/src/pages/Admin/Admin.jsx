@@ -21,7 +21,7 @@ class AdminErrorBoundary extends Component {
         <section className="admin-section" style={{ padding: '30px' }}>
           <div style={{ padding: '24px', background: '#fff', borderRadius: '12px', border: '1px solid #fed7aa' }}>
             <h3 style={{ color: '#c2410c', margin: '0 0 8px' }}>Unable to load view</h3>
-            <p style={{ color: '#687187', margin: '0 0 16px', fontSize: '14px' }}>
+            <p style={{ color: '#6b6458', margin: '0 0 16px', fontSize: '14px' }}>
               {this.state.error?.message || 'An error occurred while loading this section.'}
             </p>
             <button className="primary-button" onClick={() => this.setState({ hasError: false, error: null })}>
@@ -282,7 +282,7 @@ function NFCOrdersAdmin({ adminId }) {
                 {orders.length ? (
                   orders.map((o) => (
                     <tr key={o.id}>
-                      <td><strong>{o.order_reference}</strong>{o.is_demo && <small style={{ display: 'block', color: '#8b6400', fontWeight: 700 }}>DEMO</small>}</td>
+                      <td><strong>{o.order_reference}</strong>{o.is_demo && <small style={{ display: 'block', color: '#8a6400', fontWeight: 700 }}>DEMO</small>}</td>
                       <td>{o.recipient_name}<br /><small>{o.phone}</small></td>
                       <td>{o.address_line1}, {o.area}, {o.city}, {o.state} – {o.pincode}</td>
                       <td><span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase' }}>{o.delivery_tier}</span></td>
@@ -291,7 +291,7 @@ function NFCOrdersAdmin({ adminId }) {
                       <td><Badge value={o.order_status} /></td>
                       <td>
                         {o.is_demo || o.payment_status === 'simulated' ? (
-                          <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 99, background: '#fff3c4', color: '#8b6400', border: '1px solid #ffe082', display: 'inline-block' }}>
+                          <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 99, background: '#fff3c4', color: '#8a6400', border: '1px solid #ffe082', display: 'inline-block' }}>
                             DEMO / SIMULATED
                           </span>
                         ) : (
@@ -353,14 +353,14 @@ function WithdrawalRequestsAdmin({ adminId }) {
     } catch (err) { setError(err.message) }
   }
 
-  const STATUS_COLORS = { pending: '#f59e0b', approved: '#3b82f6', paid: '#22c55e', rejected: '#ef4444' }
+  const STATUS_COLORS = { pending: '#9a5b00', approved: '#8a6400', paid: '#177a47', rejected: '#c8372d' }
   return (
     <section className="admin-section">
       <div className="section-heading">
         <div><span className="eyebrow">Wallet Withdrawals</span><h2>Withdrawal Request Management</h2><p>Approve, mark as paid, or reject user withdrawal requests. Balance is reserved at submission and reversed on rejection.</p></div>
       </div>
       <div className="table-controls">
-        <select value={filter} onChange={(e) => { setFilter(e.target.value) }} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+        <select value={filter} onChange={(e) => { setFilter(e.target.value) }} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #eae4da' }}>
           <option value="">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
@@ -369,7 +369,7 @@ function WithdrawalRequestsAdmin({ adminId }) {
         </select>
         <button className="secondary-button" onClick={load}>Refresh</button>
       </div>
-      {actionMsg && <p style={{ color: '#22c55e', fontWeight: 600, marginBottom: 12 }}>{actionMsg}</p>}
+      {actionMsg && <p style={{ color: '#2e9560', fontWeight: 600, marginBottom: 12 }}>{actionMsg}</p>}
       <LoadState error={error}>
         {loading ? <Empty text="Loading withdrawal requests…" /> : (
           <div className="table-wrap">
@@ -383,13 +383,13 @@ function WithdrawalRequestsAdmin({ adminId }) {
                     <td><code style={{ fontSize: 11 }}>{w.reference}</code></td>
                     <td><strong>{money(w.amount)}</strong></td>
                     <td style={{ fontSize: 12 }}>{w.destination_desc}</td>
-                    <td><span style={{ padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: (STATUS_COLORS[w.status] || '#94a3b8') + '22', color: STATUS_COLORS[w.status] || '#94a3b8' }}>{w.status}</span></td>
-                    <td style={{ fontSize: 12, color: '#64748b' }}>{w.admin_note || '—'}</td>
+                    <td><span style={{ padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: (STATUS_COLORS[w.status] || '#a39b8e') + '22', color: STATUS_COLORS[w.status] || '#a39b8e' }}>{w.status}</span></td>
+                    <td style={{ fontSize: 12, color: '#6b6458' }}>{w.admin_note || '—'}</td>
                     <td>{date(w.created_at)}</td>
                     <td className="actions">
                       {w.status === 'pending' && <><button onClick={() => act(w.id, 'approve')}>Approve</button><button onClick={() => act(w.id, 'reject')}>Reject</button></>}
                       {w.status === 'approved' && <button onClick={() => act(w.id, 'pay')}>Mark Paid</button>}
-                      {(w.status === 'paid' || w.status === 'rejected') && <span style={{ color: '#94a3b8', fontSize: 12 }}>{w.status === 'paid' ? '✓ Paid' : '✗ Rejected'}</span>}
+                      {(w.status === 'paid' || w.status === 'rejected') && <span style={{ color: '#a39b8e', fontSize: 12 }}>{w.status === 'paid' ? '✓ Paid' : '✗ Rejected'}</span>}
                     </td>
                   </tr>
                 )) : <tr><td colSpan="9"><Empty text="No withdrawal requests found." /></td></tr>}
@@ -435,8 +435,8 @@ function SupportTicketsAdmin({ adminId }) {
     catch (err) { setError(err.message) }
   }
 
-  const PRIORITY_COLORS = { urgent: '#ef4444', high: '#f59e0b', medium: '#3b82f6', low: '#22c55e' }
-  const STATUS_COLORS = { open: '#ef4444', in_progress: '#f59e0b', resolved: '#22c55e', closed: '#94a3b8' }
+  const PRIORITY_COLORS = { urgent: '#c8372d', high: '#9a5b00', medium: '#8a6400', low: '#177a47' }
+  const STATUS_COLORS = { open: '#c8372d', in_progress: '#9a5b00', resolved: '#177a47', closed: '#6b6458' }
 
   return (
     <section className="admin-section">
@@ -444,7 +444,7 @@ function SupportTicketsAdmin({ adminId }) {
         <div><span className="eyebrow">Customer Support</span><h2>Support Tickets</h2><p>View, reply to, and resolve user support tickets. Email notifications sent on reply.</p></div>
       </div>
       <div className="table-controls">
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #eae4da' }}>
           <option value="">All Statuses</option>
           <option value="open">Open</option>
           <option value="in_progress">In Progress</option>
@@ -462,11 +462,11 @@ function SupportTicketsAdmin({ adminId }) {
                 {result.items?.length ? result.items.map((t) => (
                   <tr key={t.id}>
                     <td>#{t.id}</td>
-                    <td><span style={{ fontSize: 12 }}>{t.name}<br /><small style={{ color: '#64748b' }}>{t.email}</small></span></td>
+                    <td><span style={{ fontSize: 12 }}>{t.name}<br /><small style={{ color: '#6b6458' }}>{t.email}</small></span></td>
                     <td style={{ fontSize: 12 }}>{t.category}</td>
-                    <td><span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: (PRIORITY_COLORS[t.priority] || '#94a3b8') + '22', color: PRIORITY_COLORS[t.priority] || '#94a3b8' }}>{t.priority}</span></td>
+                    <td><span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: (PRIORITY_COLORS[t.priority] || '#a39b8e') + '22', color: PRIORITY_COLORS[t.priority] || '#a39b8e' }}>{t.priority}</span></td>
                     <td style={{ fontSize: 12, maxWidth: 200 }}>{t.subject}</td>
-                    <td><span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: (STATUS_COLORS[t.status] || '#94a3b8') + '22', color: STATUS_COLORS[t.status] || '#94a3b8' }}>{t.status}</span></td>
+                    <td><span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: (STATUS_COLORS[t.status] || '#a39b8e') + '22', color: STATUS_COLORS[t.status] || '#a39b8e' }}>{t.status}</span></td>
                     <td style={{ fontSize: 12 }}>{date(t.created_at)}</td>
                     <td className="actions">
                       <button onClick={() => { setSelected(t); setReplyText(t.admin_reply || ''); setNewStatus(t.status) }}>Reply</button>
@@ -487,23 +487,23 @@ function SupportTicketsAdmin({ adminId }) {
             <button className="modal-close" onClick={() => { setSelected(null); setReplyText(''); setNewStatus('') }}>×</button>
             <span className="eyebrow">Ticket #{selected.id} · {selected.category}</span>
             <h2 style={{ fontSize: 18 }}>{selected.subject}</h2>
-            <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px 16px', marginBottom: 16, fontSize: 13 }}>
-              <p style={{ margin: '0 0 8px', color: '#64748b' }}><b>From:</b> {selected.name} ({selected.email})</p>
-              <p style={{ margin: 0, color: '#1e293b', lineHeight: 1.6 }}>{selected.message}</p>
+            <div style={{ background: '#fbf9f5', borderRadius: 10, padding: '14px 16px', marginBottom: 16, fontSize: 13 }}>
+              <p style={{ margin: '0 0 8px', color: '#6b6458' }}><b>From:</b> {selected.name} ({selected.email})</p>
+              <p style={{ margin: 0, color: '#2a2723', lineHeight: 1.6 }}>{selected.message}</p>
             </div>
             {selected.admin_reply && (
-              <div style={{ background: '#f0fdf4', borderLeft: '3px solid #22c55e', borderRadius: '0 10px 10px 0', padding: '12px 16px', marginBottom: 16, fontSize: 13 }}>
-                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase' }}>Previous Reply</p>
+              <div style={{ background: '#eef8f2', borderLeft: '3px solid #2e9560', borderRadius: '0 10px 10px 0', padding: '12px 16px', marginBottom: 16, fontSize: 13 }}>
+                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#177a47', textTransform: 'uppercase' }}>Previous Reply</p>
                 <p style={{ margin: 0 }}>{selected.admin_reply}</p>
               </div>
             )}
             <label style={{ display: 'block', marginBottom: 8, fontWeight: 700, fontSize: 12 }}>Reply</label>
             <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} rows={4}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, resize: 'vertical', marginBottom: 12 }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #eae4da', fontSize: 13, resize: 'vertical', marginBottom: 12 }}
               placeholder="Type your reply here…" />
             <label style={{ display: 'block', marginBottom: 8, fontWeight: 700, fontSize: 12 }}>Update Status</label>
             <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, marginBottom: 16 }}>
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 10, border: '1px solid #eae4da', fontSize: 13, marginBottom: 16 }}>
               <option value="open">Open</option>
               <option value="in_progress">In Progress</option>
               <option value="resolved">Resolved</option>

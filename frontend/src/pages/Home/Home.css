@@ -22,10 +22,6 @@
   width: 100%;
 }
 
-.tapgo-home .section-balance {
-  text-wrap: balance;
-}
-
 .tapgo-home #features,
 .tapgo-home #how,
 .tapgo-home #why,
@@ -33,12 +29,209 @@
   scroll-margin-top: 88px;
 }
 
-.tapgo-section-eyebrow {
-  margin: 0 0 12px;
-  color: #7c5800;
-  font-size: 14px;
-  line-height: 20px;
+/* ── Masthead ─────────────────────────────────────────────── */
+.tapgo-masthead {
+  animation: tapgo-masthead-in 0.9s var(--tg-ease) both;
+}
+
+@keyframes tapgo-masthead-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The ruled line the logo's taxi and auto stand on. */
+.tapgo-rule {
+  height: 2px;
+  background: var(--tg-ink);
+  border-radius: 2px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.tapgo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 0 28px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    transform 160ms var(--tg-ease),
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.tapgo-button:active {
+  transform: scale(0.98);
+}
+.tapgo-button--yellow {
+  background: var(--tg-yellow);
+  color: var(--tg-ink);
+}
+.tapgo-button--yellow:hover {
+  background: var(--tg-yellow-deep);
+}
+.tapgo-button--ghost {
+  color: var(--tg-ink);
+  box-shadow: inset 0 0 0 1.5px var(--tg-ink);
+}
+.tapgo-button--ghost:hover {
+  background: #ffffff;
+}
+.tapgo-button--ink {
+  background: var(--tg-ink);
+  color: #ffffff;
+}
+.tapgo-button--ink:hover {
+  background: #3a352e;
+}
+.tapgo-button--alert {
+  color: var(--tg-red);
+  box-shadow: inset 0 0 0 1.5px rgba(200, 55, 45, 0.45);
+}
+.tapgo-button--alert:hover {
+  background: var(--tg-red-soft);
+}
+
+/* ── Section label: a short yellow bar, then the word ─────── */
+.tapgo-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--tg-ink-soft);
+  font-family: var(--tg-font-ui);
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+.tapgo-kicker::before {
+  content: '';
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--tg-yellow);
+}
+
+/* ── Features list ────────────────────────────────────────── */
+.tapgo-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--tg-yellow);
+  color: var(--tg-ink);
+}
+.tapgo-feature {
+  transition: background-color 200ms ease;
+}
+
+/* ── How it works: an asphalt road with five stop signs ──── */
+.tapgo-road {
+  position: relative;
+  display: grid;
+  gap: 28px;
+  padding-left: 0;
+  list-style: none;
+}
+.tapgo-road::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  top: 6px;
+  bottom: 6px;
+  width: 16px;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(to bottom, var(--tg-yellow) 0 14px, transparent 14px 26px) center / 3px 100% no-repeat,
+    var(--tg-ink);
+}
+.tapgo-stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  align-items: start;
+  gap: 18px;
+}
+.tapgo-stop-sign {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: var(--tg-yellow);
+  color: var(--tg-ink);
+  box-shadow:
+    0 0 0 3px var(--tg-ink),
+    0 0 0 7px var(--tg-canvas);
+  font-family: var(--tg-font-display);
+  font-size: 26px;
+  font-weight: 800;
+}
+.tapgo-stop-text {
+  padding-top: 6px;
+}
+
+@media (min-width: 1024px) {
+  .tapgo-road {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .tapgo-road::before {
+    left: 0;
+    right: 0;
+    top: 22px;
+    bottom: auto;
+    width: auto;
+    height: 16px;
+    background:
+      repeating-linear-gradient(to right, var(--tg-yellow) 0 22px, transparent 22px 40px) center / 100% 3px no-repeat,
+      var(--tg-ink);
+  }
+  .tapgo-stop {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .tapgo-stop-text {
+    padding-top: 0;
+  }
+}
+
+/* ── Why choose: a ruled spec sheet ───────────────────────── */
+.tapgo-spec {
+  border-top: 2px solid var(--tg-ink);
+}
+.tapgo-spec-cell {
+  padding: 28px 24px 32px 0;
+  border-bottom: 1px solid #dcd4c6;
+}
+@media (min-width: 640px) {
+  .tapgo-spec-cell:nth-child(2n) {
+    padding-left: 28px;
+    border-left: 1px solid #dcd4c6;
+  }
+}
+@media (min-width: 1024px) {
+  .tapgo-spec-cell {
+    border-bottom: 0;
+    padding-left: 28px;
+    border-left: 1px solid #dcd4c6;
+  }
+  .tapgo-spec-cell:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
 }

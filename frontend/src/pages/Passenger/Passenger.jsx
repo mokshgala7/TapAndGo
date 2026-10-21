@@ -81,8 +81,8 @@ function PassengerDocCard({ title, path, type = 'Document', userName, onPreview 
               fontWeight: 800,
               padding: '2px 8px',
               borderRadius: 99,
-              background: path ? 'rgba(31, 157, 85, 0.12)' : 'rgba(253, 211, 77, 0.14)',
-              color: path ? '#1f9d55' : 'var(--yellow)',
+              background: path ? 'rgba(23, 122, 71, 0.12)' : 'rgba(253, 211, 77, 0.14)',
+              color: path ? '#177a47' : 'var(--yellow)',
               whiteSpace: 'nowrap',
               flexShrink: 0,
             }}
@@ -114,7 +114,7 @@ function PassengerDocCard({ title, path, type = 'Document', userName, onPreview 
                   objectFit: 'cover',
                   border: '1px solid var(--line)',
                   flexShrink: 0,
-                  background: '#f3f4f6',
+                  background: '#f0ece4',
                 }}
               />
             ) : (
@@ -123,7 +123,7 @@ function PassengerDocCard({ title, path, type = 'Document', userName, onPreview 
                   width: 44,
                   height: 44,
                   borderRadius: 8,
-                  background: '#f3f4f6',
+                  background: '#f0ece4',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -223,38 +223,38 @@ function SupportTicketModal({ user, onClose }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', padding: 16 }}>
-      <div style={{ width: '100%', maxWidth: 440, background: '#fff', borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-        <div style={{ background: '#0b1420', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div><div style={{ color: '#fdd34d', fontWeight: 700, fontSize: 15 }}>🎫 Contact Support</div><div style={{ color: '#8a9bad', fontSize: 12 }}>We reply within 24 hours</div></div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8a9bad', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(30,27,22,0.5)', backdropFilter: 'blur(6px)', padding: 16 }}>
+      <div style={{ width: '100%', maxWidth: 440, background: '#fff', borderRadius: 20, boxShadow: '0 24px 60px rgba(30,27,22,0.25)', overflow: 'hidden' }}>
+        <div style={{ background: '#fdd34d', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div><div style={{ color: '#1e1b16', fontWeight: 800, fontSize: 16 }}>🎫 Contact Support</div><div style={{ color: '#5e4a10', fontSize: 12 }}>We reply within 24 hours</div></div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#1e1b16', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
         <div style={{ padding: '20px 20px 24px', maxHeight: '70vh', overflowY: 'auto' }}>
           {success ? (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-              <p style={{ fontWeight: 700, color: '#16a34a', marginBottom: 8 }}>{success}</p>
-              <button onClick={onClose} style={{ marginTop: 16, padding: '10px 24px', background: '#0b1420', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Close</button>
+              <p style={{ fontWeight: 700, color: '#177a47', marginBottom: 8 }}>{success}</p>
+              <button onClick={onClose} style={{ marginTop: 16, padding: '10px 24px', background: '#141210', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Close</button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {error && <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, color: '#dc2626', fontSize: 13 }}>{error}</div>}
+              {error && <div style={{ padding: '10px 12px', background: '#fdf2f0', border: '1px solid #f1a79d', borderRadius: 10, color: '#c8372d', fontSize: 13 }}>{error}</div>}
               {[['Subject', 'subject', 'text', 'Brief summary of your issue'], ['Your Name', 'name', 'text', ''], ['Email', 'email', 'email', ''], ['Phone', 'phone', 'tel', '']].map(([lbl, key, type, ph]) => (
-                <label key={key} style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>{lbl}<input type={type} value={form[key]} onChange={e => set(key, e.target.value)} placeholder={ph} required style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, boxSizing: 'border-box' }} /></label>
+                <label key={key} style={{ fontSize: 12, fontWeight: 700, color: '#3a352e' }}>{lbl}<input type={type} value={form[key]} onChange={e => set(key, e.target.value)} placeholder={ph} required style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #eae4da', fontSize: 13, boxSizing: 'border-box' }} /></label>
               ))}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>Category
-                  <select value={form.category} onChange={e => set('category', e.target.value)} style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#3a352e' }}>Category
+                  <select value={form.category} onChange={e => set('category', e.target.value)} style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #eae4da', fontSize: 13 }}>
                     <option value="billing">Billing</option><option value="technical">Technical</option><option value="nfc_card">NFC Card</option><option value="account">Account</option><option value="other">Other</option>
                   </select></label>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>Priority
-                  <select value={form.priority} onChange={e => set('priority', e.target.value)} style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#3a352e' }}>Priority
+                  <select value={form.priority} onChange={e => set('priority', e.target.value)} style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #eae4da', fontSize: 13 }}>
                     <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option>
                   </select></label>
               </div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>Message
-                <textarea value={form.message} onChange={e => set('message', e.target.value)} required rows={4} placeholder="Describe your issue in detail…" style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }} /></label>
-              <button type="submit" disabled={loading} style={{ padding: '12px', background: '#0b1420', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#3a352e' }}>Message
+                <textarea value={form.message} onChange={e => set('message', e.target.value)} required rows={4} placeholder="Describe your issue in detail…" style={{ display: 'block', width: '100%', marginTop: 4, padding: '9px 12px', borderRadius: 10, border: '1px solid #eae4da', fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }} /></label>
+              <button type="submit" disabled={loading} style={{ padding: '12px', background: '#141210', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
                 {loading ? 'Submitting…' : 'Submit Support Ticket'}
               </button>
             </form>
@@ -311,63 +311,63 @@ function NFCSecurityModal({ user, onClose }) {
     setShowReplacement(false)
   }
 
-  const STATUS_COLOR = { active: '#22c55e', blocked: '#ef4444', lost: '#f59e0b', replaced: '#94a3b8' }
+  const STATUS_COLOR = { active: '#2e9560', blocked: '#d6503f', lost: '#f5be24', replaced: '#a39b8e' }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', padding: 16 }}>
-      <div style={{ width: '100%', maxWidth: 420, background: '#fff', borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-        <div style={{ background: '#0b1420', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div><div style={{ color: '#fdd34d', fontWeight: 700, fontSize: 15 }}>💳 NFC Card Security</div><div style={{ color: '#8a9bad', fontSize: 12 }}>Manage your physical NFC card</div></div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8a9bad', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(30,27,22,0.5)', backdropFilter: 'blur(6px)', padding: 16 }}>
+      <div style={{ width: '100%', maxWidth: 420, background: '#fff', borderRadius: 20, boxShadow: '0 24px 60px rgba(30,27,22,0.25)', overflow: 'hidden' }}>
+        <div style={{ background: '#fdd34d', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div><div style={{ color: '#1e1b16', fontWeight: 800, fontSize: 16 }}>💳 NFC Card Security</div><div style={{ color: '#5e4a10', fontSize: 12 }}>Manage your physical NFC card</div></div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#1e1b16', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
         <div style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
-          {error && <div style={{ padding: '10px 12px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, color: '#dc2626', fontSize: 13, marginBottom: 12 }}>{error}</div>}
-          {success && <div style={{ padding: '10px 12px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, color: '#16a34a', fontSize: 13, marginBottom: 12 }}>✅ {success}</div>}
-          {loading ? <p style={{ textAlign: 'center', color: '#64748b' }}>Loading card data…</p> : !card ? (
-            <p style={{ textAlign: 'center', color: '#64748b', padding: '20px 0' }}>No NFC card issued to your account yet.<br />Order one from the Home screen.</p>
+          {error && <div style={{ padding: '10px 12px', background: '#fdf2f0', border: '1px solid #f1a79d', borderRadius: 10, color: '#c8372d', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+          {success && <div style={{ padding: '10px 12px', background: '#eef8f2', border: '1px solid #8fcfa8', borderRadius: 10, color: '#177a47', fontSize: 13, marginBottom: 12 }}>✅ {success}</div>}
+          {loading ? <p style={{ textAlign: 'center', color: '#6b6458' }}>Loading card data…</p> : !card ? (
+            <p style={{ textAlign: 'center', color: '#6b6458', padding: '20px 0' }}>No NFC card issued to your account yet.<br />Order one from the Home screen.</p>
           ) : (
             <div>
-              <div style={{ background: '#f8fafc', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Card Reference</div>
-                <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 15, color: '#0b1420' }}>{card.card_reference}</div>
+              <div style={{ background: '#fbf9f5', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #eae4da' }}>
+                <div style={{ fontSize: 12, color: '#6b6458', marginBottom: 4 }}>Card Reference</div>
+                <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 15, color: '#141210' }}>{card.card_reference}</div>
                 <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: (STATUS_COLOR[card.status] || '#94a3b8') + '22', color: STATUS_COLOR[card.status] || '#94a3b8' }}>{card.status.toUpperCase()}</span>
-                  <span style={{ fontSize: 12, color: '#64748b' }}>{card.card_type}</span>
+                  <span style={{ padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: (STATUS_COLOR[card.status] || '#a39b8e') + '22', color: STATUS_COLOR[card.status] || '#a39b8e' }}>{card.status.toUpperCase()}</span>
+                  <span style={{ fontSize: 12, color: '#6b6458' }}>{card.card_type}</span>
                 </div>
-                {card.blocked_reason && <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>Reason: {card.blocked_reason}</div>}
+                {card.blocked_reason && <div style={{ marginTop: 8, fontSize: 12, color: '#6b6458' }}>Reason: {card.blocked_reason}</div>}
               </div>
 
-              {card.status === 'replaced' && <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center' }}>This card has been replaced. Check your NFC Card History for the new order.</p>}
+              {card.status === 'replaced' && <p style={{ fontSize: 13, color: '#6b6458', textAlign: 'center' }}>This card has been replaced. Check your NFC Card History for the new order.</p>}
 
               {showReplacement ? (
                 <form onSubmit={handleReplacement} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ fontWeight: 700, color: '#0b1420', marginBottom: 4 }}>Replacement Delivery Address</div>
+                  <div style={{ fontWeight: 700, color: '#141210', marginBottom: 4 }}>Replacement Delivery Address</div>
                   {[['Recipient Name', 'recipient_name'], ['Phone', 'phone'], ['Address Line 1', 'address_line1'], ['Area / Locality', 'area'], ['City', 'city'], ['State', 'state'], ['Pincode', 'pincode']].map(([lbl, key]) => (
                     <input key={key} placeholder={lbl} value={replForm[key]} required onChange={e => setRepl(key, e.target.value)}
-                      style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 13 }} />
+                      style={{ padding: '9px 12px', borderRadius: 10, border: '1px solid #eae4da', fontSize: 13 }} />
                   ))}
-                  <button type="submit" disabled={actionLoading} style={{ padding: 12, background: '#0b1420', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="submit" disabled={actionLoading} style={{ padding: 12, background: '#141210', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
                     {actionLoading ? 'Submitting…' : 'Submit Replacement Request'}
                   </button>
-                  <button type="button" onClick={() => setShowReplacement(false)} style={{ padding: 10, background: '#f1f5f9', border: 'none', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" onClick={() => setShowReplacement(false)} style={{ padding: 10, background: '#f0ece4', border: 'none', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                 </form>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {card.status === 'active' && (
                     <><button onClick={() => { if (window.confirm('Block your NFC card? You can unblock it anytime.')) doAction('my/block', { reason: 'Blocked by user from app' }) }} disabled={actionLoading}
-                        style={{ padding: 12, background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 10, color: '#dc2626', fontWeight: 700, cursor: 'pointer' }}>🔒 Block Card</button>
+                        style={{ padding: 12, background: '#fdf2f0', border: '1px solid #f1a79d', borderRadius: 10, color: '#c8372d', fontWeight: 700, cursor: 'pointer' }}>🔒 Block Card</button>
                       <button onClick={() => { if (window.confirm('Report card as lost? This cannot be undone.')) doAction('my/report-lost') }} disabled={actionLoading}
-                        style={{ padding: 12, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 10, color: '#92400e', fontWeight: 700, cursor: 'pointer' }}>⚠️ Report Lost</button></>
+                        style={{ padding: 12, background: '#fffbeb', border: '1px solid #fdd34d', borderRadius: 10, color: '#6b4d05', fontWeight: 700, cursor: 'pointer' }}>⚠️ Report Lost</button></>
                   )}
                   {card.status === 'blocked' && (
                     <><button onClick={() => doAction('my/unblock')} disabled={actionLoading}
-                        style={{ padding: 12, background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, color: '#16a34a', fontWeight: 700, cursor: 'pointer' }}>🔓 Unblock Card</button>
+                        style={{ padding: 12, background: '#eef8f2', border: '1px solid #8fcfa8', borderRadius: 10, color: '#177a47', fontWeight: 700, cursor: 'pointer' }}>🔓 Unblock Card</button>
                       <button onClick={() => { if (window.confirm('Report card as lost? This cannot be undone.')) doAction('my/report-lost') }} disabled={actionLoading}
-                        style={{ padding: 12, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 10, color: '#92400e', fontWeight: 700, cursor: 'pointer' }}>⚠️ Report Lost</button></>
+                        style={{ padding: 12, background: '#fffbeb', border: '1px solid #fdd34d', borderRadius: 10, color: '#6b4d05', fontWeight: 700, cursor: 'pointer' }}>⚠️ Report Lost</button></>
                   )}
                   {card.status === 'lost' && (
                     <button onClick={() => setShowReplacement(true)} disabled={actionLoading}
-                      style={{ padding: 12, background: '#0b1420', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>📦 Request Replacement Card</button>
+                      style={{ padding: 12, background: '#141210', color: '#fdd34d', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>📦 Request Replacement Card</button>
                   )}
                 </div>
               )}
@@ -750,11 +750,11 @@ function Passenger() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <b style={{ fontSize: 15, color: 'var(--text)' }}>{typeText}</b>
-            <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 8, padding: '2px 8px', borderRadius: 99, background: isCredit ? '#dff4e8' : '#fde7eb', color: isCredit ? '#1f9d55' : '#9f1730' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 8, padding: '2px 8px', borderRadius: 99, background: isCredit ? '#e2f3e8' : '#fce8e5', color: isCredit ? '#177a47' : '#a52b23' }}>
               {isCredit ? 'CREDIT' : 'DEBIT'}
             </span>
           </div>
-          <strong className={isCredit ? 'credit' : ''} style={{ fontSize: 16, color: isCredit ? '#1f9d55' : 'var(--text)' }}>
+          <strong className={isCredit ? 'credit' : ''} style={{ fontSize: 16, color: isCredit ? '#177a47' : 'var(--text)' }}>
             {isCredit ? '+' : '-'}₹{Math.abs(t.amount || t.fare).toFixed(2)}
           </strong>
         </div>
@@ -807,8 +807,9 @@ function Passenger() {
         <div
           className="bank-alert-card"
           style={{
-            background: 'linear-gradient(135deg, rgba(253, 211, 77, 0.14) 0%, rgba(245, 158, 11, 0.08) 100%)',
-            border: '1px solid rgba(245, 158, 11, 0.45)',
+            background: 'var(--card)',
+            border: '1px solid var(--line)',
+            borderLeft: '6px solid var(--yellow)',
             borderRadius: 16,
             padding: '16px 20px',
             marginBottom: 20,
@@ -817,16 +818,15 @@ function Passenger() {
             justifyContent: 'space-between',
             gap: 14,
             flexWrap: 'wrap',
-            boxShadow: '0 4px 16px rgba(245, 158, 11, 0.08)',
           }}
         >
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ fontSize: 18 }}>🏦</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Payout &amp; Refund Setup</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Payout &amp; Refund Setup</span>
             </div>
-            <h3 style={{ margin: '2px 0 4px', fontSize: 16, fontWeight: 800, color: 'var(--text, #0f172a)' }}>Add Your Bank Details</h3>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--muted, #64748b)' }}>
+            <h3 style={{ margin: '2px 0 4px', fontSize: 16, fontWeight: 800, color: 'var(--text, #1e1b16)' }}>Add Your Bank Details</h3>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--muted, #6b6458)' }}>
               Link your bank account and UPI ID to enable seamless refunds and cashouts.
             </p>
           </div>
@@ -835,16 +835,15 @@ function Passenger() {
             className="primary"
             onClick={() => setShowBankModal(true)}
             style={{
-              background: 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)',
-              color: '#0f172a',
-              fontWeight: 900,
+              background: '#FDD34D',
+              color: '#1e1b16',
+              fontWeight: 800,
               fontSize: 13,
               padding: '12px 22px',
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
@@ -858,9 +857,9 @@ function Passenger() {
 
       {/* NFC Card Ordering Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+        background: '#fdd34d',
         borderRadius: 18,
-        border: '1px solid rgba(251, 191, 36, 0.22)',
+        border: 0,
         padding: '20px 24px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -868,25 +867,24 @@ function Passenger() {
         marginBottom: 20,
         flexWrap: 'wrap',
         gap: 16,
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{
             width: 46,
             height: 46,
             borderRadius: 12,
-            background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+            background: '#1e1b16',
+            color: '#fdd34d',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 22,
             flexShrink: 0,
-            boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
           }}>💳</div>
           <div>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Transit Hardware</span>
-            <h3 style={{ margin: '2px 0 4px', fontSize: 18, fontWeight: 800, color: '#ffffff' }}>Get Your Tap&amp;Go NFC Card</h3>
-            <p style={{ margin: 0, fontSize: 13, color: '#94a3b8' }}>Physical NFC smart card (₹50) with location-based shipping</p>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#5e4a10', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Transit Hardware</span>
+            <h3 style={{ margin: '2px 0 4px', fontSize: 19, fontWeight: 800, color: '#1e1b16' }}>Get Your Tap&amp;Go NFC Card</h3>
+            <p style={{ margin: 0, fontSize: 13, color: '#5e4a10' }}>Physical NFC smart card (₹50) with location-based shipping</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -896,9 +894,9 @@ function Passenger() {
             style={{
               padding: '10px 18px',
               borderRadius: 12,
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.16)',
-              color: '#ffffff',
+              background: '#ffffff',
+              border: '1px solid rgba(30, 27, 22, 0.14)',
+              color: '#1e1b16',
               fontSize: 13,
               fontWeight: 700,
               cursor: 'pointer',
@@ -913,13 +911,12 @@ function Passenger() {
             style={{
               padding: '10px 20px',
               borderRadius: 12,
-              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-              color: '#0a0a0a',
+              background: '#1e1b16',
+              color: '#fdd34d',
               fontSize: 13,
-              fontWeight: 900,
+              fontWeight: 800,
               border: 0,
               cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
               transition: 'all 0.2s ease',
             }}
           >
@@ -934,13 +931,12 @@ function Passenger() {
           onClick={() => setShowSupportModal(true)}
           style={{
             padding: '16px 18px',
-            background: 'linear-gradient(135deg, #262626 0%, #1c1c1c 100%)',
+            background: 'var(--card)',
             borderRadius: 16,
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            color: '#ffffff',
+            border: '1px solid var(--line)',
+            color: 'var(--text)',
             textAlign: 'left',
             cursor: 'pointer',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
             display: 'flex',
             alignItems: 'center',
             gap: 14,
@@ -951,8 +947,8 @@ function Passenger() {
             width: 42,
             height: 42,
             borderRadius: 12,
-            background: 'rgba(251, 191, 36, 0.12)',
-            border: '1px solid rgba(251, 191, 36, 0.25)',
+            background: 'var(--yellow)',
+            color: '#1e1b16',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -960,8 +956,8 @@ function Passenger() {
             flexShrink: 0,
           }}>🎫</div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 14, color: '#ffffff' }}>Contact Support</div>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Submit a ticket</div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>Contact Support</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Submit a ticket</div>
           </div>
         </button>
 
@@ -969,13 +965,12 @@ function Passenger() {
           onClick={() => setShowNFCSecurityModal(true)}
           style={{
             padding: '16px 18px',
-            background: 'linear-gradient(135deg, #262626 0%, #1c1c1c 100%)',
+            background: 'var(--card)',
             borderRadius: 16,
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            color: '#ffffff',
+            border: '1px solid var(--line)',
+            color: 'var(--text)',
             textAlign: 'left',
             cursor: 'pointer',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
             display: 'flex',
             alignItems: 'center',
             gap: 14,
@@ -986,8 +981,8 @@ function Passenger() {
             width: 42,
             height: 42,
             borderRadius: 12,
-            background: 'rgba(251, 191, 36, 0.12)',
-            border: '1px solid rgba(251, 191, 36, 0.25)',
+            background: 'var(--yellow)',
+            color: '#1e1b16',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -995,8 +990,8 @@ function Passenger() {
             flexShrink: 0,
           }}>🛡️</div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 14, color: '#ffffff' }}>NFC Card Security</div>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Block / report lost</div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>NFC Card Security</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Block / report lost</div>
           </div>
         </button>
       </div>
@@ -1035,7 +1030,7 @@ function Passenger() {
       <p className="muted">Add money or withdraw your Tap&amp;Go balance to bank.</p>
       
       {isFrozen && (
-        <div style={{ background: '#fde7eb', border: '1px solid #f998a6', color: '#9f1730', padding: '12px 16px', borderRadius: 12, marginBottom: 16, fontWeight: 700, fontSize: 14 }}>
+        <div style={{ background: '#fce8e5', border: '1px solid #f1a79d', color: '#a52b23', padding: '12px 16px', borderRadius: 12, marginBottom: 16, fontWeight: 700, fontSize: 14 }}>
           ⚠️ Your wallet is frozen by an administrator. Adding funds and withdrawals are currently disabled.
         </div>
       )}
@@ -1077,12 +1072,9 @@ function Passenger() {
               className="secondary-btn"
               onClick={() => setShowNFCOrderModal(true)}
               style={{
-                background: 'rgba(255, 255, 255, 0.16)',
-                color: '#ffffff',
-                border: '1.5px solid rgba(255, 255, 255, 0.35)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
+                background: 'transparent',
+                color: '#1e1b16',
+                border: '1.5px solid #1e1b16',
                 fontWeight: 800,
                 transition: 'all 0.2s ease',
               }}
@@ -1149,10 +1141,9 @@ function Passenger() {
       <div style={{
         marginTop: 28,
         borderRadius: 20,
-        background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
-        border: '1px solid rgba(251, 191, 36, 0.25)',
+        background: 'var(--card)',
+        border: '1px solid var(--line)',
         padding: '24px 28px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.24)',
       }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
@@ -1160,39 +1151,39 @@ function Passenger() {
             width: 46,
             height: 46,
             borderRadius: 12,
-            background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+            background: '#fdd34d',
+            color: '#1e1b16',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 22,
             flexShrink: 0,
-            boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
           }}>💳</div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{
                 padding: '3px 12px',
                 borderRadius: 20,
-                background: 'rgba(251, 191, 36, 0.15)',
-                border: '1px solid rgba(251, 191, 36, 0.3)',
-                color: '#fbbf24',
+                background: 'var(--yellow)',
+                border: 0,
+                color: '#1e1b16',
                 fontSize: 10,
                 fontWeight: 900,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
               }}>PAYMENT ARCHITECTURE</span>
             </div>
-            <h3 style={{ margin: '4px 0 4px', fontSize: 19, fontWeight: 800, color: '#ffffff' }}>
+            <h3 style={{ margin: '4px 0 4px', fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>
               Tap&amp;Go Wallet Payment Workflow
             </h3>
-            <p style={{ margin: 0, fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>
               External payment gateways fund the wallet. Normal ride payments move directly from passenger wallet to driver wallet.
             </p>
           </div>
         </div>
 
         {/* Brand Accent Divider */}
-        <div style={{ height: 2, background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 40%, rgba(251, 191, 36, 0.05) 100%)', borderRadius: 2, marginBottom: 20 }} />
+        <div style={{ height: 2, background: 'var(--text)', marginBottom: 20 }} />
 
         {/* Steps Grid */}
         <div style={{
@@ -1208,13 +1199,13 @@ function Passenger() {
             <div key={title} style={{
               padding: '16px 18px',
               borderRadius: 14,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid var(--line)',
+              background: 'var(--bg)',
               transition: 'all 0.2s ease',
             }}>
-              <div style={{ fontWeight: 800, fontSize: 14, color: '#ffffff', marginBottom: 4 }}>{title}</div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{subtitle}</div>
-              <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>{desc}</div>
+              <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text)', marginBottom: 4 }}>{title}</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{subtitle}</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{desc}</div>
             </div>
           ))}
         </div>
@@ -1500,17 +1491,17 @@ function Passenger() {
 
       <div style={{ marginTop: 10 }}>
         {user?.phone_request_status === 'requested' ? (
-          <p className="muted" style={{ fontWeight: 700, color: '#d97706', margin: '6px 0 0' }}>
+          <p className="muted" style={{ fontWeight: 700, color: '#8a6400', margin: '6px 0 0' }}>
             ⏳ Phone number change request submitted to Admin. Awaiting authorization.
           </p>
         ) : user?.phone_request_status === 'approved' ? (
-          <p style={{ fontWeight: 700, color: '#1f9d55', margin: '6px 0 0' }}>
+          <p style={{ fontWeight: 700, color: '#177a47', margin: '6px 0 0' }}>
             ✅ Admin approval granted! Click &quot;Edit details&quot; above to change your phone number.
           </p>
         ) : (
           <div>
             {user?.phone_request_status === 'rejected' && (
-              <p style={{ fontWeight: 700, color: '#9f1730', margin: '6px 0 6px' }}>
+              <p style={{ fontWeight: 700, color: '#a52b23', margin: '6px 0 6px' }}>
                 ❌ Your previous phone change request was rejected by Admin.
               </p>
             )}
@@ -1555,27 +1546,26 @@ function Passenger() {
               padding: '8px 16px',
               fontSize: 13,
               fontWeight: 800,
-              color: '#0f172a',
-              background: 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)',
+              color: '#1e1b16',
+              background: '#FDD34D',
               border: 'none',
               borderRadius: 10,
               cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
             }}
             onClick={() => setShowBankModal(true)}
           >
             Add Bank Details
           </button>
         ) : isBankApproved ? (
-          <span className="field-tag editable" style={{ background: '#dff4e8', color: '#1f9d55' }}>
+          <span className="field-tag editable" style={{ background: '#e2f3e8', color: '#177a47' }}>
             Admin Approval Granted
           </span>
         ) : isBankPending ? (
-          <span className="field-tag readonly" style={{ background: '#FFF3C4', color: '#906500' }}>
+          <span className="field-tag readonly" style={{ background: '#FFF3C4', color: '#8a6400' }}>
             Request Pending Admin Review
           </span>
         ) : user?.bank_request_status === 'rejected' ? (
-          <span className="field-tag readonly" style={{ background: '#fde7eb', color: '#9f1730' }}>
+          <span className="field-tag readonly" style={{ background: '#fce8e5', color: '#a52b23' }}>
             Request Rejected
           </span>
         ) : (
@@ -1682,7 +1672,7 @@ function Passenger() {
       </div>
 
       {bankError && (
-        <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#fde7eb', color: '#9f1730', fontSize: 13, fontWeight: 600 }}>
+        <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#fce8e5', color: '#a52b23', fontSize: 13, fontWeight: 600 }}>
           ⚠️ {bankError}
         </div>
       )}
@@ -1690,12 +1680,12 @@ function Passenger() {
       {hasBank && (
         <div style={{ marginTop: 12 }}>
           {isBankPending ? (
-            <p className="muted" style={{ fontWeight: 700, color: '#d97706', margin: 0 }}>
+            <p className="muted" style={{ fontWeight: 700, color: '#8a6400', margin: 0 }}>
               ⏳ Bank change request pending admin approval
             </p>
           ) : isBankApproved ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-              <p style={{ fontWeight: 700, color: '#1f9d55', margin: 0 }}>
+              <p style={{ fontWeight: 700, color: '#177a47', margin: 0 }}>
                 ✓ Admin approval granted
               </p>
               <div>
@@ -1720,7 +1710,7 @@ function Passenger() {
           ) : (
             <div>
               {user?.bank_request_status === 'rejected' && (
-                <p style={{ fontWeight: 700, color: '#9f1730', marginBottom: 6 }}>
+                <p style={{ fontWeight: 700, color: '#a52b23', marginBottom: 6 }}>
                   ❌ Your previous bank edit request was rejected by Admin.
                 </p>
               )}
@@ -1750,17 +1740,17 @@ function Passenger() {
 
       <div style={{ marginTop: 12 }}>
         {user?.doc_request_status === 'requested' ? (
-          <p className="muted" style={{ fontWeight: 700, color: '#d97706' }}>
+          <p className="muted" style={{ fontWeight: 700, color: '#8a6400' }}>
             ⏳ Document edit request submitted to Admin. Awaiting authorization.
           </p>
         ) : user?.doc_request_status === 'approved' ? (
           <div>
-            <p style={{ fontWeight: 700, color: '#1f9d55', marginBottom: 8 }}>
+            <p style={{ fontWeight: 700, color: '#177a47', marginBottom: 8 }}>
               ✅ Admin approval granted! You can now upload replacement documents.
             </p>
             <button
               className="secondary-btn"
-              style={{ color: '#0f172a', background: 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)', border: 'none', fontWeight: 700, borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}
+              style={{ color: '#1e1b16', background: '#FDD34D', border: 'none', fontWeight: 700, borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}
               onClick={() => setShowDocUploadModal(true)}
             >
               Upload Replacement Document
@@ -1769,7 +1759,7 @@ function Passenger() {
         ) : (
           <div>
             {user?.doc_request_status === 'rejected' && (
-              <p style={{ fontWeight: 700, color: '#9f1730', marginBottom: 6 }}>
+              <p style={{ fontWeight: 700, color: '#a52b23', marginBottom: 6 }}>
                 ❌ Your previous document edit request was rejected by Admin.
               </p>
             )}
@@ -1876,21 +1866,21 @@ function Passenger() {
       {qrConfirmStep !== 'idle' && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 300,
-          background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
+          background: 'rgba(30,27,22,0.55)', backdropFilter: 'blur(6px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }}>
           <div style={{
             width: '100%', maxWidth: 380,
-            background: '#0b1420', borderRadius: 20,
-            border: '1.5px solid rgba(253,211,77,0.3)',
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+            background: '#ffffff', borderRadius: 20,
+            border: '1.5px solid #1e1b16',
+            boxShadow: '0 24px 60px rgba(30,27,22,0.3)',
             overflow: 'hidden',
           }}>
             {/* Modal header */}
-            <div style={{ background: 'rgba(253,211,77,0.08)', borderBottom: '1px solid rgba(253,211,77,0.15)', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontWeight: 900, color: '#fff', fontSize: 15 }}>Tap<span style={{ color: '#fdd34d' }}>&amp;</span>Go Pay</span>
+            <div style={{ background: '#fdd34d', borderBottom: '1.5px solid #1e1b16', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 900, color: '#1e1b16', fontSize: 15 }}>Tap<span style={{ color: '#8a6400' }}>&amp;</span>Go Pay</span>
               {qrConfirmStep !== 'paying' && (
-                <button onClick={dismissQrConfirm} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 18, cursor: 'pointer' }}>✕</button>
+                <button onClick={dismissQrConfirm} style={{ background: 'none', border: 'none', color: '#1e1b16', fontSize: 18, cursor: 'pointer' }}>✕</button>
               )}
             </div>
 
@@ -1898,8 +1888,8 @@ function Passenger() {
 
               {/* Loading */}
               {qrConfirmStep === 'loading' && (
-                <div style={{ color: '#64748b', fontSize: 14, padding: '20px 0' }}>
-                  <div style={{ display: 'inline-block', width: 24, height: 24, border: '3px solid rgba(253,211,77,0.3)', borderTopColor: '#fdd34d', borderRadius: '50%', animation: 'spin 0.7s linear infinite', marginBottom: 10 }} />
+                <div style={{ color: '#6b6458', fontSize: 14, padding: '20px 0' }}>
+                  <div style={{ display: 'inline-block', width: 24, height: 24, border: '3px solid #f0ece4', borderTopColor: '#1e1b16', borderRadius: '50%', animation: 'spin 0.7s linear infinite', marginBottom: 10 }} />
                   <div>Loading payment details…</div>
                 </div>
               )}
@@ -1907,23 +1897,23 @@ function Passenger() {
               {/* Confirm */}
               {qrConfirmStep === 'confirm' && qrPaymentInfo && (
                 <>
-                  <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#64748b', marginBottom: 6 }}>Confirm Payment</div>
-                  <div style={{ fontSize: 42, fontWeight: 900, color: '#fdd34d', letterSpacing: '-0.02em', marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6b6458', marginBottom: 6 }}>Confirm Payment</div>
+                  <div style={{ fontFamily: 'var(--tg-font-display)', fontSize: 44, fontWeight: 800, color: '#1e1b16', letterSpacing: '-0.03em', marginBottom: 4 }}>
                     ₹{Number(qrPaymentInfo.amount).toFixed(2)}
                   </div>
-                  <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 4 }}>to <strong style={{ color: '#e2e8f0' }}>{qrPaymentInfo.driver_name}</strong></div>
+                  <div style={{ fontSize: 14, color: '#6b6458', marginBottom: 4 }}>to <strong style={{ color: '#1e1b16' }}>{qrPaymentInfo.driver_name}</strong></div>
                   {qrPaymentInfo.remaining_seconds > 0 && (
-                    <div style={{ fontSize: 12, color: '#475569', marginBottom: 16 }}>QR valid for {qrPaymentInfo.remaining_seconds}s</div>
+                    <div style={{ fontSize: 12, color: '#6b6458', marginBottom: 16 }}>QR valid for {qrPaymentInfo.remaining_seconds}s</div>
                   )}
                   <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                     <button
                       onClick={dismissQrConfirm}
-                      style={{ flex: 1, padding: '13px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#94a3b8', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
+                      style={{ flex: 1, padding: '13px', background: '#ffffff', border: '1.5px solid #dcd4c6', borderRadius: 12, color: '#1e1b16', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
                     >Cancel</button>
                     <button
                       id="qr-confirm-pay-btn"
                       onClick={handleConfirmQrPayment}
-                      style={{ flex: 2, padding: '13px', background: 'linear-gradient(135deg,#fdd34d,#f59e0b)', border: 0, borderRadius: 12, color: '#0a0a0a', fontWeight: 900, cursor: 'pointer', fontSize: 15 }}
+                      style={{ flex: 2, padding: '13px', background: '#fdd34d', border: 0, borderRadius: 12, color: '#141210', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}
                     >
                       Pay ₹{Number(qrPaymentInfo.amount).toFixed(2)}
                     </button>
@@ -1933,8 +1923,8 @@ function Passenger() {
 
               {/* Paying */}
               {qrConfirmStep === 'paying' && (
-                <div style={{ color: '#64748b', fontSize: 14, padding: '20px 0' }}>
-                  <div style={{ display: 'inline-block', width: 24, height: 24, border: '3px solid rgba(253,211,77,0.3)', borderTopColor: '#fdd34d', borderRadius: '50%', animation: 'spin 0.7s linear infinite', marginBottom: 10 }} />
+                <div style={{ color: '#6b6458', fontSize: 14, padding: '20px 0' }}>
+                  <div style={{ display: 'inline-block', width: 24, height: 24, border: '3px solid #f0ece4', borderTopColor: '#1e1b16', borderRadius: '50%', animation: 'spin 0.7s linear infinite', marginBottom: 10 }} />
                   <div>Processing payment…</div>
                 </div>
               )}
@@ -1943,12 +1933,12 @@ function Passenger() {
               {qrConfirmStep === 'success' && qrConfirmResult && (
                 <>
                   <div style={{ fontSize: 52, marginBottom: 8 }}>✅</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: '#4ade80', marginBottom: 4 }}>Payment Successful!</div>
-                  <div style={{ fontSize: 34, fontWeight: 900, color: '#fdd34d', marginBottom: 4 }}>₹{Number(qrConfirmResult.amount).toFixed(2)}</div>
-                  <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#475569', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: 6, marginBottom: 18 }}>{qrConfirmResult.reference}</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: '#177a47', marginBottom: 4 }}>Payment Successful!</div>
+                  <div style={{ fontFamily: 'var(--tg-font-display)', fontSize: 36, fontWeight: 800, color: '#1e1b16', letterSpacing: '-0.03em', marginBottom: 4 }}>₹{Number(qrConfirmResult.amount).toFixed(2)}</div>
+                  <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#4e483f', background: '#f0ece4', padding: '4px 12px', borderRadius: 6, marginBottom: 18 }}>{qrConfirmResult.reference}</div>
                   <button
                     onClick={() => { dismissQrConfirm(); setTab('home') }}
-                    style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg,#fdd34d,#f59e0b)', border: 0, borderRadius: 12, color: '#0a0a0a', fontWeight: 900, cursor: 'pointer', fontSize: 15 }}
+                    style={{ width: '100%', padding: '13px', background: '#fdd34d', border: 0, borderRadius: 12, color: '#141210', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}
                   >Done</button>
                 </>
               )}
@@ -1957,11 +1947,11 @@ function Passenger() {
               {qrConfirmStep === 'error' && (
                 <>
                   <div style={{ fontSize: 42, marginBottom: 8 }}>⚠️</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#f87171', marginBottom: 8 }}>Payment Failed</div>
-                  <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 18 }}>{qrConfirmError}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#c8372d', marginBottom: 8 }}>Payment Failed</div>
+                  <div style={{ fontSize: 13, color: '#6b6458', marginBottom: 18 }}>{qrConfirmError}</div>
                   <button
                     onClick={dismissQrConfirm}
-                    style={{ width: '100%', padding: '13px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#e2e8f0', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
+                    style={{ width: '100%', padding: '13px', background: '#ffffff', border: '1.5px solid #1e1b16', borderRadius: 12, color: '#1e1b16', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}
                   >Try Again</button>
                 </>
               )}

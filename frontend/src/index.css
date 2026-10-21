@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Tap&Go design tokens — shared with the mobile app.
+ * Warm paper canvas, white cards on soft shadows, taxi-yellow primary actions
+ * and warm "asphalt" ink. Headlines and money use Bricolage Grotesque; the
+ * interface uses Figtree.
+ */
+:root {
+  --tg-canvas: #f6f3ee;
+  --tg-surface: #ffffff;
+  --tg-fill: #f0ece4;
+  --tg-fill-strong: #e4ded3;
+  --tg-hairline: #eae4da;
+  --tg-ink: #1e1b16;
+  --tg-ink-soft: #6b6458;
+  --tg-ink-faint: #a39b8e;
+  --tg-yellow: #fdd34d;
+  --tg-yellow-light: #ffe380;
+  --tg-yellow-deep: #f5be24;
+  --tg-butter: #fff3c4;
+  --tg-gold: #8a6400;
+  --tg-on-yellow-soft: #5e4a10;
+  --tg-green: #177a47;
+  --tg-green-soft: #e2f3e8;
+  --tg-red: #c8372d;
+  --tg-red-soft: #fce8e5;
+  --tg-amber: #9a5b00;
+  --tg-amber-soft: #fff0d2;
+  --tg-night: #141210;
+  --tg-night-surface: #1f1d1a;
+  --tg-yellow-gradient: linear-gradient(135deg, #ffe380 0%, #fdd34d 45%, #f5be24 100%);
+  --tg-shadow-card: 0 1px 3px rgba(30, 27, 22, 0.04), 0 10px 30px -10px rgba(30, 27, 22, 0.12);
+  --tg-shadow-float: 0 2px 6px rgba(30, 27, 22, 0.05), 0 24px 48px -16px rgba(30, 27, 22, 0.22);
+  --tg-shadow-glow: 0 12px 28px -8px rgba(245, 190, 36, 0.55);
+  --tg-radius-card: 22px;
+  --tg-font-display: 'Bricolage Grotesque', 'Figtree', sans-serif;
+  --tg-font-ui: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  --tg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -22,7 +61,26 @@ body {
   min-width: 320px;
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: 'Hanken Grotesk', sans-serif;
+  font-family: var(--tg-font-ui);
+  background-color: var(--tg-canvas);
+  color: var(--tg-ink);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--tg-font-display);
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: rgba(253, 211, 77, 0.55);
+  color: var(--tg-ink);
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--tg-yellow-deep);
+  outline-offset: 2px;
 }
 
 a {
@@ -53,3 +111,185 @@ svg {
   overflow-x: hidden;
 }
 
+@layer components {
+  /* White card floating on a soft warm shadow. */
+  .tg-card {
+    background: var(--tg-surface);
+    border-radius: var(--tg-radius-card);
+    box-shadow: var(--tg-shadow-card);
+  }
+
+  /* Taxi-yellow surface with the brand gradient and a glow. */
+  .tg-yellow {
+    background: var(--tg-yellow-gradient);
+    box-shadow: var(--tg-shadow-glow);
+    color: var(--tg-ink);
+  }
+
+  .tg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3.25rem;
+    padding: 0 1.75rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition:
+      transform 0.18s var(--tg-ease),
+      box-shadow 0.25s var(--tg-ease),
+      background-color 0.2s ease;
+  }
+  .tg-btn:active {
+    transform: scale(0.97);
+  }
+  .tg-btn-primary {
+    background: var(--tg-yellow-gradient);
+    color: var(--tg-ink);
+    box-shadow: var(--tg-shadow-glow);
+  }
+  .tg-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px -8px rgba(245, 190, 36, 0.65);
+  }
+  .tg-btn-secondary {
+    background: var(--tg-surface);
+    color: var(--tg-ink);
+    box-shadow: inset 0 0 0 1.2px var(--tg-fill-strong), var(--tg-shadow-card);
+  }
+  .tg-btn-secondary:hover {
+    transform: translateY(-1px);
+    background: #fffdf8;
+  }
+
+  /* Small uppercase label above a section title. */
+  .tg-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    background: var(--tg-butter);
+    color: var(--tg-gold);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* Section label: a short yellow bar, then the word (as on the home page). */
+  .tg-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--tg-ink-soft);
+    font-family: var(--tg-font-ui);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .tg-kicker::before {
+    content: '';
+    width: 28px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--tg-yellow);
+  }
+  .tg-kicker .material-symbols-outlined {
+    display: none;
+  }
+
+  /* Tinted round icon well. */
+  .tg-icon-well {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    background: var(--tg-butter);
+    color: var(--tg-gold);
+  }
+
+  /* Cards lift slightly on hover. */
+  .tg-lift {
+    transition:
+      transform 0.35s var(--tg-ease),
+      box-shadow 0.35s var(--tg-ease);
+  }
+  .tg-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--tg-shadow-float);
+  }
+}
+
+/* Browser autofill paints fields blue; keep them white with ink text instead. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: var(--tg-ink);
+  caret-color: var(--tg-ink);
+}
+.tapgo-dark input:-webkit-autofill,
+.tapgo-dark input:-webkit-autofill:hover,
+.tapgo-dark input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--card) inset;
+  box-shadow: 0 0 0 1000px var(--card) inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+}
+
+/* Material icons that utils/mobileEmoji.js puts in place of colour emoji. */
+[data-tg-icon] {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+}
+[data-tg-icon][data-tg-icon][data-tg-icon][data-tg-icon][data-tg-icon='dark'] {
+  color: #ffffff !important;
+}
+[data-tg-icon][data-tg-icon][data-tg-icon][data-tg-icon][data-tg-icon='light'] {
+  color: var(--tg-ink) !important;
+}
+
+/* Sections rise into view as they scroll in (where the browser supports it). */
+@supports (animation-timeline: view()) {
+  .tg-reveal {
+    animation: tg-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+}
+
+@keyframes tg-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -80,7 +80,7 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(6, 12, 20, 0.75)',
+        background: 'rgba(20, 18, 16, 0.75)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
         display: 'flex',
@@ -94,12 +94,12 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
       <div
         style={{
           background: 'var(--card, #ffffff)',
-          color: 'var(--text, #102233)',
+          color: 'var(--text, #1e1b16)',
           borderRadius: 20,
-          border: '1px solid var(--line, #e1e7ec)',
+          border: '1px solid var(--line, #e7e1d6)',
           width: '100%',
           maxWidth: 480,
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',
+          boxShadow: '0 24px 60px rgba(30, 27, 22, 0.25)',
           overflow: 'hidden',
           animation: 'fadeScale 0.15s ease-out',
         }}
@@ -111,12 +111,12 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '16px 20px',
-            borderBottom: '1px solid var(--line, #e1e7ec)',
+            borderBottom: '1px solid var(--line, #e7e1d6)',
           }}
         >
           <div>
             <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Upload Replacement Document</h3>
-            <span style={{ fontSize: 12, color: 'var(--muted, #64748b)' }}>Admin approval granted for document edit</span>
+            <span style={{ fontSize: 12, color: 'var(--muted, #6b6458)' }}>Admin approval granted for document edit</span>
           </div>
           <button
             type="button"
@@ -126,7 +126,7 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
               border: 'none',
               fontSize: 22,
               cursor: 'pointer',
-              color: 'var(--muted, #64748b)',
+              color: 'var(--muted, #6b6458)',
               padding: '4px 8px',
               borderRadius: 8,
               lineHeight: 1,
@@ -140,9 +140,9 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
           {error && (
             <div
               style={{
-                background: '#fef2f2',
-                color: '#b91c1c',
-                border: '1px solid #fecaca',
+                background: '#fdf2f0',
+                color: '#a52b23',
+                border: '1px solid #f8cfc9',
                 padding: '10px 14px',
                 borderRadius: 10,
                 fontSize: 13,
@@ -155,7 +155,7 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
           )}
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6, color: 'var(--text, #102233)' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6, color: 'var(--text, #1e1b16)' }}>
               Select Document to Replace
             </label>
             <select
@@ -169,9 +169,9 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
                 width: '100%',
                 padding: '10px 12px',
                 borderRadius: 10,
-                border: '1px solid var(--line, #cbd5e1)',
-                background: 'var(--bg, #f8fafc)',
-                color: 'var(--text, #102233)',
+                border: '1px solid var(--line, #ddd5c8)',
+                background: 'var(--bg, #fbf9f5)',
+                color: 'var(--text, #1e1b16)',
                 fontSize: 14,
                 fontWeight: 500,
               }}
@@ -185,7 +185,7 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
           </div>
 
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6, color: 'var(--text, #102233)' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6, color: 'var(--text, #1e1b16)' }}>
               Choose Replacement File (Max 5 MB)
             </label>
             <input
@@ -196,9 +196,9 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
                 width: '100%',
                 padding: '8px',
                 fontSize: 13,
-                border: '1px dashed var(--line, #cbd5e1)',
+                border: '1px dashed var(--line, #ddd5c8)',
                 borderRadius: 10,
-                background: 'var(--bg, #f8fafc)',
+                background: 'var(--bg, #fbf9f5)',
                 boxSizing: 'border-box',
               }}
             />
@@ -214,14 +214,14 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
                   maxWidth: '100%',
                   borderRadius: 10,
                   objectFit: 'contain',
-                  border: '1px solid var(--line, #cbd5e1)',
+                  border: '1px solid var(--line, #ddd5c8)',
                 }}
               />
             </div>
           )}
 
           {file && !preview && (
-            <div style={{ fontSize: 13, color: 'var(--muted, #64748b)', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: 'var(--muted, #6b6458)', marginBottom: 16 }}>
               Selected file: <b>{file.name}</b> ({(file.size / 1024).toFixed(1)} KB)
             </div>
           )}
@@ -234,8 +234,8 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
                 flex: 1,
                 padding: '12px 16px',
                 borderRadius: 10,
-                background: file ? 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)' : '#cbd5e1',
-                color: '#0f172a',
+                background: file ? '#FDD34D' : '#ddd5c8',
+                color: '#1e1b16',
                 border: 'none',
                 fontWeight: 800,
                 fontSize: 14,
@@ -252,8 +252,8 @@ export default function DocumentUploadModal({ onClose, flash, accountType = 'pas
                 padding: '12px 16px',
                 borderRadius: 10,
                 background: 'transparent',
-                border: '1px solid var(--line, #cbd5e1)',
-                color: 'var(--text, #102233)',
+                border: '1px solid var(--line, #ddd5c8)',
+                color: 'var(--text, #1e1b16)',
                 fontWeight: 600,
                 fontSize: 14,
                 cursor: 'pointer',

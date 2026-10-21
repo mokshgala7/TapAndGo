@@ -118,7 +118,7 @@ function DriverEarnings({ flash }) {
   return (
     <>
       <h1>Earnings</h1>
-      <p className="muted">All amounts are in Indian Rupees (\u20b9).</p>
+      <p className="muted">All amounts are in Indian Rupees (₹).</p>
 
       <div className="kpi-grid">
         <div className="kpi-card">

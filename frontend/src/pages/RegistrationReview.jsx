@@ -143,7 +143,7 @@ function RegistrationReview() {
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 font-medium">No registration data found.</p>
-          <button onClick={() => navigate('/register')} className="mt-4 btn-primary px-6 py-3 rounded-lg">
+          <button onClick={() => navigate('/register')} className="mt-4 btn-primary px-6 py-3 rounded-[12px] bg-yellow-400 text-darker font-bold hover:bg-yellow-500">
             Back to Registration
           </button>
         </div>
@@ -154,15 +154,15 @@ function RegistrationReview() {
   const { form, profilePhoto, signature, sessionId, isDriver } = formData
 
   return (
-    <div className="bg-surface text-[#1C1C1E] selection:bg-brand selection:text-darker min-h-screen antialiased">
+    <div className="bg-surface text-[#1F1D1A] min-h-screen antialiased">
       <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-16 min-h-screen flex flex-col relative">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12 pb-8 border-b border-gray-200 relative z-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12 pb-8 border-b-2 border-gray-900 relative z-10">
           <div>
-            <h2 className="text-3xl sm:text-4xl lg:text-[3rem] font-black text-darker tracking-tighter mb-2">Review Application</h2>
-            <p className="text-gray-500 font-medium text-base sm:text-lg tracking-wide">Please verify your details before final submission.</p>
+            <h2 className="font-display text-[34px] sm:text-[44px] lg:text-[56px] font-extrabold text-darker tracking-[-0.035em] leading-[1.02] mb-2">Review Application</h2>
+            <p className="text-gray-600 font-medium text-base sm:text-lg">Please verify your details before final submission.</p>
           </div>
-          <div className="px-6 py-3 bg-white text-brand text-[0.8rem] font-black rounded-full uppercase tracking-widest border border-brand/30 shadow-[0_4px_12px_rgba(253,211,77,0.2)]">
+          <div className="px-5 py-2.5 bg-yellow-400 text-gray-900 text-[0.75rem] font-extrabold rounded-full uppercase tracking-[0.16em]">
             Final Step
           </div>
         </div>
@@ -172,8 +172,8 @@ function RegistrationReview() {
           {/* Left Column */}
           <div className="space-y-6 sm:space-y-10">
             {/* Profile Section */}
-            <div className="bg-white p-5 sm:p-8 rounded-[2rem] border border-gray-100 shadow-premium flex flex-col sm:flex-row items-center text-center sm:text-left gap-4 sm:gap-8 relative overflow-hidden">
-              <div className="w-32 h-32 rounded-full border-[6px] border-white shadow-[0_8px_24px_rgba(0,0,0,0.1)] overflow-hidden bg-gray-50 relative z-10">
+            <div className="bg-white p-5 sm:p-8 rounded-[22px] border border-[#dcd4c6] flex flex-col sm:flex-row items-center text-center sm:text-left gap-4 sm:gap-8 relative overflow-hidden">
+              <div className="w-32 h-32 rounded-full border-[3px] border-gray-900 ring-4 ring-yellow-400 overflow-hidden bg-gray-50 relative z-10">
                 {profilePhoto ? (
                   <img src={profilePhoto} className="w-full h-full object-cover" alt="Profile" />
                 ) : (
@@ -183,7 +183,7 @@ function RegistrationReview() {
                 )}
               </div>
               <div>
-                <h3 className="text-3xl font-black text-darker tracking-tight mb-2">{form.name}</h3>
+                <h3 className="font-display text-3xl font-extrabold text-darker tracking-[-0.025em] mb-2">{form.name}</h3>
                 <p className={`text-[0.7rem] font-black uppercase tracking-widest inline-block px-4 py-1.5 rounded-lg ${isDriver ? 'text-darker bg-brand' : 'text-gray-500 bg-gray-100'}`}>
                   {isDriver ? 'Professional Driver' : 'Passenger'}
                 </p>
@@ -192,12 +192,12 @@ function RegistrationReview() {
             </div>
 
             {/* Personal Details */}
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 space-y-6 text-[0.95rem] font-medium">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100/50">
+            <div className="bg-white p-8 rounded-[22px] border border-[#dcd4c6] space-y-6 text-[0.95rem] font-medium">
+              <div className="flex items-center justify-between pb-4 border-b border-[#eae4da]">
                 <span className="text-gray-400">Email</span>
                 <span className="text-darker font-semibold">{form.email}</span>
               </div>
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100/50">
+              <div className="flex items-center justify-between pb-4 border-b border-[#eae4da]">
                 <span className="text-gray-400">Phone</span>
                 <span className="text-darker font-mono font-semibold">+91 {form.phone}</span>
               </div>
@@ -213,9 +213,9 @@ function RegistrationReview() {
           {/* Right Column */}
           <div className="space-y-10">
             {/* Government ID */}
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 space-y-6 text-[0.95rem] font-medium relative overflow-hidden">
-              <div className="absolute right-0 top-0 h-full w-2 bg-success"></div>
-              <div className="flex items-center justify-between pb-4 border-b border-gray-100/50">
+            <div className="bg-white p-8 rounded-[22px] border border-[#dcd4c6] space-y-6 text-[0.95rem] font-medium relative overflow-hidden">
+              <div className="absolute left-0 top-0 h-full w-1.5 bg-success"></div>
+              <div className="flex items-center justify-between pb-4 border-b border-[#eae4da]">
                 <span className="text-gray-400">Aadhaar</span>
                 <span className="text-darker font-mono tracking-widest font-semibold">XXXX XXXX {form.aadhaar.slice(-4)}</span>
               </div>
@@ -227,12 +227,12 @@ function RegistrationReview() {
 
             {/* Vehicle Details (Driver Only) */}
             {isDriver && (
-              <div className="bg-white p-8 rounded-[2rem] shadow-premium border border-brand/20 space-y-6 text-[0.95rem] font-medium">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <div className="bg-white p-8 rounded-[22px] border-[1.5px] border-gray-900 space-y-6 text-[0.95rem] font-medium">
+                <div className="flex items-center justify-between pb-4 border-b border-[#eae4da]">
                   <span className="text-gray-400">Vehicle Type</span>
                   <span className="text-darker font-black text-lg">{form.vehicleType}</span>
                 </div>
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div className="flex items-center justify-between pb-4 border-b border-[#eae4da]">
                   <span className="text-gray-400">Make & Model</span>
                   <span className="text-darker font-semibold">
                     {form.vehicleMake} {form.vehicleModel}
@@ -246,7 +246,7 @@ function RegistrationReview() {
             )}
 
             {/* Signature Preview */}
-            <div className="bg-white p-8 rounded-[2rem] border border-gray-100 flex flex-col items-center justify-center h-[240px] relative overflow-hidden shadow-sm">
+            <div className="bg-white p-8 rounded-[22px] border border-dashed border-[#cfc6b6] flex flex-col items-center justify-center h-[240px] relative overflow-hidden">
               {signature ? (
                 <img src={signature} className="h-32 max-w-full object-contain mix-blend-multiply mt-6" alt="Signature" />
               ) : (
@@ -257,8 +257,8 @@ function RegistrationReview() {
         </div>
 
         {/* Verification Checklist */}
-        <div className="mt-16 p-8 bg-white rounded-[2rem] border border-gray-100 shadow-sm relative z-10">
-          <h3 className="text-lg font-black text-darker mb-6 tracking-tight">Verification Checklist</h3>
+        <div className="mt-16 p-8 bg-white rounded-[22px] border border-[#dcd4c6] relative z-10">
+          <h3 className="font-display text-xl font-extrabold text-darker mb-6 tracking-[-0.02em]">Verification Checklist</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               'Personal Information Verified',
@@ -284,15 +284,15 @@ function RegistrationReview() {
 
         {/* Action Buttons */}
         {errorMessage && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center font-bold text-sm">
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-[12px] text-center font-bold text-sm">
             {errorMessage}
           </div>
         )}
-        <div className="mt-10 pt-10 flex flex-col md:flex-row gap-6 border-t border-gray-200 relative z-10 pb-10">
+        <div className="mt-10 pt-10 flex flex-col md:flex-row gap-6 border-t-2 border-gray-900 relative z-10 pb-10">
           <button
             type="button"
             onClick={editDetails}
-            className="px-10 py-6 rounded-[1.5rem] font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 hover:text-darker transition-colors w-full md:w-[35%] tracking-wide shadow-sm text-lg"
+            className="px-10 py-5 rounded-[14px] font-bold text-darker bg-white border-[1.5px] border-gray-900 hover:bg-yellow-50 transition-colors w-full md:w-[35%] tracking-wide text-lg"
           >
             Edit Details
           </button>
@@ -300,7 +300,7 @@ function RegistrationReview() {
             type="button"
             onClick={confirmAccount}
             disabled={confirming}
-            className="flex-1 btn-primary py-6 rounded-[1.5rem] font-black text-xl tracking-wide group relative overflow-hidden disabled:opacity-75"
+            className="flex-1 btn-primary py-5 rounded-[14px] bg-yellow-400 text-darker hover:bg-yellow-500 transition-colors font-extrabold text-xl tracking-[0.01em] group relative overflow-hidden disabled:opacity-75"
           >
             <span className="relative z-10 block">{confirming ? 'Account Created' : 'Confirm & Create Account'}</span>
           </button>

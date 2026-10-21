@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(30, 27, 22, 0.5);
 }
 
 .tapgo-dl-dialog {
@@ -17,7 +17,7 @@
   border-radius: 20px;
   background: #ffffff;
   padding: 24px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 24px 60px rgba(30, 27, 22, 0.25);
 }
 
 .tapgo-dl-head {
@@ -49,7 +49,7 @@
 
 .tapgo-dl-body {
   margin-top: 16px;
-  color: #1c1c1e;
+  color: #1f1d1a;
   font-size: 14px;
   line-height: 21px;
 }
@@ -70,7 +70,7 @@
 
 .tapgo-dl-note {
   font-size: 12px;
-  color: #44474c;
+  color: #4e483f;
 }
 
 .tapgo-dl-again {
@@ -99,5 +99,5 @@
 
 .tapgo-dl-close:hover,
 .tapgo-dl-close:focus-visible {
-  background: #f5c518;
+  background: #f5be24;
 }

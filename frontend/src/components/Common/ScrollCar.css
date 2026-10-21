@@ -1,0 +1,77 @@
+/* The road: a thin strip of asphalt with a dashed yellow centre line, on the left edge. */
+.tg-scroll-road {
+  --tg-road-w: 6px;
+  --tg-car-h: 27px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--tg-road-w);
+  z-index: 45;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, #fdd34d 0 8px, transparent 8px 16px) center / 1.5px 100% no-repeat,
+    #1e1b16;
+}
+
+/* The taxi: moves down the road with the page and turns to face the scroll. */
+.tg-scroll-car {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: var(--tg-car-h);
+  transform: translateY(calc(var(--tg-car-progress, 0) * (100vh - var(--tg-car-h) - 8px) + 4px));
+  /* an unhurried drive: the taxi eases to its spot well after the page stops */
+  transition: transform 1400ms cubic-bezier(0.25, 0.8, 0.3, 1);
+  will-change: transform;
+  filter: drop-shadow(0 2px 3px rgba(30, 27, 22, 0.3));
+}
+
+.tg-scroll-car-body {
+  width: 100%;
+  height: 100%;
+  transform: rotate(180deg);
+  transition: transform 900ms cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+.tg-scroll-car[data-dir='up'] .tg-scroll-car-body {
+  transform: rotate(0deg);
+}
+
+.tg-scroll-car-body svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* A little bob while driving. */
+.tg-scroll-car.is-driving .tg-scroll-car-body svg {
+  animation: tg-car-bob 520ms ease-in-out infinite alternate;
+}
+
+@keyframes tg-car-bob {
+  from {
+    transform: translateX(-0.4px);
+  }
+  to {
+    transform: translateX(0.4px);
+  }
+}
+
+/* Laptop and desktop only: phones get no road or car. */
+@media (max-width: 767px) {
+  .tg-scroll-road {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-scroll-car,
+  .tg-scroll-car-body {
+    transition: none;
+  }
+  .tg-scroll-car.is-driving .tg-scroll-car-body svg {
+    animation: none;
+  }
+}

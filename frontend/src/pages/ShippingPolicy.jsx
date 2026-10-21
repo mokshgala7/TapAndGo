@@ -4,17 +4,17 @@ import Footer from '../components/Common/Footer.jsx'
 
 export function ShippingPolicy() {
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col font-sans selection:bg-amber-200 selection:text-slate-900 antialiased">
+    <div className="bg-surface min-h-screen text-slate-900 flex flex-col font-sans antialiased">
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
         {/* Header */}
-        <section className="bg-white rounded-2xl p-6 sm:p-10 shadow-sm border border-slate-200 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold uppercase tracking-wider">
+        <section className="relative border-b-2 border-slate-900 pb-10 pt-2 sm:pb-14 space-y-3">
+          <div className="tg-kicker">
             <span className="material-symbols-outlined text-sm">local_shipping</span>
             Shipping &amp; Delivery Policy
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h1 className="max-w-4xl font-display text-[40px] font-extrabold leading-[1.02] tracking-[-0.04em] text-slate-900 sm:text-[60px]">
             NFC Card Shipping &amp; Delivery Policy
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm">
@@ -23,7 +23,7 @@ export function ShippingPolicy() {
         </section>
 
         {/* Content Body */}
-        <div className="bg-white rounded-2xl p-6 sm:p-10 shadow-sm border border-slate-200 space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
+        <div className="bg-white rounded-[22px] p-6 sm:p-10 border border-[#dcd4c6] space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
           {/* Main Platform Statement */}
           <div className="p-5 rounded-2xl bg-blue-50/80 border border-blue-200 text-blue-950 font-medium space-y-2">
             <h2 className="text-lg font-bold text-blue-900">Digital Mobility &amp; Card Delivery Overview</h2>

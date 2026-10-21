@@ -49,8 +49,8 @@ export function NFCOrderHistoryModal({ user, onClose, onOrderAgain }) {
             onClick={onClose}
             style={{
               border: 0,
-              background: 'var(--bg, #f8fafc)',
-              color: 'var(--text, #0f172a)',
+              background: 'var(--bg, #fbf9f5)',
+              color: 'var(--text, #1e1b16)',
               borderRadius: '50%',
               width: 32,
               height: 32,
@@ -65,7 +65,7 @@ export function NFCOrderHistoryModal({ user, onClose, onOrderAgain }) {
         </div>
 
         {error && (
-          <div style={{ background: '#fde7eb', color: '#9f1730', padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 700 }}>
+          <div style={{ background: '#fce8e5', color: '#a52b23', padding: '10px 14px', borderRadius: 10, marginBottom: 14, fontSize: 13, fontWeight: 700 }}>
             ⚠️ {error}
           </div>
         )}
@@ -73,7 +73,7 @@ export function NFCOrderHistoryModal({ user, onClose, onOrderAgain }) {
         {loading ? (
           <p className="muted" style={{ padding: '30px 0', textAlign: 'center' }}>Loading orders...</p>
         ) : orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg, #f8fafc)', borderRadius: 14, border: '1px dashed var(--line)' }}>
+          <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg, #fbf9f5)', borderRadius: 14, border: '1px dashed var(--line)' }}>
             <span className="material-symbols-outlined" style={{ fontSize: 40, color: 'var(--muted)', marginBottom: 8 }}>credit_card</span>
             <p style={{ margin: 0, fontWeight: 700, color: 'var(--text)' }}>No NFC card orders yet.</p>
             <p className="muted" style={{ margin: '4px 0 16px', fontSize: 13 }}>Get your physical Tap&amp;Go NFC card for cashless transit.</p>
@@ -94,7 +94,7 @@ export function NFCOrderHistoryModal({ user, onClose, onOrderAgain }) {
             {orders.map((o) => (
               <div
                 key={o.id || o.order_reference}
-                style={{ background: 'var(--card, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: 14, padding: 16 }}
+                style={{ background: 'var(--card, #fff)', border: '1px solid var(--line, #eae4da)', borderRadius: 14, padding: 16 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
@@ -104,7 +104,7 @@ export function NFCOrderHistoryModal({ user, onClose, onOrderAgain }) {
                     </span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <strong style={{ fontSize: 16, color: '#16a34a', display: 'block' }}>₹{o.total_amount.toFixed(2)}</strong>
+                    <strong style={{ fontSize: 16, color: '#177a47', display: 'block' }}>₹{o.total_amount.toFixed(2)}</strong>
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', marginTop: 4 }}>
                       <span style={{
                         fontSize: 10,
@@ -112,8 +112,8 @@ export function NFCOrderHistoryModal({ user, onClose, onOrderAgain }) {
                         textTransform: 'uppercase',
                         padding: '2px 8px',
                         borderRadius: 99,
-                        background: o.order_status === 'delivered' ? '#dff4e8' : '#eff6ff',
-                        color: o.order_status === 'delivered' ? '#16a34a' : '#2563eb'
+                        background: o.order_status === 'delivered' ? '#e2f3e8' : '#fffbeb',
+                        color: o.order_status === 'delivered' ? '#177a47' : '#8a6400'
                       }}>
                         {o.order_status.replace('_', ' ')}
                       </span>
@@ -124,7 +124,7 @@ export function NFCOrderHistoryModal({ user, onClose, onOrderAgain }) {
                         padding: '2px 8px',
                         borderRadius: 99,
                         background: '#fff2c5',
-                        color: '#8b6400'
+                        color: '#8a6400'
                       }}>
                         {o.payment_status === 'simulated' ? 'SIMULATED' : o.payment_status}
                       </span>

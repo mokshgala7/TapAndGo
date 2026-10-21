@@ -1,30 +1,24 @@
 import { Link } from '../../routes/navigation.jsx'
 import Footer from '../../components/Common/Footer.jsx'
 import Navbar from '../../components/Common/Navbar.jsx'
-import logo from '../../assets/images/logio.png'
+import logo from '../../assets/images/tapgo-logo.png'
 import './Home.css'
 
 const features = [
   {
     icon: 'contactless',
-    iconClass: 'bg-primary-container text-on-primary shadow-sm',
-    glowClass: 'bg-secondary-container/10 group-hover:bg-secondary-container/20',
     title: 'Instant Cashless Payments',
     description:
       'Complete payments instantly using NFC or QR codes, eliminating the need for cash while ensuring a smooth travel experience.',
   },
   {
     icon: 'security',
-    iconClass: 'bg-surface-container-highest text-primary border border-outline-variant shadow-sm',
-    glowClass: 'bg-primary/5 group-hover:bg-primary/10',
     title: 'AI Fraud Detection',
     description:
       'Advanced AI continuously analyzes transactions to detect suspicious activity and help protect both passengers and drivers.',
   },
   {
     icon: 'account_balance_wallet',
-    iconClass: 'bg-primary-container text-on-primary shadow-sm',
-    glowClass: 'bg-secondary-container/10 group-hover:bg-secondary-container/20',
     title: 'Digital Wallet',
     description:
       'Securely manage your wallet, view transaction history, track balances, and access digital receipts-all in one place.',
@@ -32,213 +26,188 @@ const features = [
 ]
 
 const steps = [
-  {
-    number: '1️⃣',
-    title: 'Register',
-    description: 'Create your passenger or driver account.',
-  },
-  {
-    number: '2️⃣',
-    title: 'Login',
-    description: 'Securely access your dashboard.',
-  },
-  {
-    number: '3️⃣',
-    title: 'Scan QR / Tap NFC',
-    description: 'Choose your preferred payment method.',
-  },
-  {
-    number: '4️⃣',
-    title: 'Pay Securely',
-    description: 'AI verifies every transaction.',
-  },
-  {
-    number: '5️⃣',
-    title: 'Done!',
-    description: 'Receive instant confirmation and receipt.',
-  },
+  { number: '1', title: 'Register', description: 'Create your passenger or driver account.' },
+  { number: '2', title: 'Login', description: 'Securely access your dashboard.' },
+  { number: '3', title: 'Scan QR / Tap NFC', description: 'Choose your preferred payment method.' },
+  { number: '4', title: 'Pay Securely', description: 'AI verifies every transaction.' },
+  { number: '5', title: 'Done!', description: 'Receive instant confirmation and receipt.' },
 ]
 
 const benefits = [
-  {
-    title: 'AI Security',
-    description: 'Fraud detection helps protect every transaction.',
-  },
-  {
-    title: 'Instant Payments',
-    description: 'Fast QR and NFC transactions in seconds.',
-  },
-  {
-    title: 'Digital Wallet',
-    description: 'Track balances and payment history easily.',
-  },
-  {
-    title: 'Built for Mobility',
-    description: 'Designed specifically for taxis and auto-rickshaws.',
-  },
+  { icon: 'shield_lock', title: 'AI Security', description: 'Fraud detection helps protect every transaction.' },
+  { icon: 'bolt', title: 'Instant Payments', description: 'Fast QR and NFC transactions in seconds.' },
+  { icon: 'account_balance_wallet', title: 'Digital Wallet', description: 'Track balances and payment history easily.' },
+  { icon: 'local_taxi', title: 'Built for Mobility', description: 'Designed specifically for taxis and auto-rickshaws.' },
 ]
+
+/* The three speed lines that trail "Go" in the logo. */
+function SpeedLines({ className = '' }) {
+  return (
+    <svg aria-hidden="true" className={className} viewBox="0 0 64 28" fill="none">
+      <rect x="14" y="0" width="50" height="6" rx="3" fill="currentColor" />
+      <rect x="4" y="11" width="50" height="6" rx="3" fill="currentColor" />
+      <rect x="0" y="22" width="34" height="6" rx="3" fill="currentColor" />
+    </svg>
+  )
+}
 
 function Home() {
   return (
-    <div className="tapgo-home tapgo-shell bg-surface text-on-surface font-body-lg antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+    <div className="tapgo-home tapgo-shell bg-surface text-on-surface font-body-lg antialiased">
       <Navbar />
 
-      <main className="min-h-screen flex flex-col items-center justify-center pb-section-gap pt-8">
-        <section className="mx-auto flex w-full max-w-7xl flex-col items-center space-y-12 px-container-padding text-center">
-          <div className="relative w-full max-w-4xl">
-            <img
-              alt="Tap&Go Mobility logo"
-              className="mx-auto h-auto w-full max-w-3xl object-contain"
-              src={logo}
-            />
-          </div>
+      <main className="flex min-h-screen flex-col pb-section-gap">
+        {/* ── Masthead: the logo, then the promise ───────────── */}
+        <section className="mx-auto w-full max-w-7xl px-container-padding pt-8 sm:pt-12">
+          <h1 className="sr-only">Smart Payments. Every Ride.</h1>
+          <img
+            alt="Tap&Go Mobility logo"
+            className="tapgo-masthead mx-auto w-full max-w-[880px] object-contain"
+            src={logo}
+          />
 
-          <div className="max-w-3xl space-y-6">
-            <h1 className="sr-only">Smart Payments. Every Ride.</h1>
+          <div className="tapgo-rule mt-10 sm:mt-14" />
 
-            <div className="mx-auto max-w-2xl space-y-3 text-on-surface-variant">
-              <p className="font-body-lg text-body-lg">
-                <strong>Fast. Secure. Cashless Travel Payments.</strong>
-              </p>
-              <p className="p2">
-                Experience the future of transportation payments with <strong>Tap&Go</strong>.
+          <div className="grid gap-8 py-10 sm:py-14 lg:grid-cols-12 lg:gap-12">
+            <p className="font-display text-[42px] font-extrabold leading-[0.98] tracking-[-0.04em] text-slate-900 sm:text-[64px] lg:col-span-7 lg:text-[76px]">
+              <strong className="font-extrabold">
+                Fast. Secure. <br className="hidden sm:block" />
+                Cashless Travel Payments.
+              </strong>
+              <SpeedLines className="ml-3 inline-block h-[0.36em] w-auto -translate-y-[0.12em] align-middle text-yellow-400" />
+            </p>
+
+            <div className="flex flex-col justify-end lg:col-span-5">
+              <p className="text-[17px] leading-[1.65] text-slate-600 sm:text-lg">
+                Experience the future of transportation payments with <strong className="text-slate-900">Tap&Go</strong>.
                 Our platform enables passengers to pay taxi and auto-rickshaw fares instantly
-                using <strong>NFC</strong> or <strong>QR codes</strong>, while providing drivers
+                using <strong className="text-slate-900">NFC</strong> or <strong className="text-slate-900">QR codes</strong>, while providing drivers
                 with secure digital payments, real-time transaction tracking, and AI-powered
                 fraud detection.
               </p>
-            </div>
 
-            <div className="flex flex-col items-center justify-center gap-gutter pt-4 sm:flex-row">
-              <Link
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary-container bg-transparent px-8 py-4 text-title-md font-title-md text-primary-container sm:w-auto hover:bg-slate-50 transition-colors"
-                to="/login"
-              >
-                Log in
-                <span className="material-symbols-outlined" aria-hidden="true">
-                  arrow_forward
-                </span>
-              </Link>
-
-              <Link
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-400 px-8 py-4 text-title-md font-title-md text-black sm:w-auto hover:bg-yellow-500 transition-colors"
-                to="/register"
-              >
-                Register
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="features"
-          className="relative mt-24 w-full max-w-7xl border-t border-surface-variant px-container-padding py-24"
-        >
-          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-surface-container-lowest to-surface"></div>
-
-          <div className="mb-16 text-center">
-            <h3 className="mb-4 text-center text-4xl font-bold">Feautures</h3>
-            <h2 className="font-headline-lg text-headline-lg text-primary mb-4">
-              Designed for Safe and Seamless Payments
-            </h2>
-            <p className="font-body-md text-body-md mx-auto max-w-xl text-on-surface-variant">
-              Built specifically for taxis and auto-rickshaws, Tap&Go delivers fast
-              transactions, secure authentication, and an effortless payment experience for every
-              ride.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-            {features.map((feature) => (
-              <article
-                key={feature.title}
-                className="group relative flex flex-col items-start overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-8 shadow-[0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)]"
-              >
-                <div
-                  className={`absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full blur-3xl transition-colors ${feature.glowClass}`}
-                ></div>
-                <div
-                  className={`mb-6 flex h-12 w-12 items-center justify-center rounded-lg ${feature.iconClass}`}
-                >
-                  <span className="material-symbols-outlined material-symbols-filled" aria-hidden="true">
-                    {feature.icon}
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link className="tapgo-button tapgo-button--ghost" to="/login">
+                  Log in
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                    arrow_forward
                   </span>
-                </div>
-                <h3 className="font-title-md text-title-md mb-3 text-primary">{feature.title}</h3>
-                <p className="font-body-md text-body-md leading-relaxed text-on-surface-variant">
-                  {feature.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section id="how" className="mx-auto w-full max-w-7xl px-6 py-24">
-          <h2 className="mb-4 text-center text-4xl font-bold">How Tap&Go Works</h2>
-          <p className="mb-12 text-center text-gray-600">Getting started is simple and takes only a few seconds.</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 text-center">
-            {steps.map((step) => (
-              <article key={step.title}>
-                <div className="text-5xl">{step.number}</div>
-                <h3 className="mt-3 font-bold">{step.title}</h3>
-                <p>{step.description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section id="why" className="w-full bg-gray-50 py-24">
-          <div className="mx-auto max-w-7xl px-6">
-            <h2 className="mb-12 text-center text-4xl font-bold">Why Choose Tap&Go?</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {benefits.map((benefit) => (
-                <article key={benefit.title} className="rounded-xl bg-white p-6 shadow">
-                  <h3 className="font-bold">{benefit.title}</h3>
-                  <p>{benefit.description}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-16 text-center space-y-4">
-              <h3 className="text-3xl font-bold text-slate-900">Ready to Experience Smarter Travel?</h3>
-              <p className="text-gray-600 max-w-xl mx-auto">
-                Join Tap&amp;Go today and enjoy fast, secure and cashless transportation payments.
-              </p>
-              <div>
-                <Link className="inline-block rounded-lg bg-yellow-400 px-8 py-4 font-bold text-black hover:bg-yellow-300 transition-colors shadow" to="/register">
-                  Register Now
+                </Link>
+                <Link className="tapgo-button tapgo-button--yellow" to="/register">
+                  Register
                 </Link>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Need Help Support CTA Section */}
-        <section className="mx-auto w-full max-w-7xl px-6 py-12">
-          <div className="rounded-3xl bg-neutral-800 p-8 sm:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <h3 className="text-2xl font-bold text-amber-400">Need Help?</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Tap&amp;Go Project Support is available for questions regarding wallets, transactions, account security, and the academic demonstration platform.
+        {/* ── Features: an editorial list ────────────────────── */}
+        <section id="features" className="border-y border-slate-300/70 bg-white">
+          <div className="mx-auto grid w-full max-w-7xl gap-10 px-container-padding py-16 sm:py-24 lg:grid-cols-12 lg:gap-12">
+            <div className="lg:col-span-5">
+              <div className="lg:sticky lg:top-28">
+                <h3 className="tapgo-kicker">Features</h3>
+                <h2 className="mt-4 font-display text-[34px] font-extrabold leading-[1.04] tracking-[-0.03em] text-slate-900 sm:text-[48px]">
+                  Designed for Safe and Seamless Payments
+                </h2>
+                <p className="mt-5 max-w-md text-[17px] leading-relaxed text-slate-600">
+                  Built specifically for taxis and auto-rickshaws, Tap&Go delivers fast
+                  transactions, secure authentication, and an effortless payment experience for every
+                  ride.
+                </p>
+              </div>
+            </div>
+
+            <ol className="divide-y divide-slate-300/70 border-y border-slate-300/70 lg:col-span-7 lg:border-t-0">
+              {features.map((feature) => (
+                <li key={feature.title} className="tapgo-feature grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 py-8 sm:py-10">
+                  <span className="tapgo-feature-icon row-span-2" aria-hidden="true">
+                    <span className="material-symbols-outlined">{feature.icon}</span>
+                  </span>
+                  <h3 className="font-display text-[24px] font-bold tracking-[-0.02em] text-slate-900 sm:text-[28px]">{feature.title}</h3>
+                  <p className="max-w-xl text-[16px] leading-relaxed text-slate-600">{feature.description}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ── How it works: a road with five stops ───────────── */}
+        <section id="how" className="mx-auto w-full max-w-7xl px-container-padding py-16 sm:py-24">
+          <div className="max-w-2xl">
+            <h2 className="font-display text-[34px] font-extrabold leading-[1.04] tracking-[-0.03em] text-slate-900 sm:text-[48px]">How Tap&Go Works</h2>
+            <p className="mt-4 text-[17px] text-slate-600">Getting started is simple and takes only a few seconds.</p>
+          </div>
+
+          <ol className="tapgo-road mt-12 sm:mt-16">
+            {steps.map((step) => (
+              <li key={step.title} className="tapgo-stop">
+                <span className="tapgo-stop-sign">{step.number}</span>
+                <div className="tapgo-stop-text">
+                  <h3 className="font-display text-[19px] font-bold tracking-[-0.01em] text-slate-900">{step.title}</h3>
+                  <p className="mt-1 text-[15px] leading-relaxed text-slate-600">{step.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* ── Why choose: a spec sheet ───────────────────────── */}
+        <section id="why" className="mx-auto w-full max-w-7xl px-container-padding pb-16 sm:pb-24">
+          <h2 className="font-display text-[34px] font-extrabold leading-[1.04] tracking-[-0.03em] text-slate-900 sm:text-[48px]">Why Choose Tap&Go?</h2>
+
+          <div className="tapgo-spec mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {benefits.map((benefit) => (
+              <article key={benefit.title} className="tapgo-spec-cell">
+                <span className="material-symbols-outlined text-[30px] text-slate-900" aria-hidden="true">{benefit.icon}</span>
+                <h3 className="mt-6 font-display text-[21px] font-bold tracking-[-0.015em] text-slate-900">{benefit.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-slate-600">{benefit.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Call to action: a taxi-yellow band ─────────────── */}
+        <section className="bg-yellow-400">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-container-padding py-14 sm:py-20 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <h3 className="font-display text-[34px] font-extrabold leading-[1.02] tracking-[-0.035em] text-slate-900 sm:text-[52px]">Ready to Experience Smarter Travel?</h3>
+              <p className="mt-4 text-[17px] text-[#5e4a10] sm:text-lg">
+                Join Tap&amp;Go today and enjoy fast, secure and cashless transportation payments.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/contact" className="px-5 py-3 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm hover:bg-amber-300 transition-colors">
-                Contact Support
-              </Link>
-              <Link to="/lost-card" className="px-5 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-xs sm:text-sm hover:bg-slate-700 transition-colors">
-                Lost Card Support
+            <div className="flex items-center gap-6">
+              <SpeedLines className="hidden h-7 w-auto text-slate-900 sm:block" />
+              <Link className="tapgo-button tapgo-button--ink" to="/register">
+                Register Now
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Compliance Footer Banner Disclosure */}
-        <section className="w-full bg-slate-100 border-t border-slate-200 py-6 text-center px-4">
-          <p className="text-xs text-slate-600 max-w-4xl mx-auto leading-relaxed">
-            <strong className="text-slate-900">Academic Project Disclosure:</strong> Tap&amp;Go is a student / final-year academic project developed by Moksh Gala,Arham Fofriya and Vansh Gala at SVKM’s Shri Bhagubai Mafatlal Polytechnic. The platform is presented for technological demonstration and evaluation and is not a registered commercial payment institution.
+        {/* Need Help Support CTA Section */}
+        <section className="mx-auto w-full max-w-7xl px-container-padding py-12 sm:py-16">
+          <div className="flex flex-col justify-between gap-6 border-b border-slate-300/70 pb-12 md:flex-row md:items-end">
+            <div className="max-w-2xl space-y-3">
+              <h3 className="font-display text-[28px] font-extrabold tracking-[-0.025em] text-slate-900 sm:text-[34px]">Need Help?</h3>
+              <p className="text-[16px] leading-relaxed text-slate-600">
+                Tap&amp;Go Project Support is available for questions regarding wallets, transactions, account security, and the academic demonstration platform.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/contact" className="tapgo-button tapgo-button--ink">
+                Contact Support
+              </Link>
+              <Link to="/lost-card" className="tapgo-button tapgo-button--alert">
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">credit_card_off</span>
+                Lost Card Support
+              </Link>
+            </div>
+          </div>
+
+          {/* Compliance Footer Banner Disclosure */}
+          <p className="mx-auto mt-8 max-w-4xl text-center text-xs leading-relaxed text-slate-500">
+            <strong className="text-slate-800">Academic Project Disclosure:</strong> Tap&amp;Go is a student / final-year academic project developed by Moksh Gala,Arham Fofriya and Vansh Gala at SVKM’s Shri Bhagubai Mafatlal Polytechnic. The platform is presented for technological demonstration and evaluation and is not a registered commercial payment institution.
           </p>
         </section>
       </main>

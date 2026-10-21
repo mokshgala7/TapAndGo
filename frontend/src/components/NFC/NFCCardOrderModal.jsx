@@ -221,7 +221,7 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
         {/* Step Indicator Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--amber, #d97706)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--amber, #8a6400)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Tap&amp;Go NFC Hardware Card
             </span>
             <h3 style={{ margin: '2px 0 0', fontSize: 20, fontWeight: 900 }}>
@@ -235,8 +235,8 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
             onClick={onClose}
             style={{
               border: 0,
-              background: 'var(--bg, #f8fafc)',
-              color: 'var(--text, #0f172a)',
+              background: 'var(--bg, #fbf9f5)',
+              color: 'var(--text, #1e1b16)',
               borderRadius: '50%',
               width: 32,
               height: 32,
@@ -251,7 +251,7 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
         </div>
 
         {error && (
-          <div style={{ background: '#fde7eb', border: '1px solid #f998a6', color: '#9f1730', padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 700 }}>
+          <div style={{ background: '#fce8e5', border: '1px solid #f1a79d', color: '#a52b23', padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 700 }}>
             ⚠️ {error}
           </div>
         )}
@@ -260,13 +260,13 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
         {step === 1 && (
           <form onSubmit={handleProceedToReview}>
             {/* Card Product Info Box */}
-            <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', color: '#fff', padding: '16px 18px', borderRadius: 14, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: '#fdd34d', color: '#1e1b16', padding: '16px 18px', borderRadius: 14, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <b style={{ fontSize: 16, display: 'block', color: '#fef08a' }}>Physical NFC Smart Card</b>
+                <b style={{ fontSize: 16, display: 'block', color: '#1e1b16' }}>Physical NFC Smart Card</b>
                 <span style={{ fontSize: 12, opacity: 0.9 }}>Cashless transit card linked to your Tap&amp;Go account</span>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <strong style={{ fontSize: 22, color: '#fde047' }}>₹50</strong>
+                <strong style={{ fontSize: 24, color: '#1e1b16', fontFamily: 'var(--tg-font-display)', letterSpacing: '-0.03em' }}>₹50</strong>
                 <small style={{ display: 'block', fontSize: 10, opacity: 0.8 }}>+ delivery charge</small>
               </div>
             </div>
@@ -278,7 +278,7 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
               {user && (
                 <button
                   type="button"
-                  style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'var(--bg, #f8fafc)', border: '1px solid var(--line, #e2e8f0)', cursor: 'pointer', color: 'var(--text)' }}
+                  style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'var(--bg, #fbf9f5)', border: '1px solid var(--line, #eae4da)', cursor: 'pointer', color: 'var(--text)' }}
                   onClick={handleUseExistingDetails}
                 >
                   Use existing details
@@ -420,13 +420,13 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
           <div>
             {/* DEMO MODE Alert Badge */}
             {IS_DEMO && (
-              <div style={{ background: '#FFF3C4', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 16, fontSize: 12, color: '#664d03', fontWeight: 600, leadingHeight: 1.4 }}>
+              <div style={{ background: '#FFF3C4', border: '1px solid #FFE082', borderRadius: 12, padding: '12px 14px', marginBottom: 16, fontSize: 12, color: '#6b4d05', fontWeight: 600, leadingHeight: 1.4 }}>
                 <strong>DEMO MODE:</strong> This NFC card order is simulated for academic demonstration. No real payment will be processed and no physical card will be dispatched from this demonstration environment.
               </div>
             )}
 
             {/* Price Breakdown Card */}
-            <div style={{ background: 'var(--card, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: 14, padding: 18, marginBottom: 16 }}>
+            <div style={{ background: 'var(--card, #fff)', border: '1px solid var(--line, #eae4da)', borderRadius: 14, padding: 18, marginBottom: 16 }}>
               <h4 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>
                 Order Pricing Breakdown
               </h4>
@@ -446,18 +446,18 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0 4px', fontSize: 18, fontWeight: 900, color: 'var(--text)' }}>
                 <span>Total Amount</span>
-                <span style={{ color: '#16a34a' }}>₹{calc.total_amount.toFixed(2)}</span>
+                <span style={{ color: '#177a47' }}>₹{calc.total_amount.toFixed(2)}</span>
               </div>
             </div>
 
             {/* Delivery Address Summary */}
-            <div style={{ background: 'var(--bg, #f8fafc)', border: '1px solid var(--line, #cbd5e1)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+            <div style={{ background: 'var(--bg, #fbf9f5)', border: '1px solid var(--line, #ddd5c8)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <strong style={{ fontSize: 13, color: 'var(--text)' }}>Shipping Address</strong>
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  style={{ border: 0, background: 'transparent', color: '#2563eb', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+                  style={{ border: 0, background: 'transparent', color: '#8a6400', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
                 >
                   Edit Address
                 </button>
@@ -471,10 +471,10 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
             {/* Mandatory Compliance Policy Links */}
             <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 20, textAlign: 'center', lineHeight: 1.6 }}>
               By confirming, you agree to Tap&amp;Go&apos;s{' '}
-              <Link to="/terms" style={{ color: '#2563eb', fontWeight: 700 }}>Terms &amp; Conditions</Link>,{' '}
-              <Link to="/shipping-policy" style={{ color: '#2563eb', fontWeight: 700 }}>Shipping &amp; Delivery Policy</Link>,{' '}
-              <Link to="/refund-policy" style={{ color: '#2563eb', fontWeight: 700 }}>Refund &amp; Cancellation Policy</Link>, and{' '}
-              <Link to="/privacy" style={{ color: '#2563eb', fontWeight: 700 }}>Privacy Policy</Link>.
+              <Link to="/terms" style={{ color: '#8a6400', fontWeight: 700 }}>Terms &amp; Conditions</Link>,{' '}
+              <Link to="/shipping-policy" style={{ color: '#8a6400', fontWeight: 700 }}>Shipping &amp; Delivery Policy</Link>,{' '}
+              <Link to="/refund-policy" style={{ color: '#8a6400', fontWeight: 700 }}>Refund &amp; Cancellation Policy</Link>, and{' '}
+              <Link to="/privacy" style={{ color: '#8a6400', fontWeight: 700 }}>Privacy Policy</Link>.
             </div>
 
             <div className="modal-actions" style={{ display: 'flex', gap: 10 }}>
@@ -504,7 +504,7 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
         {step === 3 && createdOrder && (
           <div>
             <div style={{ textAlign: 'center', padding: '16px 0' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', color: '#15803d', display: 'grid', placeItems: 'center', margin: '0 auto 12px', fontSize: 28, fontWeight: 900 }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#e2f3e8', color: '#177a47', display: 'grid', placeItems: 'center', margin: '0 auto 12px', fontSize: 28, fontWeight: 900 }}>
                 ✓
               </div>
               <h3 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 900, color: 'var(--text)' }}>
@@ -516,12 +516,12 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
             </div>
 
             {/* Academic Disclosure */}
-            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', padding: '12px 14px', borderRadius: 12, marginBottom: 16, fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>
+            <div style={{ background: '#fffbeb', border: '1px solid #ffe89a', color: '#8a6400', padding: '12px 14px', borderRadius: 12, marginBottom: 16, fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>
               <strong>Academic Demonstration Notice:</strong> This is an academic demonstration order. No real payment has been processed and no physical shipment will be initiated from Demo Mode.
             </div>
 
             {/* Summary Details */}
-            <div style={{ background: 'var(--bg, #f8fafc)', border: '1px solid var(--line, #e2e8f0)', borderRadius: 14, padding: 16, marginBottom: 20, fontSize: 13 }}>
+            <div style={{ background: 'var(--bg, #fbf9f5)', border: '1px solid var(--line, #eae4da)', borderRadius: 14, padding: 16, marginBottom: 20, fontSize: 13 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span className="muted">NFC Card Price:</span>
                 <strong>₹{createdOrder.card_price.toFixed(2)}</strong>
@@ -532,13 +532,13 @@ export function NFCCardOrderModal({ user, onClose, onOrderSuccess }) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span className="muted">Payment Status:</span>
-                <span style={{ fontWeight: 800, color: '#8b6400', background: '#fff2c5', padding: '2px 8px', borderRadius: 99, fontSize: 11, textTransform: 'uppercase' }}>
+                <span style={{ fontWeight: 800, color: '#8a6400', background: '#fff2c5', padding: '2px 8px', borderRadius: 99, fontSize: 11, textTransform: 'uppercase' }}>
                   Simulated
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBefore: 6, borderTop: '1px dashed var(--line)', paddingTop: 6, fontSize: 15 }}>
                 <span>Total Amount:</span>
-                <strong style={{ color: '#16a34a' }}>₹{createdOrder.total_amount.toFixed(2)}</strong>
+                <strong style={{ color: '#177a47' }}>₹{createdOrder.total_amount.toFixed(2)}</strong>
               </div>
               <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
                 <span className="muted" style={{ display: 'block', fontSize: 11, textTransform: 'uppercase', fontWeight: 800 }}>Delivery Recipient &amp; Address</span>

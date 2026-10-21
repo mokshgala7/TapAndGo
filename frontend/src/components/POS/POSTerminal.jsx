@@ -153,7 +153,7 @@ export default function POSTerminal({ driver, onClose }) {
       await QRCode.toCanvas(canvas, paymentUrl, {
         width: 176,
         margin: 1,
-        color: { dark: '#0b1420', light: '#ffffff' },
+        color: { dark: '#141210', light: '#ffffff' },
         errorCorrectionLevel: 'M',
       })
       const dataUrl = canvas.toDataURL()
@@ -327,8 +327,8 @@ export default function POSTerminal({ driver, onClose }) {
         <div className="pos-driver-strip">
           <div className="pos-driver-avatar">{driverInitials}</div>
           <span>
-            <strong style={{ color: '#e2e8f0' }}>{driver?.name || 'Driver'}</strong>
-            <span style={{ color: '#475569', marginLeft: 6 }}>· Active Terminal</span>
+            <strong style={{ color: '#1e1b16' }}>{driver?.name || 'Driver'}</strong>
+            <span style={{ color: '#6b6458', marginLeft: 6 }}>· Active Terminal</span>
           </span>
         </div>
 
@@ -448,7 +448,7 @@ export default function POSTerminal({ driver, onClose }) {
                   Generating secure QR…
                 </div>
               ) : qrError ? (
-                <div className="pos-loading" style={{ color: '#f87171' }}>
+                <div className="pos-loading" style={{ color: '#c8372d' }}>
                   ⚠ {qrError}
                   <br />
                   <button
@@ -469,7 +469,7 @@ export default function POSTerminal({ driver, onClose }) {
               {!qrLoading && !qrError && qrRequest && (
                 <>
                   <div className={`pos-countdown ${isUrgent ? 'urgent' : ''}`}
-                    style={{ color: isUrgent ? '#f87171' : '#fdd34d' }}
+                    style={{ color: isUrgent ? '#c8372d' : '#1e1b16' }}
                     aria-label={`${countdown} seconds remaining`}
                   >
                     {fmtCountdown(countdown)}
@@ -498,7 +498,7 @@ export default function POSTerminal({ driver, onClose }) {
           {screen === 'success' && (
             <div className="pos-success-screen">
               <span className="pos-success-icon">✅</span>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#4ade80', marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#177a47', marginBottom: 4 }}>
                 PAYMENT SUCCESSFUL
               </div>
               <div className="pos-success-amount">₹{(successTxn?.amount ?? fareNum).toFixed(2)}</div>

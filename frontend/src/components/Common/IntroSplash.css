@@ -7,7 +7,7 @@
   width: 100vw;
   height: 100vh;
   z-index: 999999;
-  background-color: #060c14;
+  background-color: #141210;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -146,7 +146,7 @@
 }
 
 .tapgo-intro-badge-title span {
-  color: #fbbf24;
+  color: #fdd34d;
 }
 
 /* Audio button */
@@ -201,18 +201,18 @@
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1.5px solid rgba(251, 191, 36, 0.6);
+  border: 1.5px solid rgba(245, 190, 36, 0.6);
   border-radius: 9999px;
   cursor: pointer;
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(251, 191, 36, 0.25);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(245, 190, 36, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tapgo-intro-skip-btn:hover {
-  background: #fbbf24;
+  background: #fdd34d;
   color: #000000;
-  border-color: #fbbf24;
-  box-shadow: 0 0 25px rgba(251, 191, 36, 0.7), 0 6px 20px rgba(0, 0, 0, 0.5);
+  border-color: #fdd34d;
+  box-shadow: 0 0 25px rgba(245, 190, 36, 0.7), 0 6px 20px rgba(0, 0, 0, 0.5);
   transform: translateY(-1px) scale(1.03);
 }
 
@@ -233,8 +233,8 @@
 
 .tapgo-intro-skip-progress-fill {
   height: 100%;
-  background: #fbbf24;
-  box-shadow: 0 0 10px #fbbf24;
+  background: #fdd34d;
+  box-shadow: 0 0 10px #fdd34d;
   transition: width 0.08s linear;
 }
 

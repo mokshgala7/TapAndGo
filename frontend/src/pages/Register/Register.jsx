@@ -178,7 +178,7 @@ function FileUpload({ label, helper, file, onChange, error, preview }) {
             className="absolute inset-0 bg-cover bg-center z-10 transition-transform duration-700 group-hover/upload:scale-105"
             style={{ backgroundImage: `url(${preview})` }}
           >
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover/upload:opacity-100 transition-opacity duration-400 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-darker/60 flex flex-col items-center justify-center opacity-0 group-hover/upload:opacity-100 transition-opacity duration-400 backdrop-blur-sm">
               <span className="text-white text-[0.85rem] font-bold tracking-widest uppercase">Change Photo</span>
             </div>
           </div>
@@ -218,16 +218,16 @@ function ProgressCheck({ active, hidden, label }) {
 function SuggestedPasswordPill({ password }) {
   const [revealed, setRevealed] = useState(false)
   return (
-    <div className="w-full rounded-2xl border border-[#FDD34D]/40 bg-gradient-to-r from-[#FFFCF0] to-[#FFFDF5] p-4 flex items-center gap-3 animate-slide-up shadow-sm">
+    <div className="w-full rounded-2xl border border-[#FDD34D]/60 bg-[#FFFCF0] p-4 flex items-center gap-3 animate-slide-up">
       {/* Icon */}
       <div className="w-9 h-9 rounded-xl bg-brand/15 flex items-center justify-center flex-shrink-0">
-        <svg className="w-4 h-4 text-[#D97706]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="w-4 h-4 text-[#8A6400]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
       </div>
       {/* Label + password */}
       <div className="flex-1 min-w-0">
-        <p className="text-[0.6rem] font-black uppercase tracking-[0.18em] text-[#D97706] mb-0.5">Suggested password</p>
+        <p className="text-[0.6rem] font-black uppercase tracking-[0.18em] text-[#8A6400] mb-0.5">Suggested password</p>
         <p
           className="font-mono text-[0.95rem] font-bold text-gray-800 tracking-widest truncate select-all"
           aria-label={revealed ? `Suggested password: ${password}` : 'Suggested password — click eye to reveal'}
@@ -240,7 +240,7 @@ function SuggestedPasswordPill({ password }) {
         type="button"
         aria-label={revealed ? 'Hide suggested password' : 'Show suggested password'}
         onClick={() => setRevealed((v) => !v)}
-        className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#D97706] hover:bg-brand/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#8A6400] hover:bg-brand/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
       >
         {revealed ? (
           <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -611,22 +611,17 @@ function Register() {
   const strengthText = ['Not Started', 'Weak', 'Medium', 'Strong', 'Very Strong']
 
   return (
-    <div className="auth-page bg-surface text-[#1C1C1E] selection:bg-brand selection:text-darker overflow-x-hidden antialiased">
+    <div className="auth-page bg-surface text-[#1F1D1A] selection:bg-brand selection:text-darker overflow-x-hidden antialiased">
       <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden relative w-full">
         <aside className="desktop-id-wrap lg:w-[45%] lg:h-screen lg:overflow-y-auto hide-scrollbar bg-darker text-white p-0 lg:p-10 flex flex-col items-center z-40 relative">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-            <div className="absolute top-[-15%] left-[-15%] w-[70%] h-[70%] rounded-full bg-brand opacity-[0.08] blur-[140px] animate-ambient"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600 opacity-[0.06] blur-[120px] animate-ambient"></div>
-          </div>
-
-          <div className="glass-panel w-full max-w-xl lg:rounded-[3rem] p-6 lg:p-8 relative z-10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] flex flex-col gap-5 min-h-full lg:min-h-0 lg:my-auto shrink-0">
+          <div className="glass-panel w-full max-w-xl lg:rounded-[2rem] p-6 lg:p-8 relative z-10 flex flex-col gap-5 min-h-full lg:min-h-0 lg:my-auto shrink-0">
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <div className="text-[0.65rem] tracking-[0.25em] text-brand font-black uppercase mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-brand animate-pulse shadow-[0_0_10px_rgba(253,211,77,1)]"></span>
+                  <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
                   Live Preview
                 </div>
-                <h1 className="text-3xl lg:text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-white via-gray-200 to-gray-500 drop-shadow-sm">
+                <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
                   Tap&Go Identity
                 </h1>
                 <div className="flex items-center gap-4 mt-4">
@@ -639,7 +634,7 @@ function Register() {
               <div className="relative w-24 h-24 lg:w-28 lg:h-28 flex items-center justify-center">
                 <svg className="absolute inset-0 w-full h-full transform -rotate-90 drop-shadow-glow" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="8"></circle>
-                  <circle cx="50" cy="50" r="46" fill="none" stroke={progress === 100 ? '#00C853' : '#FDD34D'} strokeWidth="8" strokeDasharray="289" strokeDashoffset={ringOffset} strokeLinecap="round"></circle>
+                  <circle cx="50" cy="50" r="46" fill="none" stroke={progress === 100 ? '#2E9560' : '#FDD34D'} strokeWidth="8" strokeDasharray="289" strokeDashoffset={ringOffset} strokeLinecap="round"></circle>
                 </svg>
                 <div className="text-center">
                   <span className="text-2xl lg:text-3xl font-black text-white block leading-none">{progress}%</span>
@@ -658,7 +653,7 @@ function Register() {
                   )}
                 </div>
                 {profilePhoto && (
-                  <div className="absolute bottom-1 right-1 w-10 h-10 bg-[#00C853] rounded-full border-[3px] border-darker flex items-center justify-center shadow-[0_0_20px_rgba(0,200,83,0.6)] z-20">
+                  <div className="absolute bottom-1 right-1 w-10 h-10 bg-[#2E9560] rounded-full border-[3px] border-darker flex items-center justify-center z-20">
                     <CheckIcon className="w-6 h-6 text-white" />
                   </div>
                 )}
@@ -678,7 +673,7 @@ function Register() {
               </div>
               <div className="glass-card-inner rounded-3xl p-5">
                 <p className="text-[0.65rem] text-gray-400 uppercase tracking-widest mb-3 font-bold flex justify-between items-center">
-                  Govt ID <span className={`px-2 py-0.5 rounded text-[0.6rem] ${valid.aadhaar && valid.pan ? 'text-[#00C853] bg-[#00C853]/10' : 'text-[#FF3B30] bg-[#FF3B30]/10'}`}>{valid.aadhaar && valid.pan ? 'Verified' : 'Pending'}</span>
+                  Govt ID <span className={`px-2 py-0.5 rounded text-[0.6rem] ${valid.aadhaar && valid.pan ? 'text-[#2E9560] bg-[#2E9560]/10' : 'text-[#D6503F] bg-[#D6503F]/10'}`}>{valid.aadhaar && valid.pan ? 'Verified' : 'Pending'}</span>
                 </p>
                 <p className="text-xs font-mono tracking-widest truncate text-gray-500 mb-1.5">{valid.aadhaar ? `XXXX XXXX ${form.aadhaar.slice(-4)}` : form.aadhaar || '-'}</p>
                 <p className="text-xs font-mono tracking-widest truncate text-gray-500 uppercase">{form.pan || '-'}</p>
@@ -734,7 +729,7 @@ function Register() {
               </div>
             </div>
 
-            <div className={`glass-card-inner rounded-3xl p-4 relative h-[90px] shrink-0 flex items-center justify-center overflow-hidden group z-10 transition-all duration-500 border ${signature ? 'bg-white/10 border-[#00C853]/40' : 'border-white/5'}`}>
+            <div className={`glass-card-inner rounded-3xl p-4 relative h-[90px] shrink-0 flex items-center justify-center overflow-hidden group z-10 transition-all duration-500 border ${signature ? 'bg-white/10 border-[#2E9560]/40' : 'border-white/5'}`}>
               <div className="absolute top-4 left-5 right-5 flex justify-between items-center z-10">
                 <p className={`text-[0.6rem] uppercase tracking-widest font-bold ${signature ? 'text-success' : 'text-gray-500'}`}>{signature ? 'Signed Digitally' : 'E-Signature Pending'}</p>
               </div>
@@ -750,9 +745,9 @@ function Register() {
         <main className="form-wrap w-full lg:w-[55%] bg-surface flex flex-col items-center py-12 lg:py-24 px-5 sm:px-10 lg:px-20 min-h-screen lg:h-screen lg:overflow-y-auto relative z-10">
           <div className="w-full max-w-2xl lg:max-w-3xl">
             <div className="mb-14 text-center lg:text-left">
-              <Link to="/" className="inline-flex mb-6 text-sm font-black uppercase tracking-widest text-gray-400 hover:text-darker">Back Home</Link>
+              <Link to="/" className="inline-flex mb-6 text-sm font-black uppercase tracking-widest text-gray-600 underline decoration-brand decoration-2 underline-offset-4 hover:text-darker">Back Home</Link>
               <h2 className="text-4xl lg:text-[3.5rem] font-black text-darker tracking-tighter mb-4 leading-none">Create Account</h2>
-              <p className="text-[#8E8E93] text-base lg:text-lg font-medium tracking-wide">Join the secure cashless ecosystem with Tap&Go.</p>
+              <p className="text-[#6B6458] text-base lg:text-lg font-medium tracking-wide">Join the secure cashless ecosystem with Tap&Go.</p>
             </div>
 
 
@@ -778,11 +773,11 @@ function Register() {
                 <div>
                   <p className="text-xs font-black uppercase tracking-widest text-darker mb-3">Your Profile Photo</p>
                   <label className={`group relative flex items-center gap-5 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                    profilePhoto ? 'border-[#00C853] bg-[#F0FDF4]' : 'border-dashed border-gray-300 bg-gray-50 hover:border-brand hover:bg-[#FFFCF5]'
+                    profilePhoto ? 'border-[#2E9560] bg-[#EEF8F2]' : 'border-dashed border-gray-300 bg-gray-50 hover:border-brand hover:bg-[#FFFCF5]'
                   }`}>
                     <input className="hidden" type="file" accept="image/*" onChange={(e) => handleFile('profilePhoto', e)} />
                     <div className={`w-20 h-20 rounded-full border-4 flex-shrink-0 overflow-hidden flex items-center justify-center transition-all duration-500 ${
-                      profilePhoto ? 'border-[#00C853] shadow-[0_0_20px_rgba(0,200,83,0.3)]' : 'border-gray-200 bg-white'
+                      profilePhoto ? 'border-[#2E9560]' : 'border-gray-200 bg-white'
                     }`} style={{ backgroundImage: profilePhoto ? `url(${profilePhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                       {!profilePhoto && (
                         <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -791,7 +786,7 @@ function Register() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className={`font-bold text-sm mb-1 transition-colors ${profilePhoto ? 'text-[#166534]' : 'text-gray-700'}`}>
+                      <p className={`font-bold text-sm mb-1 transition-colors ${profilePhoto ? 'text-[#12613a]' : 'text-gray-700'}`}>
                         {profilePhoto ? '✓ Photo uploaded — visible in live preview' : 'Click to upload your face photo'}
                       </p>
                       <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">
@@ -799,7 +794,7 @@ function Register() {
                       </p>
                     </div>
                     {profilePhoto && (
-                      <div className="w-9 h-9 bg-[#00C853] rounded-full flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(0,200,83,0.4)]">
+                      <div className="w-9 h-9 bg-[#2E9560] rounded-full flex items-center justify-center flex-shrink-0">
                         <CheckIcon className="w-5 h-5 text-white" />
                       </div>
                     )}
@@ -808,7 +803,7 @@ function Register() {
                 </div>
 
                 <FloatingInput name="name" value={form.name} onChange={updateForm} touched={touched.name} valid={valid.name} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
+                <div className="grid grid-cols-1 gap-7">
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <FloatingInput name="email" type="email" value={form.email} onChange={updateForm} touched={touched.email} valid={valid.email} />
@@ -817,7 +812,7 @@ function Register() {
                   <div>
                     <div className="flex gap-2 items-center">
                       <div className="flex-1">
-                        <FloatingInput name="emailOtp" maxLength={6} value={form.emailOtp} onChange={updateForm} touched={touched.emailOtp} valid={otpVerified} className={`tracking-[0.5em] font-mono font-bold ${otpVerified ? 'text-[#00C853]' : 'text-brand'}`} />
+                        <FloatingInput name="emailOtp" maxLength={6} value={form.emailOtp} onChange={updateForm} touched={touched.emailOtp} valid={otpVerified} className={`tracking-[0.5em] font-mono font-bold ${otpVerified ? 'text-[#2E9560]' : 'text-brand'}`} />
                       </div>
                       <button
                         type="button"
@@ -848,7 +843,7 @@ function Register() {
                         }}
                         className={`h-[60px] px-3 sm:px-5 font-black rounded-xl transition whitespace-nowrap text-xs sm:text-sm tracking-wide border-2 ${
                           otpVerified
-                            ? 'bg-[#00C853] text-white border-[#00C853] cursor-default'
+                            ? 'bg-[#2E9560] text-white border-[#2E9560] cursor-default'
                             : otpSending
                               ? 'bg-gray-200 text-gray-500 border-gray-200 cursor-wait'
                               : otpCooldown > 0
@@ -867,7 +862,7 @@ function Register() {
                     </div>
                     {/* OTP status message */}
                     {otpMessage && (
-                      <p className={`text-xs font-bold mt-2 px-1 ${otpVerified ? 'text-[#00C853]' : otpMessage.startsWith('✓') ? 'text-[#00C853]' : 'text-[#FF3B30]'}`}>
+                      <p className={`text-xs font-bold mt-2 px-1 ${otpVerified ? 'text-[#2E9560]' : otpMessage.startsWith('✓') ? 'text-[#2E9560]' : 'text-[#D6503F]'}`}>
                         {otpVerifying ? '⏳ Verifying code...' : otpMessage}
                       </p>
                     )}
@@ -889,7 +884,7 @@ function Register() {
               </section>
 
               <section className="form-section-card space-y-7 !border-2 !border-brand/30 !bg-[#FFFCF5]">
-                <div className="absolute top-0 right-0 bg-gradient-to-l from-brand to-[#F59E0B] text-darker text-[0.6rem] font-black px-5 py-2 rounded-bl-2xl rounded-tr-[1.25rem] uppercase tracking-widest shadow-md">Mandatory Govt Verification</div>
+                <div className="absolute top-0 right-0 bg-brand text-darker text-[0.6rem] font-black px-5 py-2 rounded-bl-2xl rounded-tr-[1.25rem] uppercase tracking-widest">Mandatory Govt Verification</div>
                 <h3 className="section-title !text-darker">Identity Setup</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
                   <FloatingInput name="aadhaar" maxLength={12} value={form.aadhaar} onChange={updateForm} touched={touched.aadhaar} valid={valid.aadhaar} className="tracking-widest font-mono text-lg" />
@@ -907,7 +902,7 @@ function Register() {
               </section>
 
               <section className={`driver-section ${isDriver ? 'active' : ''}`}>
-                <div className="driver-inner form-section-card space-y-7 !bg-[#F4F4F5] !border-none">
+                <div className="driver-inner form-section-card space-y-7 !bg-[#F3EFE8] !border-none">
                   <div className="absolute top-0 right-0 bg-darker text-brand text-[0.6rem] font-black px-5 py-2 rounded-bl-2xl rounded-tr-[1.5rem] uppercase tracking-widest shadow-md">Professional Driver</div>
                   <h3 className="section-title !text-darker">Vehicle & Documentation</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
@@ -1034,12 +1029,12 @@ function Register() {
 
                   {/* Status messages */}
                   {suggestedPassword && pwSuggestUsedRef.current && !pwSuggestLoading && (
-                    <p className="text-[0.72rem] font-semibold text-[#00c853] tracking-wide text-center animate-slide-up">
+                    <p className="text-[0.72rem] font-semibold text-[#2e9560] tracking-wide text-center animate-slide-up">
                       ✓ Both fields filled — you can still type your own password
                     </p>
                   )}
                   {pwSuggestError && !pwSuggestLoading && (
-                    <p className="text-[0.72rem] font-semibold text-[#FF3B30] tracking-wide text-center">
+                    <p className="text-[0.72rem] font-semibold text-[#D6503F] tracking-wide text-center">
                       Could not generate a suggestion — please enter a password manually
                     </p>
                   )}
@@ -1103,15 +1098,15 @@ function Register() {
         {legalModal && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+            style={{ background: 'rgba(30,27,22,0.5)', backdropFilter: 'blur(6px)' }}
             onClick={() => setLegalModal(null)}
           >
             <div
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"
+              className="bg-white rounded-[24px] border border-darker shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-[#1C1C1E] rounded-t-3xl">
+              <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-[#1F1D1A] rounded-t-3xl">
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-[3px] text-[#FDD34D] mb-1">
                     Tap&amp;Go Legal
@@ -1131,26 +1126,26 @@ function Register() {
                 </button>
               </div>
               {/* Gold bar */}
-              <div style={{ height: 4, background: 'linear-gradient(90deg,#FDD34D,#F59E0B)' }} />
+              <div style={{ height: 4, background: '#FDD34D' }} />
               {/* Scrollable content */}
               <div className="overflow-y-auto px-8 py-6 text-[0.92rem] text-gray-700 leading-relaxed space-y-5 flex-1">
                 {legalModal === 'terms' && (
                   <>
                     <p><strong>Last updated:</strong> August 2026</p>
                     <p>Welcome to <strong>Tap&amp;Go</strong>. By registering an account, you agree to the following terms and conditions in their entirety.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">1. Service Description</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">1. Service Description</h3>
                     <p>Tap&amp;Go is a smart transit payment platform that facilitates cashless fare collection between passengers and registered drivers. The platform operates via NFC/QR-based transactions and digital wallets.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">2. Eligibility</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">2. Eligibility</h3>
                     <p>You must be at least 18 years of age and a resident of India to register. By registering, you confirm that all information provided is accurate and complete.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">3. Account Responsibility</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">3. Account Responsibility</h3>
                     <p>You are solely responsible for maintaining the confidentiality of your login credentials. Tap&amp;Go is not liable for losses arising from unauthorized account access.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">4. Payments & Wallet</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">4. Payments & Wallet</h3>
                     <p>All wallet top-ups and payments are processed through authorized payment gateways. Refunds are subject to our refund policy and may take 5–7 business days.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">5. Prohibited Activities</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">5. Prohibited Activities</h3>
                     <p>You agree not to misuse the platform for fraudulent transactions, unauthorized access, or any activity that violates applicable Indian laws.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">6. Termination</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">6. Termination</h3>
                     <p>Tap&amp;Go reserves the right to suspend or terminate accounts found in violation of these terms without prior notice.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">7. Governing Law</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">7. Governing Law</h3>
                     <p>These terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in Mumbai, Maharashtra.</p>
                   </>
                 )}
@@ -1158,19 +1153,19 @@ function Register() {
                   <>
                     <p><strong>Last updated:</strong> August 2026</p>
                     <p>Your privacy is important to us. This policy explains how Tap&amp;Go collects, uses, and protects your personal information.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">1. Information We Collect</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">1. Information We Collect</h3>
                     <p>We collect your name, email, phone number, Aadhaar number, PAN card, address, profile photo, and uploaded documents for identity verification purposes.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">2. How We Use Your Information</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">2. How We Use Your Information</h3>
                     <p>Your information is used to: verify your identity, process payments, provide customer support, detect fraud, and comply with legal obligations under Indian law.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">3. Data Sharing</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">3. Data Sharing</h3>
                     <p>We do not sell your personal data. We may share data with payment processors, regulatory authorities, and fraud prevention services as required.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">4. Data Security</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">4. Data Security</h3>
                     <p>All data is encrypted in transit (TLS 1.3) and at rest. Passwords are hashed using bcrypt. Sensitive documents are stored on secured servers.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">5. Your Rights</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">5. Your Rights</h3>
                     <p>You have the right to access, update, or request deletion of your personal data. Contact us at tapandgosupport@gmail.com to exercise these rights.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">6. Cookies</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">6. Cookies</h3>
                     <p>We use session cookies for authentication purposes only. We do not use tracking or advertising cookies.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">7. Contact</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">7. Contact</h3>
                     <p>For privacy concerns, contact our Data Protection Officer at <strong>privacy@tapandgo.app</strong>.</p>
                   </>
                 )}
@@ -1178,15 +1173,15 @@ function Register() {
                   <>
                     <p><strong>Last updated:</strong> August 2026</p>
                     <p>By drawing your digital signature on this registration form, you agree to the following Electronic Signature Agreement.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">1. Legal Validity</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">1. Legal Validity</h3>
                     <p>Your digital signature drawn on this form constitutes a legally binding electronic signature under the <strong>Information Technology Act, 2000</strong> of India and has the same legal effect as a handwritten signature.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">2. Consent to Electronic Records</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">2. Consent to Electronic Records</h3>
                     <p>You consent to receive all agreements, notices, disclosures, and communications electronically. You confirm you have the ability to access and retain electronic records.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">3. Signature Binding</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">3. Signature Binding</h3>
                     <p>By submitting this form with your drawn signature, you acknowledge that you have read and agree to all terms, and that this signature binds you to the Tap&amp;Go Terms &amp; Conditions and Privacy Policy.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">4. Signature Storage</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">4. Signature Storage</h3>
                     <p>Your signature image is stored securely on our servers and linked to your account for audit and compliance purposes. It will not be shared with third parties except as required by law.</p>
-                    <h3 className="font-black text-[#1C1C1E] text-base">5. Right to Withdraw</h3>
+                    <h3 className="font-black text-[#1F1D1A] text-base">5. Right to Withdraw</h3>
                     <p>You may withdraw your consent to electronic signatures by contacting support@tapandgo.app. However, withdrawal will require account deactivation as e-signature is mandatory for platform compliance.</p>
                   </>
                 )}
@@ -1196,7 +1191,7 @@ function Register() {
                 <button
                   type="button"
                   onClick={() => setLegalModal(null)}
-                  className="w-full py-4 rounded-2xl font-black text-sm tracking-widest uppercase bg-[#1C1C1E] text-white hover:bg-[#FDD34D] hover:text-[#1C1C1E] transition-all duration-300"
+                  className="w-full py-4 rounded-2xl font-black text-sm tracking-widest uppercase bg-[#1F1D1A] text-white hover:bg-[#FDD34D] hover:text-[#1F1D1A] transition-all duration-300"
                 >
                   I Understand — Close
                 </button>

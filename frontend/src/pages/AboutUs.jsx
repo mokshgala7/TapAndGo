@@ -5,31 +5,30 @@ import { Link } from '../routes/navigation.jsx'
 
 export function AboutUs() {
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col font-sans selection:bg-amber-200 selection:text-slate-900 antialiased">
+    <div className="bg-surface min-h-screen text-slate-900 flex flex-col font-sans antialiased">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8 sm:space-y-12">
         {/* Header */}
-        <section className="bg-gradient-to-br from-zinc-900 via-zinc-700 to-zinc-900 rounded-3xl p-6 sm:p-10 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <section className="relative border-b-2 border-slate-900 pb-10 pt-2 sm:pb-14">
           <div className="relative z-10 space-y-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider">
+            <div className="tg-kicker">
               <span className="material-symbols-outlined text-sm">info</span>
               About Tap&amp;Go
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+            <h1 className="max-w-4xl font-display text-[40px] font-extrabold leading-[1.02] tracking-[-0.04em] text-slate-900 sm:text-[60px]">
               Smart Cashless Payment Platform for Mobility
             </h1>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+            <p className="max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
               Tap&amp;Go is a modern digital payment system designed specifically for taxis and auto-rickshaws, creating an effortless cashless ecosystem connecting passengers and drivers.
             </p>
           </div>
         </section>
 
         {/* Core Vision & Overview */}
-        <section className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center text-lg">
+        <section className="bg-white rounded-[22px] p-6 sm:p-9 border border-[#dcd4c6] space-y-4">
+          <h2 className="font-display text-[26px] sm:text-[30px] font-extrabold text-slate-900 tracking-[-0.03em] flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-yellow-400 text-slate-900 flex items-center justify-center text-[22px]">
               🎯
             </span>
             Platform Overview
@@ -41,15 +40,15 @@ export function AboutUs() {
 
         {/* Core Capabilities Grid */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg">
+          <h2 className="font-display text-[26px] sm:text-[30px] font-extrabold text-slate-900 tracking-[-0.03em] flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-yellow-400 text-slate-900 flex items-center justify-center text-[22px]">
               ⚡
             </span>
             Core Capabilities
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+            <div className="p-6 rounded-[18px] bg-white border border-[#dcd4c6] space-y-2">
               <span className="material-symbols-outlined text-slate-900 text-2xl">account_balance_wallet</span>
               <h3 className="font-bold text-slate-900 text-lg">Passenger &amp; Driver Wallets</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -57,7 +56,7 @@ export function AboutUs() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+            <div className="p-6 rounded-[18px] bg-white border border-[#dcd4c6] space-y-2">
               <span className="material-symbols-outlined text-slate-900 text-2xl">contactless</span>
               <h3 className="font-bold text-slate-900 text-lg">NFC &amp; QR Interaction</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -65,7 +64,7 @@ export function AboutUs() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+            <div className="p-6 rounded-[18px] bg-white border border-[#dcd4c6] space-y-2">
               <span className="material-symbols-outlined text-slate-900 text-2xl">hardware</span>
               <h3 className="font-bold text-slate-900 text-lg">Smart POS Terminal</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -73,7 +72,7 @@ export function AboutUs() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+            <div className="p-6 rounded-[18px] bg-white border border-[#dcd4c6] space-y-2">
               <span className="material-symbols-outlined text-slate-900 text-2xl">security</span>
               <h3 className="font-bold text-slate-900 text-lg">AI Fraud Detection</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -81,7 +80,7 @@ export function AboutUs() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+            <div className="p-6 rounded-[18px] bg-white border border-[#dcd4c6] space-y-2">
               <span className="material-symbols-outlined text-slate-900 text-2xl">lock_reset</span>
               <h3 className="font-bold text-slate-900 text-lg">OTP Security Verification</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -89,7 +88,7 @@ export function AboutUs() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+            <div className="p-6 rounded-[18px] bg-white border border-[#dcd4c6] space-y-2">
               <span className="material-symbols-outlined text-slate-900 text-2xl">dns</span>
               <h3 className="font-bold text-slate-900 text-lg">FastAPI Backend</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -100,9 +99,9 @@ export function AboutUs() {
         </section>
 
         {/* Project Background */}
-        <section className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg">
+        <section className="bg-white rounded-[22px] p-6 sm:p-9 border border-[#dcd4c6] space-y-4">
+          <h2 className="font-display text-[26px] sm:text-[30px] font-extrabold text-slate-900 tracking-[-0.03em] flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-yellow-400 text-slate-900 flex items-center justify-center text-[22px]">
               🎓
             </span>
             Project Background
@@ -119,16 +118,16 @@ export function AboutUs() {
         </section>
 
         {/* Navigation Quick Actions */}
-        <section className="bg-zinc-700 rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+        <section className="bg-yellow-400 rounded-[24px] p-7 sm:p-10 text-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-bold text-amber-400">Explore Tap&amp;Go Features</h3>
-            <p className="text-xs sm:text-sm text-slate-300">Learn how wallet funding, payments, and driver withdrawals operate on Tap&amp;Go.</p>
+            <h3 className="font-display text-[24px] sm:text-[28px] font-extrabold tracking-[-0.025em] text-slate-900">Explore Tap&amp;Go Features</h3>
+            <p className="text-sm sm:text-base text-[#5e4a10]">Learn how wallet funding, payments, and driver withdrawals operate on Tap&amp;Go.</p>
           </div>
           <div className="flex gap-3">
-            <Link to="/payments" className="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm hover:bg-amber-300 transition-colors">
+            <Link to="/payments" className="px-5 py-2.5 rounded-[12px] bg-slate-900 text-white font-bold text-xs sm:text-sm hover:bg-slate-800 transition-colors">
               How Payments Work
             </Link>
-            <Link to="/contact" className="px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-xs sm:text-sm hover:bg-slate-700 transition-colors">
+            <Link to="/contact" className="px-5 py-2.5 rounded-[12px] bg-white text-slate-900 font-bold text-xs sm:text-sm hover:bg-yellow-50 transition-colors">
               Contact Support
             </Link>
           </div>

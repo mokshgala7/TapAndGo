@@ -12,7 +12,7 @@
   padding-bottom: 96px;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Hanken Grotesk', sans-serif;
+  font-family: var(--tg-font-ui);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
@@ -37,16 +37,18 @@
   border: 0;
   background: none;
   color: var(--text);
+  font-family: var(--tg-font-display);
   font-size: 27px;
   font-weight: 800;
+  letter-spacing: -0.03em;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
 }
 
 .driver .logo span {
-  color: var(--yellow);
+  color: var(--tg-yellow-deep, #f5be24);
 }
 
 .driver .user {
@@ -55,7 +57,7 @@
   width: 39px;
   height: 39px;
   background: var(--yellow);
-  color: #172431;
+  color: #22201b;
   border-radius: 50%;
   font-weight: 800;
 }
@@ -69,12 +71,19 @@
 }
 
 .driver h1 {
-  font-size: 34px;
+  font-family: var(--tg-font-display);
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
   margin: 3px 0;
 }
 
 .driver h2 {
-  font-size: 22px;
+  font-family: var(--tg-font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-size: 24px;
   margin: 34px 0 13px;
 }
 
@@ -110,7 +119,7 @@
 }
 
 .driver nav .active {
-  color: #966b00;
+  color: #8a6400;
   font-weight: 800;
 }
 
@@ -142,7 +151,6 @@
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(16, 34, 51, 0.05);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -170,19 +178,21 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(253, 211, 77, 0.18);
-  color: #966b00;
+  background: var(--yellow);
+  color: #1e1b16;
   font-size: 18px;
   flex-shrink: 0;
 }
 
 .tapgo-dark .kpi-card .kpi-icon {
-  background: rgba(253, 211, 77, 0.14);
-  color: var(--yellow);
+  background: var(--yellow);
+  color: #1e1b16;
 }
 
 .kpi-card .kpi-value {
-  font-size: 28px;
+  font-family: var(--tg-font-display);
+  letter-spacing: -0.03em;
+  font-size: 30px;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -201,11 +211,11 @@
 }
 
 .kpi-trend.up {
-  color: #1f9d55;
+  color: #177a47;
 }
 
 .kpi-trend.down {
-  color: #c0392b;
+  color: #c8372d;
 }
 
 .kpi-card .kpi-action {
@@ -217,7 +227,6 @@
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(16, 34, 51, 0.05);
   padding: 22px;
   margin: 10px 0 24px;
 }
@@ -240,7 +249,6 @@
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(16, 34, 51, 0.05);
   padding: 16px 20px;
   margin: 10px 0;
 }
@@ -252,7 +260,7 @@
 }
 
 .review-stars {
-  color: #d99a00;
+  color: #d9a110;
   font-weight: 800;
   font-size: 14px;
 }
@@ -279,7 +287,6 @@
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(16, 34, 51, 0.05);
   padding: 14px 16px;
   display: grid;
   gap: 5px;
@@ -327,13 +334,13 @@
 }
 
 .field-tag.readonly {
-  color: #6a5300;
+  color: #6b4d05;
   background: rgba(253, 211, 77, 0.25);
 }
 
 .field-tag.editable {
-  color: #1f9d55;
-  background: rgba(31, 157, 85, 0.12);
+  color: #177a47;
+  background: rgba(23, 122, 71, 0.12);
 }
 
 .tapgo-dark .field-tag.readonly {
@@ -346,7 +353,7 @@
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: rgba(6, 12, 20, 0.55);
+  background: rgba(20, 18, 16, 0.55);
   display: flex;
   align-items: flex-end;
   justify-content: center;

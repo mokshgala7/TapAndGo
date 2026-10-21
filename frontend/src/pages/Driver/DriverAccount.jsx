@@ -93,7 +93,7 @@ function DocCard({ title, path, type = 'Document', userName, onPreview }) {
                   objectFit: 'cover',
                   border: '1px solid var(--line)',
                   flexShrink: 0,
-                  background: '#f3f4f6',
+                  background: '#f0ece4',
                 }}
               />
             ) : (
@@ -102,7 +102,7 @@ function DocCard({ title, path, type = 'Document', userName, onPreview }) {
                   width: 44,
                   height: 44,
                   borderRadius: 8,
-                  background: '#f3f4f6',
+                  background: '#f0ece4',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -500,17 +500,17 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
 
       <div style={{ marginTop: 10 }}>
         {user?.phone_request_status === 'requested' ? (
-          <p className="muted" style={{ fontWeight: 700, color: '#d97706', margin: '6px 0 0' }}>
+          <p className="muted" style={{ fontWeight: 700, color: '#8a6400', margin: '6px 0 0' }}>
             ⏳ Phone number change request submitted to Admin. Awaiting authorization.
           </p>
         ) : user?.phone_request_status === 'approved' ? (
-          <p style={{ fontWeight: 700, color: '#1f9d55', margin: '6px 0 0' }}>
+          <p style={{ fontWeight: 700, color: '#177a47', margin: '6px 0 0' }}>
             ✅ Admin approval granted! Click &quot;Edit details&quot; above to change your phone number.
           </p>
         ) : (
           <div>
             {user?.phone_request_status === 'rejected' && (
-              <p style={{ fontWeight: 700, color: '#9f1730', margin: '6px 0 6px' }}>
+              <p style={{ fontWeight: 700, color: '#a52b23', margin: '6px 0 6px' }}>
                 ❌ Your previous phone change request was rejected by Admin.
               </p>
             )}
@@ -558,27 +558,26 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
               padding: '8px 16px',
               fontSize: 13,
               fontWeight: 800,
-              color: '#0f172a',
-              background: 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)',
+              color: '#1e1b16',
+              background: '#FDD34D',
               border: 'none',
               borderRadius: 10,
               cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
             }}
             onClick={() => openModal?.('bank')}
           >
             Add Bank Details
           </button>
         ) : isBankApproved ? (
-          <span className="field-tag editable" style={{ background: '#dff4e8', color: '#1f9d55' }}>
+          <span className="field-tag editable" style={{ background: '#e2f3e8', color: '#177a47' }}>
             Admin Approval Granted
           </span>
         ) : isBankPending ? (
-          <span className="field-tag readonly" style={{ background: '#FFF3C4', color: '#906500' }}>
+          <span className="field-tag readonly" style={{ background: '#FFF3C4', color: '#8a6400' }}>
             Request Pending Admin Review
           </span>
         ) : user?.bank_request_status === 'rejected' ? (
-          <span className="field-tag readonly" style={{ background: '#fde7eb', color: '#9f1730' }}>
+          <span className="field-tag readonly" style={{ background: '#fce8e5', color: '#a52b23' }}>
             Request Rejected
           </span>
         ) : (
@@ -685,7 +684,7 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
       </div>
 
       {bankError && (
-        <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#fde7eb', color: '#9f1730', fontSize: 13, fontWeight: 600 }}>
+        <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: '#fce8e5', color: '#a52b23', fontSize: 13, fontWeight: 600 }}>
           ⚠️ {bankError}
         </div>
       )}
@@ -693,12 +692,12 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
       {hasBank && (
         <div style={{ marginTop: 12 }}>
           {isBankPending ? (
-            <p className="muted" style={{ fontWeight: 700, color: '#d97706', margin: 0 }}>
+            <p className="muted" style={{ fontWeight: 700, color: '#8a6400', margin: 0 }}>
               ⏳ Bank change request pending admin approval
             </p>
           ) : isBankApproved ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-              <p style={{ fontWeight: 700, color: '#1f9d55', margin: 0 }}>
+              <p style={{ fontWeight: 700, color: '#177a47', margin: 0 }}>
                 ✓ Admin approval granted
               </p>
               <div>
@@ -723,7 +722,7 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
           ) : (
             <div>
               {user?.bank_request_status === 'rejected' && (
-                <p style={{ fontWeight: 700, color: '#9f1730', marginBottom: 6 }}>
+                <p style={{ fontWeight: 700, color: '#a52b23', marginBottom: 6 }}>
                   ❌ Your previous bank edit request was rejected by Admin.
                 </p>
               )}
@@ -753,17 +752,17 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
 
       <div style={{ marginTop: 12 }}>
         {user?.doc_request_status === 'requested' ? (
-          <p className="muted" style={{ fontWeight: 700, color: '#d97706' }}>
+          <p className="muted" style={{ fontWeight: 700, color: '#8a6400' }}>
             ⏳ Document re-upload request submitted to Admin. Awaiting authorization.
           </p>
         ) : user?.doc_request_status === 'approved' ? (
           <div>
-            <p style={{ fontWeight: 700, color: '#1f9d55', marginBottom: 8 }}>
+            <p style={{ fontWeight: 700, color: '#177a47', marginBottom: 8 }}>
               ✅ Admin approval granted! You can now upload replacement documents.
             </p>
             <button
               className="secondary-btn"
-              style={{ color: '#0f172a', background: 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)', border: 'none', fontWeight: 700, borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}
+              style={{ color: '#1e1b16', background: '#FDD34D', border: 'none', fontWeight: 700, borderRadius: 8, padding: '8px 16px', cursor: 'pointer' }}
               onClick={() => setShowDocUploadModal(true)}
             >
               Upload Replacement Document
@@ -772,7 +771,7 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
         ) : (
           <div>
             {user?.doc_request_status === 'rejected' && (
-              <p style={{ fontWeight: 700, color: '#9f1730', marginBottom: 6 }}>
+              <p style={{ fontWeight: 700, color: '#a52b23', marginBottom: 6 }}>
                 ❌ Your previous document edit request was rejected by Admin.
               </p>
             )}

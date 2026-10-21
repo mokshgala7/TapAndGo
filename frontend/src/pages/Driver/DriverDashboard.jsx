@@ -107,7 +107,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
             </span>
           </div>
           <span className="kpi-value">{inr(earnings.today)}</span>
-          <span className="kpi-sub" style={{ color: 'var(--yellow)', fontWeight: 700 }}>
+          <span className="kpi-sub" style={{ color: 'var(--accent)', fontWeight: 700 }}>
             {todayTrips.length} trips today &rarr;
           </span>
         </div>
@@ -126,7 +126,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
             </span>
           </div>
           <span className="kpi-value">{inr(earnings.week)}</span>
-          <span className="kpi-sub" style={{ color: 'var(--yellow)', fontWeight: 700 }}>
+          <span className="kpi-sub" style={{ color: 'var(--accent)', fontWeight: 700 }}>
             Last 7 days ({weekTrips.length} trips) &rarr;
           </span>
         </div>
@@ -145,7 +145,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
             </span>
           </div>
           <span className="kpi-value">{inr(earnings.month)}</span>
-          <span className="kpi-sub" style={{ color: 'var(--yellow)', fontWeight: 700 }}>
+          <span className="kpi-sub" style={{ color: 'var(--accent)', fontWeight: 700 }}>
             Last 30 days ({monthTrips.length} trips) &rarr;
           </span>
         </div>
@@ -214,7 +214,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
             </span>
           </div>
           <span className="kpi-value">{rating || '4.8'}</span>
-          <span className="kpi-sub" style={{ color: 'var(--yellow)', fontWeight: 700 }}>
+          <span className="kpi-sub" style={{ color: 'var(--accent)', fontWeight: 700 }}>
             {reviews.length} passenger reviews &rarr;
           </span>
         </div>
@@ -227,12 +227,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
         {!hasValidBankDetails(user) && (
           <button
             className="secondary-btn"
-            style={{
-              color: '#0f172a',
-              background: 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)',
-              border: 'none',
-              fontWeight: 800,
-            }}
+            style={{ color: 'var(--text)', background: 'var(--card)', border: '1px solid var(--line)' }}
             onClick={() => openModal('bank')}
           >
             Add Bank Details
@@ -254,8 +249,9 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
         <div
           className="bank-alert-card"
           style={{
-            background: 'linear-gradient(135deg, rgba(253, 211, 77, 0.14) 0%, rgba(245, 158, 11, 0.08) 100%)',
-            border: '1px solid rgba(245, 158, 11, 0.45)',
+            background: 'var(--card)',
+            border: '1px solid var(--line)',
+            borderLeft: '6px solid var(--yellow)',
             borderRadius: 16,
             padding: '16px 20px',
             marginTop: 16,
@@ -264,16 +260,15 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
             justifyContent: 'space-between',
             gap: 14,
             flexWrap: 'wrap',
-            boxShadow: '0 4px 16px rgba(245, 158, 11, 0.08)',
           }}
         >
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ fontSize: 18 }}>🏦</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Payout Account Setup</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Payout Account Setup</span>
             </div>
-            <h3 style={{ margin: '2px 0 4px', fontSize: 16, fontWeight: 800, color: 'var(--text, #0f172a)' }}>Add Your Bank Details</h3>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--muted, #64748b)' }}>
+            <h3 style={{ margin: '2px 0 4px', fontSize: 16, fontWeight: 800, color: 'var(--text, #1e1b16)' }}>Add Your Bank Details</h3>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--muted, #6b6458)' }}>
               Link your bank account and UPI ID to withdraw your fare earnings.
             </p>
           </div>
@@ -282,16 +277,15 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
             className="primary"
             onClick={() => openModal('bank')}
             style={{
-              background: 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)',
-              color: '#0f172a',
-              fontWeight: 900,
+              background: '#FDD34D',
+              color: '#1e1b16',
+              fontWeight: 800,
               fontSize: 13,
               padding: '12px 22px',
               borderRadius: 12,
               border: 'none',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
@@ -314,11 +308,11 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <b style={{ fontSize: 15, color: 'var(--text)' }}>{t.type}</b>
-                <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 8, padding: '2px 8px', borderRadius: 99, background: t.is_credit ? '#dff4e8' : '#fde7eb', color: t.is_credit ? '#1f9d55' : '#9f1730' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 8, padding: '2px 8px', borderRadius: 99, background: t.is_credit ? '#e2f3e8' : '#fce8e5', color: t.is_credit ? '#177a47' : '#a52b23' }}>
                   {t.is_credit ? 'CREDIT' : 'DEBIT'}
                 </span>
               </div>
-              <strong className={t.is_credit ? 'credit' : ''} style={{ fontSize: 16, color: t.is_credit ? '#1f9d55' : 'var(--text)' }}>
+              <strong className={t.is_credit ? 'credit' : ''} style={{ fontSize: 16, color: t.is_credit ? '#177a47' : 'var(--text)' }}>
                 {t.is_credit ? '+' : '-'}₹{t.amount.toFixed(2)}
               </strong>
             </div>
@@ -414,7 +408,7 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
           <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 12, marginBottom: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span>Total Earned:</span>
-              <b style={{ color: 'var(--yellow)', fontSize: 18 }}>{inr(earnings.lifetime)}</b>
+              <b style={{ color: 'var(--accent)', fontSize: 18 }}>{inr(earnings.lifetime)}</b>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span>Completed Trips:</span>

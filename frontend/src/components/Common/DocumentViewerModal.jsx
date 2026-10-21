@@ -41,7 +41,7 @@ export default function DocumentViewerModal({ doc, onClose }) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(6, 12, 20, 0.75)',
+        background: 'rgba(20, 18, 16, 0.75)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
         display: 'flex',
@@ -55,15 +55,15 @@ export default function DocumentViewerModal({ doc, onClose }) {
       <div
         style={{
           background: 'var(--card, #ffffff)',
-          color: 'var(--text, #102233)',
+          color: 'var(--text, #1e1b16)',
           borderRadius: 20,
-          border: '1px solid var(--line, #e1e7ec)',
+          border: '1px solid var(--line, #e7e1d6)',
           width: '100%',
           maxWidth: 520,
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          boxShadow: '0 20px 60px rgba(30,27,22,0.25)',
           overflow: 'hidden',
           boxSizing: 'border-box',
         }}
@@ -76,7 +76,7 @@ export default function DocumentViewerModal({ doc, onClose }) {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '16px 20px',
-            borderBottom: '1px solid var(--line, #e1e7ec)',
+            borderBottom: '1px solid var(--line, #e7e1d6)',
             gap: 12,
           }}
         >
@@ -85,11 +85,11 @@ export default function DocumentViewerModal({ doc, onClose }) {
               <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {doc.title || 'Verification Document'}
               </h3>
-              <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 99, background: 'rgba(31, 157, 85, 0.12)', color: '#1f9d55' }}>
+              <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 99, background: 'rgba(23, 122, 71, 0.12)', color: '#177a47' }}>
                 Verified
               </span>
             </div>
-            <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--muted, #687782)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--muted, #6b6458)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {displayName}
             </p>
           </div>
@@ -99,8 +99,8 @@ export default function DocumentViewerModal({ doc, onClose }) {
             aria-label="Close document preview"
             style={{
               border: 0,
-              background: 'var(--bg, #f5f7fa)',
-              color: 'var(--text, #102233)',
+              background: 'var(--bg, #f6f3ee)',
+              color: 'var(--text, #1e1b16)',
               borderRadius: '50%',
               width: 44,
               height: 44,
@@ -126,7 +126,7 @@ export default function DocumentViewerModal({ doc, onClose }) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--bg, #f5f7fa)',
+            background: 'var(--bg, #f6f3ee)',
             minHeight: 220,
             maxHeight: '65vh',
             boxSizing: 'border-box',
@@ -141,18 +141,18 @@ export default function DocumentViewerModal({ doc, onClose }) {
                 maxHeight: '58vh',
                 objectFit: 'contain',
                 borderRadius: 12,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                boxShadow: '0 4px 16px rgba(30,27,22,0.08)',
                 background: '#fff',
               }}
             />
           ) : isPdf ? (
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center', padding: '24px 12px' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(239, 68, 68, 0.12)', display: 'grid', placeItems: 'center', color: '#dc2626', fontSize: 28 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(239, 68, 68, 0.12)', display: 'grid', placeItems: 'center', color: '#c8372d', fontSize: 28 }}>
                 📄
               </div>
               <div>
                 <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, wordBreak: 'break-word' }}>{displayName}</strong>
-                <span style={{ fontSize: 12, color: 'var(--muted, #687782)' }}>PDF Document · Click below to view full document</span>
+                <span style={{ fontSize: 12, color: 'var(--muted, #6b6458)' }}>PDF Document · Click below to view full document</span>
               </div>
               <a
                 href={fileUrl}
@@ -167,11 +167,11 @@ export default function DocumentViewerModal({ doc, onClose }) {
                   padding: '10px 20px',
                   borderRadius: 12,
                   background: 'var(--yellow, #fdd34d)',
-                  color: '#17222f',
+                  color: '#22201b',
                   fontWeight: 800,
                   fontSize: 14,
                   textDecoration: 'none',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  boxShadow: '0 2px 8px rgba(30,27,22,0.08)',
                 }}
               >
                 Open PDF Document ↗
@@ -179,12 +179,12 @@ export default function DocumentViewerModal({ doc, onClose }) {
             </div>
           ) : (
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center', padding: '24px 12px' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(59, 130, 246, 0.12)', display: 'grid', placeItems: 'center', color: '#2563eb', fontSize: 28 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(59, 130, 246, 0.12)', display: 'grid', placeItems: 'center', color: '#8a6400', fontSize: 28 }}>
                 📎
               </div>
               <div>
                 <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, wordBreak: 'break-word' }}>{displayName}</strong>
-                <span style={{ fontSize: 12, color: 'var(--muted, #687782)' }}>Verification Document</span>
+                <span style={{ fontSize: 12, color: 'var(--muted, #6b6458)' }}>Verification Document</span>
               </div>
               <a
                 href={fileUrl}
@@ -199,7 +199,7 @@ export default function DocumentViewerModal({ doc, onClose }) {
                   padding: '10px 20px',
                   borderRadius: 12,
                   background: 'var(--yellow, #fdd34d)',
-                  color: '#17222f',
+                  color: '#22201b',
                   fontWeight: 800,
                   fontSize: 14,
                   textDecoration: 'none',
@@ -215,7 +215,7 @@ export default function DocumentViewerModal({ doc, onClose }) {
         <div
           style={{
             padding: '12px 16px',
-            borderTop: '1px solid var(--line, #e1e7ec)',
+            borderTop: '1px solid var(--line, #e7e1d6)',
             display: 'flex',
             gap: 10,
             justifyContent: 'flex-end',
@@ -234,9 +234,9 @@ export default function DocumentViewerModal({ doc, onClose }) {
                 minHeight: 44,
                 padding: '0 16px',
                 borderRadius: 10,
-                border: '1px solid var(--line, #e1e7ec)',
+                border: '1px solid var(--line, #e7e1d6)',
                 background: 'var(--card, #fff)',
-                color: 'var(--text, #102233)',
+                color: 'var(--text, #1e1b16)',
                 fontSize: 13,
                 fontWeight: 700,
                 textDecoration: 'none',
@@ -261,7 +261,7 @@ export default function DocumentViewerModal({ doc, onClose }) {
               borderRadius: 10,
               border: 0,
               background: 'var(--yellow, #fdd34d)',
-              color: '#17222f',
+              color: '#22201b',
               fontSize: 13,
               fontWeight: 800,
               cursor: 'pointer',

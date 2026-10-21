@@ -1,18 +1,20 @@
 :root {
-  --bg: #f5f7fa;
+  --bg: #f6f3ee;
   --card: #fff;
-  --text: #102233;
-  --muted: #687782;
-  --line: #e1e7ec;
+  --text: #1e1b16;
+  --muted: #6b6458;
+  --line: #e7e1d6;
   --yellow: #fdd34d;
+  --accent: #8a6400;
 }
 
 .tapgo-dark {
-  --bg: #0b1420;
-  --card: #141f2c;
-  --text: #f5f7fa;
-  --muted: #b4c0c9;
-  --line: #253544;
+  --bg: #141210;
+  --card: #22201b;
+  --text: #f6f3ee;
+  --muted: #c4bbad;
+  --line: #2e2a25;
+  --accent: #fdd34d;
 }
 
 .passenger {
@@ -21,7 +23,7 @@
   padding-bottom: 96px;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Hanken Grotesk', sans-serif;
+  font-family: var(--tg-font-ui);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
@@ -47,16 +49,18 @@
   border: 0;
   background: none;
   color: var(--text);
+  font-family: var(--tg-font-display);
   font-size: 27px;
   font-weight: 800;
+  letter-spacing: -0.03em;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
 }
 
 .passenger .logo span {
-  color: var(--yellow);
+  color: var(--tg-yellow-deep, #f5be24);
 }
 
 .passenger .user,
@@ -66,7 +70,7 @@
   width: 39px;
   height: 39px;
   background: var(--yellow);
-  color: #172431;
+  color: #22201b;
   border-radius: 50%;
   font-weight: 800;
 }
@@ -96,17 +100,24 @@
 }
 
 .passenger h1 {
-  font-size: 34px;
+  font-family: var(--tg-font-display);
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
   margin: 3px 0;
 }
 
 .passenger h2 {
-  font-size: 22px;
+  font-family: var(--tg-font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-size: 24px;
   margin: 34px 0 13px;
 }
 
 .eyebrow {
-  color: #9b7000;
+  color: #8a6400;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -137,30 +148,39 @@
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(16, 34, 51, 0.05);
 }
 
 .payments button {
-  min-height: 170px;
-  padding: 22px;
+  min-height: 150px;
+  padding: 22px 24px;
   text-align: left;
   color: var(--text);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.payments button:hover {
+  border-color: var(--text);
 }
 
 .payments button:active {
   transform: scale(0.98);
 }
 
+/* the icon sits in a taxi-yellow badge */
 .payments span {
-  display: block;
-  color: #986f00;
-  font-size: 36px;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--yellow);
+  color: #1e1b16;
+  font-size: 28px;
 }
 
 .tapgo-dark .payments span {
-  color: var(--yellow);
+  color: #1e1b16;
 }
 
 .payments b,
@@ -170,7 +190,14 @@
 }
 
 .payments b {
-  font-size: 20px;
+  font-family: var(--tg-font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.payments b + small {
+  margin-top: 6px;
 }
 
 .payments small,
@@ -200,7 +227,7 @@
 }
 
 .ride strong.credit {
-  color: #1f9d55;
+  color: #177a47;
 }
 
 /* ---------- Wallet ---------- */
@@ -222,8 +249,8 @@
   gap: 7px;
   padding: 28px;
   border-radius: 22px;
-  color: #fff;
-  background: linear-gradient(135deg, #132d45, #315b7d);
+  color: #1e1b16;
+  background: var(--yellow);
 }
 
 .wallet > span {
@@ -232,11 +259,32 @@
 }
 
 .wallet span span {
-  color: var(--yellow);
+  color: #8a6400;
+}
+
+.wallet small {
+  color: #5e4a10;
+  font-weight: 700;
 }
 
 .wallet > b {
-  font-size: 38px;
+  font-family: var(--tg-font-display);
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.wallet .primary {
+  background: #1e1b16;
+  color: var(--yellow);
+  font-weight: 800;
+}
+
+.wallet .secondary-btn {
+  border-color: transparent;
+  background: #ffffff;
+  color: #1e1b16;
+  font-weight: 800;
 }
 
 .wallet-actions {
@@ -250,7 +298,7 @@
   border-radius: 12px;
   padding: 14px 20px;
   background: var(--yellow);
-  color: #17222f;
+  color: #22201b;
   font-weight: 800;
   cursor: pointer;
   transition: opacity 0.15s ease;
@@ -260,12 +308,20 @@
   opacity: 0.85;
 }
 
+/* `.passenger button { font: inherit }` would otherwise reset these to regular weight */
+.passenger .primary,
+.passenger .secondary-btn,
+.driver .primary,
+.driver .secondary-btn {
+  font-weight: 800;
+}
+
 .secondary-btn {
   border: 1px solid var(--line, rgba(0, 0, 0, 0.15));
   border-radius: 12px;
   padding: 14px 20px;
   background: var(--card, #ffffff);
-  color: var(--text, #17222f);
+  color: var(--text, #22201b);
   font-weight: 800;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -314,7 +370,7 @@
 
 .tapgo-dark .ranges button.active {
   background: var(--yellow);
-  color: #17222f;
+  color: #22201b;
   border-color: var(--yellow);
 }
 
@@ -385,7 +441,7 @@
   padding: 3px;
   border: 0;
   border-radius: 20px;
-  background: #c9d1d6;
+  background: #d6cfc2;
   cursor: pointer;
 }
 
@@ -399,7 +455,7 @@
 }
 
 .switch.on {
-  background: #e0b01e;
+  background: #d9a110;
 }
 
 .switch.on i {
@@ -413,7 +469,7 @@
   border-radius: 14px;
   padding: 16px;
   background: #fdf1f0;
-  color: #b3261e;
+  color: #a52b23;
   font-weight: 800;
   font-size: 16px;
   cursor: pointer;
@@ -426,7 +482,7 @@
 .tapgo-dark .signout {
   background: rgba(179, 38, 30, 0.15);
   border-color: rgba(179, 38, 30, 0.4);
-  color: #ff8a80;
+  color: #e5776a;
 }
 
 /* ---------- QR Scanner ---------- */
@@ -447,7 +503,7 @@
   overflow: hidden;
   margin: 20px 0;
   border-radius: 24px;
-  background: #07141f;
+  background: #141210;
 }
 
 .camera video {
@@ -469,7 +525,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  color: #cfd8e0;
+  color: #ddd5c8;
   text-align: center;
   padding: 20px;
   font-size: 14px;
@@ -483,9 +539,9 @@
   transform: translateX(-50%);
   padding: 13px 18px;
   border-radius: 12px;
-  background: #18703f;
+  background: #12613a;
   color: #fff;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 28px rgba(30, 27, 22, 0.22);
   z-index: 50;
   font-weight: 600;
 }
@@ -523,7 +579,7 @@
 }
 
 .passenger nav .active {
-  color: #966b00;
+  color: #8a6400;
   font-weight: 800;
 }
 
@@ -661,7 +717,6 @@
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(16, 34, 51, 0.05);
   padding: 14px 16px;
   display: grid;
   gap: 5px;
@@ -712,13 +767,13 @@
 }
 
 .field-tag.readonly {
-  color: #6a5300;
+  color: #6b4d05;
   background: rgba(253, 211, 77, 0.25);
 }
 
 .field-tag.editable {
-  color: #1f9d55;
-  background: rgba(31, 157, 85, 0.12);
+  color: #177a47;
+  background: rgba(23, 122, 71, 0.12);
 }
 
 .tapgo-dark .field-tag.readonly {

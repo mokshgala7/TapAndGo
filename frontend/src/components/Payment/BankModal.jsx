@@ -132,7 +132,7 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(0,0,0,0.55)',
+        background: 'rgba(30,27,22,0.5)',
         backdropFilter: 'blur(6px)',
         padding: 16,
       }}
@@ -143,29 +143,29 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
           width: '100%',
           maxWidth: 460,
           background: 'var(--card, #ffffff)',
-          color: 'var(--text, #111827)',
+          color: 'var(--text, #1e1b16)',
           borderRadius: 20,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          boxShadow: '0 24px 60px rgba(30,27,22,0.25)',
           overflow: 'hidden',
-          border: '1px solid var(--line, #e5e7eb)',
+          border: '1px solid var(--line, #eae4da)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
           style={{
-            background: 'var(--header-bg, #0b1420)',
+            background: '#fdd34d',
             padding: '18px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            borderBottom: '1px solid rgba(30,27,22,0.12)',
           }}
         >
           <div>
-            <div style={{ color: '#fdd34d', fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ color: '#1e1b16', fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
               <span>🏦</span> {title}
             </div>
-            <div style={{ color: '#8a9bad', fontSize: 12, marginTop: 2 }}>
+            <div style={{ color: '#5e4a10', fontSize: 12, marginTop: 2 }}>
               {isLocked ? 'Locked for security · Admin approval required' : 'Add your permanent bank payout details'}
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
             style={{
               background: 'none',
               border: 'none',
-              color: '#8a9bad',
+              color: '#1e1b16',
               fontSize: 22,
               cursor: 'pointer',
               lineHeight: 1,
@@ -187,7 +187,7 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
         </div>
 
         <div style={{ padding: '20px 22px 24px', maxHeight: '75vh', overflowY: 'auto' }}>
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--muted, #6b7280)', lineHeight: 1.5 }}>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--muted, #6b6458)', lineHeight: 1.5 }}>
             {isLocked
               ? '🔒 Your bank details are permanently stored and locked. Request admin approval to unlock and edit your details.'
               : user?.bank_request_status === 'approved'
@@ -200,8 +200,8 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
               style={{
                 padding: '10px 14px',
                 borderRadius: 10,
-                background: '#fde7eb',
-                color: '#9f1730',
+                background: '#fce8e5',
+                color: '#a52b23',
                 fontSize: 13,
                 fontWeight: 600,
                 marginBottom: 14,
@@ -213,8 +213,8 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
 
           <form onSubmit={isLocked ? handleRequestAccess : handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #374151)', marginBottom: 6 }}>
-                Account Holder Name <span style={{ color: '#dc2626' }}>*</span>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #3a352e)', marginBottom: 6 }}>
+                Account Holder Name <span style={{ color: '#c8372d' }}>*</span>
               </label>
               <input
                 value={form.accountHolder}
@@ -226,9 +226,9 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
                   width: '100%',
                   padding: '10px 12px',
                   borderRadius: 10,
-                  border: '1px solid var(--line, #d1d5db)',
-                  background: isLocked ? 'var(--card, #f3f4f6)' : 'var(--bg, #f9fafb)',
-                  color: 'var(--text, #111827)',
+                  border: '1px solid var(--line, #e0d9cc)',
+                  background: isLocked ? 'var(--card, #f0ece4)' : 'var(--bg, #fbf9f5)',
+                  color: 'var(--text, #1e1b16)',
                   fontSize: 14,
                   boxSizing: 'border-box',
                   opacity: isLocked ? 0.75 : 1,
@@ -237,8 +237,8 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #374151)', marginBottom: 6 }}>
-                Bank Account Number <span style={{ color: '#dc2626' }}>*</span>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #3a352e)', marginBottom: 6 }}>
+                Bank Account Number <span style={{ color: '#c8372d' }}>*</span>
               </label>
               <input
                 value={form.accountNumber}
@@ -251,9 +251,9 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
                   width: '100%',
                   padding: '10px 12px',
                   borderRadius: 10,
-                  border: '1px solid var(--line, #d1d5db)',
-                  background: isLocked ? 'var(--card, #f3f4f6)' : 'var(--bg, #f9fafb)',
-                  color: 'var(--text, #111827)',
+                  border: '1px solid var(--line, #e0d9cc)',
+                  background: isLocked ? 'var(--card, #f0ece4)' : 'var(--bg, #fbf9f5)',
+                  color: 'var(--text, #1e1b16)',
                   fontSize: 14,
                   boxSizing: 'border-box',
                   opacity: isLocked ? 0.75 : 1,
@@ -262,8 +262,8 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #374151)', marginBottom: 6 }}>
-                IFSC Code <span style={{ color: '#dc2626' }}>*</span>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #3a352e)', marginBottom: 6 }}>
+                IFSC Code <span style={{ color: '#c8372d' }}>*</span>
               </label>
               <input
                 value={form.ifsc}
@@ -275,9 +275,9 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
                   width: '100%',
                   padding: '10px 12px',
                   borderRadius: 10,
-                  border: '1px solid var(--line, #d1d5db)',
-                  background: isLocked ? 'var(--card, #f3f4f6)' : 'var(--bg, #f9fafb)',
-                  color: 'var(--text, #111827)',
+                  border: '1px solid var(--line, #e0d9cc)',
+                  background: isLocked ? 'var(--card, #f0ece4)' : 'var(--bg, #fbf9f5)',
+                  color: 'var(--text, #1e1b16)',
                   fontSize: 14,
                   textTransform: 'uppercase',
                   boxSizing: 'border-box',
@@ -287,8 +287,8 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #374151)', marginBottom: 6 }}>
-                UPI ID <span style={{ color: '#dc2626' }}>*</span>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text, #3a352e)', marginBottom: 6 }}>
+                UPI ID <span style={{ color: '#c8372d' }}>*</span>
               </label>
               <input
                 value={form.upiId}
@@ -300,9 +300,9 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
                   width: '100%',
                   padding: '10px 12px',
                   borderRadius: 10,
-                  border: '1px solid var(--line, #d1d5db)',
-                  background: isLocked ? 'var(--card, #f3f4f6)' : 'var(--bg, #f9fafb)',
-                  color: 'var(--text, #111827)',
+                  border: '1px solid var(--line, #e0d9cc)',
+                  background: isLocked ? 'var(--card, #f0ece4)' : 'var(--bg, #fbf9f5)',
+                  color: 'var(--text, #1e1b16)',
                   fontSize: 14,
                   boxSizing: 'border-box',
                   opacity: isLocked ? 0.75 : 1,
@@ -313,7 +313,7 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
               {isLocked ? (
                 user?.bank_request_status === 'requested' ? (
-                  <p style={{ fontWeight: 700, color: '#d97706', textAlign: 'center', margin: 0, fontSize: 13 }}>
+                  <p style={{ fontWeight: 700, color: '#8a6400', textAlign: 'center', margin: 0, fontSize: 13 }}>
                     ⏳ Admin access request pending approval.
                   </p>
                 ) : (
@@ -324,8 +324,8 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
                       width: '100%',
                       padding: '12px 16px',
                       borderRadius: 12,
-                      background: '#f59e0b',
-                      color: '#111',
+                      background: '#f5be24',
+                      color: '#141210',
                       border: 'none',
                       fontWeight: 800,
                       fontSize: 14,
@@ -345,19 +345,16 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
                     padding: '12px 16px',
                     borderRadius: 12,
                     background: (form.accountHolder?.trim() && form.accountNumber?.trim() && form.ifsc?.trim() && form.upiId?.trim())
-                      ? 'linear-gradient(135deg, #FDD34D 0%, #F59E0B 100%)'
-                      : 'var(--line, #e2e8f0)',
+                      ? '#FDD34D'
+                      : 'var(--line, #eae4da)',
                     color: (form.accountHolder?.trim() && form.accountNumber?.trim() && form.ifsc?.trim() && form.upiId?.trim())
-                      ? '#0f172a'
-                      : 'var(--muted, #94a3b8)',
+                      ? '#1e1b16'
+                      : 'var(--muted, #a39b8e)',
                     border: 'none',
                     fontWeight: 800,
                     fontSize: 14,
                     cursor: saving || !form.accountHolder?.trim() || !form.accountNumber?.trim() || !form.ifsc?.trim() || !form.upiId?.trim() ? 'not-allowed' : 'pointer',
                     opacity: saving ? 0.7 : 1,
-                    boxShadow: (form.accountHolder?.trim() && form.accountNumber?.trim() && form.ifsc?.trim() && form.upiId?.trim())
-                      ? '0 4px 14px rgba(245, 158, 11, 0.3)'
-                      : 'none',
                     transition: 'all 0.2s ease',
                   }}
                 >
@@ -373,8 +370,8 @@ export default function BankModal({ onClose, flash, title = 'Bank Account & Payo
                   padding: '10px 16px',
                   borderRadius: 12,
                   background: 'transparent',
-                  color: 'var(--text, #374151)',
-                  border: '1px solid var(--line, #d1d5db)',
+                  color: 'var(--text, #3a352e)',
+                  border: '1px solid var(--line, #e0d9cc)',
                   fontWeight: 600,
                   fontSize: 13,
                   cursor: 'pointer',
