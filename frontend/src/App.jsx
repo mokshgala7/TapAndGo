@@ -1,23 +1,8 @@
-import { useEffect, useState } from 'react'
 import AppRoutes from './routes/AppRoutes.jsx'
-import IntroSplash from './components/Common/IntroSplash.jsx'
 
+// The site opens straight on the page; the intro video no longer plays on load or reload.
 function App() {
-  const [showIntro, setShowIntro] = useState(true)
-
-  useEffect(() => {
-    // Listen for custom event to allow replaying the intro video from anywhere
-    const handleReplay = () => setShowIntro(true)
-    window.addEventListener('tapgo:replay-intro', handleReplay)
-    return () => window.removeEventListener('tapgo:replay-intro', handleReplay)
-  }, [])
-
-  return (
-    <>
-      {showIntro && <IntroSplash onFinish={() => setShowIntro(false)} />}
-      <AppRoutes />
-    </>
-  )
+  return <AppRoutes />
 }
 
 export default App
