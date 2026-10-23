@@ -74,6 +74,26 @@ const errorText = {
   dl: 'Invalid format.',
 }
 
+// Downscale uploaded images so the review data fits in sessionStorage (~5MB quota)
+function compressImage(dataUrl, maxSize = 1600, quality = 0.8) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.onerror = () => resolve(dataUrl)
+    img.src = dataUrl
+  })
+}
+
 function CheckIcon({ className = 'w-6 h-6' }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -510,20 +530,22 @@ function Register() {
         return
       }
       const reader = new FileReader()
-      reader.onload = (e) => setProfilePhoto(e.target.result)
+      reader.onload = async (e) => setProfilePhoto(await compressImage(e.target.result))
       reader.readAsDataURL(file)
       return
     }
 
     // All other docs (idDoc, rc, dlUpload, insurance) stored in files state
     const reader = new FileReader()
-    reader.onload = (loadEvent) => {
+    reader.onload = async (loadEvent) => {
+      const isImage = file.type.startsWith('image/')
+      const dataUrl = isImage ? await compressImage(loadEvent.target.result) : loadEvent.target.result
       setFiles((current) => ({
         ...current,
         [key]: {
           name: file.name,
-          type: file.type || 'application/octet-stream',
-          dataUrl: loadEvent.target.result,
+          type: isImage ? 'image/jpeg' : file.type || 'application/octet-stream',
+          dataUrl,
         },
       }))
     }
@@ -590,18 +612,23 @@ function Register() {
     setLoading(true)
     window.setTimeout(() => {
       setLoading(false)
-      sessionStorage.setItem(
-        'registrationReviewData',
-        JSON.stringify({
-          form,
-          profilePhoto,
-          signature,
-          files,
-          sessionId,
-          isDriver,
-          otpVerified,
-        }),
-      )
+      try {
+        sessionStorage.setItem(
+          'registrationReviewData',
+          JSON.stringify({
+            form,
+            profilePhoto,
+            signature,
+            files,
+            sessionId,
+            isDriver,
+            otpVerified,
+          }),
+        )
+      } catch {
+        alert('Your uploaded files are too large to review. Please upload smaller photos or documents (under 2MB each) and try again.')
+        return
+      }
       navigate('/registration-review')
     }, 900)
   }
