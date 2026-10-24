@@ -385,7 +385,7 @@ function NFCSecurityModal({ user, onClose }) {
 function Passenger() {
   const navigate = useNavigate()
   const { user, logout, saveProfileToDb, requestAdminAccess, refreshProfile } = useAuth()
-  const { balance, isFrozen, transactions, addMoney, withdraw, payFare, refreshWallet } = useWallet()
+  const { balance, isFrozen, transactions, loading: walletLoading, error: walletError, addMoney, withdraw, payFare, refreshWallet } = useWallet()
 
   const [tab, setTabState] = useState(() => {
     return sessionStorage.getItem('passenger_tab') || 'home'
@@ -741,6 +741,23 @@ function Passenger() {
     .slice(0, 2)
     .toUpperCase()
 
+  // Loading / error / empty states for transaction lists. Loading only shows before the
+  // first result so background refreshes after a payment do not flash the list away.
+  const txnStatus = (emptyText) => {
+    if (walletError && !transactions.length) {
+      return (
+        <div role="alert" style={{ padding: '12px 14px', margin: '12px 0', background: '#fdf2f0', border: '1px solid #f1a79d', borderRadius: 10, color: '#c8372d', fontSize: 13 }}>
+          {walletError}{' '}
+          <button type="button" onClick={() => refreshWallet()} style={{ marginLeft: 6, background: 'none', border: 'none', color: '#c8372d', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}>Retry</button>
+        </div>
+      )
+    }
+    if (walletLoading && !transactions.length) {
+      return <p className="muted" role="status" style={{ padding: '20px 0', textAlign: 'center' }}>Loading transactions…</p>
+    }
+    return <p className="muted" style={{ padding: '20px 0', textAlign: 'center' }}>{emptyText}</p>
+  }
+
   const renderTxnRow = (t) => {
     const isCredit = t.raw ? t.raw.is_credit : (t.is_credit !== undefined ? t.is_credit : t.fare < 0)
     const typeText = t.raw ? t.raw.type : (t.type || (isCredit ? 'Deposit' : 'Trip Payment'))
@@ -758,6 +775,11 @@ function Passenger() {
             <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 8, padding: '2px 8px', borderRadius: 99, background: isCredit ? '#e2f3e8' : '#fce8e5', color: isCredit ? '#177a47' : '#a52b23' }}>
               {isCredit ? 'CREDIT' : 'DEBIT'}
             </span>
+            {t.raw && t.raw.is_synthetic && (
+              <span title="Simulated demo record. No money moved." style={{ fontSize: 11, fontWeight: 700, marginLeft: 6, padding: '2px 8px', borderRadius: 99, background: '#ece9fb', color: '#4b3fa6' }}>
+                DEMO
+              </span>
+            )}
           </div>
           <strong className={isCredit ? 'credit' : ''} style={{ fontSize: 16, color: isCredit ? '#177a47' : 'var(--text)' }}>
             {isCredit ? '+' : '-'}₹{Math.abs(t.amount || t.fare).toFixed(2)}
@@ -1005,7 +1027,7 @@ function Passenger() {
       {transactions.length > 0 ? (
         transactions.slice(0, 5).map(renderTxnRow)
       ) : (
-        <p className="muted" style={{ padding: '20px 0', textAlign: 'center' }}>No transactions yet.</p>
+        txnStatus('No transactions yet.')
       )}
     </>
   )
@@ -1044,7 +1066,7 @@ function Passenger() {
           <Pager paged={activityPages} />
         </>
       ) : (
-        <p className="muted">No transactions in this range yet.</p>
+        txnStatus(transactions.length ? 'No transactions in this range yet.' : 'No transactions yet.')
       )}
     </>
   )
@@ -1237,7 +1259,7 @@ function Passenger() {
       </div>
 
       <h2>Recent transactions</h2>
-      {recentTxns.map(renderTxnRow)}
+      {recentTxns.length ? recentTxns.map(renderTxnRow) : txnStatus('No transactions yet.')}
     </>
   )
 

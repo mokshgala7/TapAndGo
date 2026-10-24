@@ -29,6 +29,7 @@ from app.models import (
 )
 from app.utils.security import hash_password, verify_password
 from app.utils.storage_service import get_signed_url
+from app.routes.wallet import demo_driver_name, is_demo_row
 
 router = APIRouter(prefix="/api/admin", tags=["Administration"])
 
@@ -283,14 +284,17 @@ def logout(
 
 @router.get("/dashboard")
 def dashboard(admin: Admin = Depends(current_admin), db: Session = Depends(get_db)):
-    count = lambda *criteria: db.query(func.count(User.id)).filter(*criteria).scalar() or 0
-    transaction_count = db.query(func.count(Transaction.id)).scalar() or 0
+    # Synthetic demo data (scripts/seed_driver_demo_history.py) must never count as real activity.
+    real_user = ~User.email.like("%@demo.tapgo.invalid")
+    real_txn = or_(Transaction.payment_source.is_(None), Transaction.payment_source != "demo_seed")
+    count = lambda *criteria: db.query(func.count(User.id)).filter(real_user, *criteria).scalar() or 0
+    transaction_count = db.query(func.count(Transaction.id)).filter(real_txn).scalar() or 0
     today_transactions = db.query(func.count(Transaction.id)).filter(
-        func.date(Transaction.created_at) == datetime.utcnow().date()
+        real_txn, func.date(Transaction.created_at) == datetime.utcnow().date()
     ).scalar() or 0
     wallet_balance = db.query(func.coalesce(func.sum(Wallet.balance), 0)).scalar() or 0
     revenue = db.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
-        Transaction.status == "completed"
+        real_txn, Transaction.status == "completed"
     ).scalar() or 0
     return {
         "total_drivers": count(User.account_type == "driver"),
@@ -386,9 +390,11 @@ def transaction_rows(rows, db: Session):
     user_ids = {value for row in rows for value in (row.passenger_id, row.driver_id) if value}
     people = {person.id: person.name for person in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
     return [{
-        "id": row.id, "reference": row.reference, "passenger": people.get(row.passenger_id),
-        "driver": people.get(row.driver_id), "amount": float(row.amount), "payment_method": row.payment_method,
+        "id": row.id, "reference": row.reference, "passenger_id": row.passenger_id, "passenger": people.get(row.passenger_id),
+        "driver": people.get(row.driver_id) or demo_driver_name(row), "amount": float(row.amount),
+        "transaction_type": row.transaction_type, "description": row.description, "payment_method": row.payment_method,
         "status": row.status, "otp_verified": row.otp_verified, "fraud_status": row.fraud_status,
+        "is_demo": is_demo_row(row),
         "created_at": row.created_at.isoformat() if row.created_at else None,
     } for row in rows]
 
@@ -396,9 +402,12 @@ def transaction_rows(rows, db: Session):
 @router.get("/transactions")
 def transactions(
     search: str = "", status: Optional[str] = None, payment_method: Optional[str] = None,
+    passenger_id: Optional[int] = None,
     page: int = 1, page_size: int = 20, admin: Admin = Depends(current_admin), db: Session = Depends(get_db),
 ):
     query = db.query(Transaction)
+    if passenger_id is not None:
+        query = query.filter(Transaction.passenger_id == passenger_id)
     if search.strip():
         query = query.filter(Transaction.reference.ilike(f"%{search.strip()}%"))
     if status:
@@ -406,7 +415,7 @@ def transactions(
     if payment_method:
         query = query.filter(Transaction.payment_method == payment_method)
     total = query.count()
-    rows = query.order_by(Transaction.created_at.desc()).offset((max(page, 1) - 1) * min(page_size, 100)).limit(min(page_size, 100)).all()
+    rows = query.order_by(Transaction.created_at.desc(), Transaction.id.desc()).offset((max(page, 1) - 1) * min(page_size, 100)).limit(min(page_size, 100)).all()
     return {"items": transaction_rows(rows, db), "total": total, "page": page, "page_size": min(page_size, 100)}
 
 
@@ -414,9 +423,9 @@ def transactions(
 def export_transactions(admin: Admin = Depends(current_admin), db: Session = Depends(get_db)):
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Transaction ID", "Passenger", "Driver", "Amount", "Method", "Status", "Date"])
+    writer.writerow(["Transaction ID", "Passenger", "Driver", "Amount", "Type", "Method", "Status", "Demo", "Date"])
     for row in transaction_rows(db.query(Transaction).order_by(Transaction.created_at.desc()).all(), db):
-        writer.writerow([row["reference"], row["passenger"] or "", row["driver"] or "", row["amount"], row["payment_method"], row["status"], row["created_at"]])
+        writer.writerow([row["reference"], row["passenger"] or "", row["driver"] or "", row["amount"], row["transaction_type"] or "", row["payment_method"], row["status"], "yes" if row["is_demo"] else "no", row["created_at"]])
     return Response(output.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=tapgo-transactions.csv"})
 
 

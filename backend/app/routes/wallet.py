@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 import json
 import math
 import os
+import re
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional
@@ -116,6 +117,23 @@ def get_or_create_wallet(user_id: int, db: Session, for_update: bool = False) ->
     return wallet
 
 
+DEMO_SOURCE = "demo_seed"
+_DEMO_DRIVER_RE = re.compile(r"paid to (.+?) \(demo driver\)")
+
+
+def is_demo_row(t) -> bool:
+    """Synthetic demo history written by the scripts in backend/scripts (payment_source='demo_seed')."""
+    return t.payment_source == DEMO_SOURCE
+
+
+def demo_driver_name(t) -> Optional[str]:
+    """Demo ride rows have no driver account; the fictional driver's name lives in the description."""
+    if not is_demo_row(t) or t.driver_id or not t.description:
+        return None
+    m = _DEMO_DRIVER_RE.search(t.description)
+    return m.group(1) if m else None
+
+
 @router.get("/{user_id}")
 def get_user_wallet(user_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user_id != current_user.id:
@@ -191,9 +209,11 @@ def get_user_transactions(user_id: int, current_user: User = Depends(get_current
             else:
                 is_credit = False
                 change = abs(amount_dec)
-                d_name = user_map.get(t.driver_id, f"Driver #{t.driver_id}" if t.driver_id else "Driver")
+                d_name = user_map.get(t.driver_id) or demo_driver_name(t) or (f"Driver #{t.driver_id}" if t.driver_id else "Driver")
                 type_label = "Ride Payment"
                 description = f"₹{float(change):.2f} paid to {d_name}"
+                if is_demo_row(t):
+                    description += " (demo)"
         elif t.driver_id == user_id:
             if t.payment_method == "bank_transfer" or t.transaction_type == "withdrawal":
                 is_credit = False
@@ -234,9 +254,10 @@ def get_user_transactions(user_id: int, current_user: User = Depends(get_current
             "timestamp": int(t.created_at.timestamp() * 1000) if t.created_at else 0,
             "passenger_id": t.passenger_id,
             "driver_id": t.driver_id,
-            "driver": user_map.get(t.driver_id, "Driver"),
+            "driver": user_map.get(t.driver_id) or demo_driver_name(t) or "Driver",
             "passenger": user_map.get(t.passenger_id, "Passenger"),
             "transaction_type": t.transaction_type,
+            "is_synthetic": is_demo_row(t),
         })
 
     formatted_txns.reverse()

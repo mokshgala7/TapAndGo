@@ -37,28 +37,39 @@ export function WalletProvider({ children }) {
         fetch(`${API_BASE}/api/wallet/${user.id}`, { headers: authHeaders() }),
         fetch(`${API_BASE}/api/wallet/${user.id}/transactions`, { headers: authHeaders() }),
       ])
-      const wData = await wRes.json()
-      const tData = await tRes.json()
+      const wData = await wRes.json().catch(() => ({}))
+      const tData = await tRes.json().catch(() => ({}))
 
       if (wRes.ok && wData.success && wData.wallet) {
         setBalance(wData.wallet.balance)
         setIsFrozen(Boolean(wData.wallet.is_frozen))
       }
       if (tRes.ok && tData.success && Array.isArray(tData.transactions)) {
-        // Format transactions for frontend consistency
-        const formatted = tData.transactions.map((t) => ({
-          id: t.reference || `TXN-${t.id}`,
-          driver: t.driver_id ? `Driver #${t.driver_id}` : t.payment_method === 'bank_transfer' ? 'Withdrawal to Bank' : t.payment_method === 'razorpay' ? 'Razorpay Top-up' : 'Wallet Top-up',
-          vehicleType: t.payment_method === 'bank_transfer' ? 'withdraw' : 'topup',
-          vehicleNumber: null,
-          fare: t.is_credit ? -t.amount : t.amount,
-          route: t.payment_method === 'bank_transfer' ? 'Bank Transfer' : t.payment_method === 'razorpay' ? 'Razorpay Gateway' : 'Ride payment',
-          method: t.payment_method,
-          timestamp: t.timestamp || Date.now(),
-          status: t.status,
-          raw: t,
-        }))
+        // Keep the backend's labels: it knows the transaction type and the driver's name.
+        const formatted = tData.transactions.map((t) => {
+          const kind = t.transaction_type === 'ride_payment' || t.type === 'Ride Payment' || t.type === 'Ride Payment Received' ? 'ride'
+            : t.transaction_type === 'withdrawal' || t.payment_method === 'BANK_TRANSFER' ? 'withdraw'
+            : 'topup'
+          return {
+            id: t.reference || `TXN-${t.id}`,
+            driver: kind === 'ride' ? (t.driver || 'Driver') : kind === 'withdraw' ? 'Withdrawal to Bank' : t.type || 'Wallet Top-up',
+            vehicleType: kind,
+            vehicleNumber: null,
+            fare: t.is_credit ? -t.amount : t.amount,
+            route: kind === 'ride' ? 'Ride payment' : kind === 'withdraw' ? 'Bank Transfer' : t.type || 'Wallet Top-up',
+            method: t.payment_method,
+            timestamp: t.timestamp || Date.now(),
+            status: t.status,
+            isDemo: Boolean(t.is_synthetic),
+            raw: t,
+          }
+        })
         setTransactions(formatted)
+      } else {
+        // Do not show stale or empty history as if it were real: surface the failure.
+        setError(tRes.status === 401 || tRes.status === 403
+          ? 'Your session has expired. Please log in again to see your transactions.'
+          : (tData && tData.detail) || 'Could not load your transactions. Please try again.')
       }
     } catch (err) {
       setError('Could not sync wallet with database.')

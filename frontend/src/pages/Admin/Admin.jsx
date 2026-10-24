@@ -47,6 +47,7 @@ const resourceConfig = {
   wallets: ['Wallet Management', '/wallets'], fraud: ['Fraud Management', '/fraud-alerts'], logs: ['Activity Logs', '/activity-logs'],
 }
 
+const TXN_PAGE_SIZE = 25
 const number = (value) => new Intl.NumberFormat('en-IN').format(value || 0)
 const money = (value) => `₹${new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0)}`
 const date = (value) => value ? new Date(value).toLocaleString() : '—'
@@ -127,9 +128,21 @@ function UserModal({ data, adminId, onClose, onAction, onSaved }) {
 function SimpleResource({ adminId, kind }) {
   const config = resourceConfig[kind] || ['Operational Records', '/activity-logs']
   const [result, setResult] = useState({ items: [] }); const [error, setError] = useState(''); const [search, setSearch] = useState(''); const [loading, setLoading] = useState(true)
+  // Transactions are paged server-side and can be narrowed to one passenger.
+  const [page, setPage] = useState(1); const [passengerId, setPassengerId] = useState(''); const [passengerFilter, setPassengerFilter] = useState('')
+  const isTxn = kind === 'transactions'
   const load = () => {
     setLoading(true)
-    adminRequest(`${config[1]}${search && ['documents', 'transactions', 'wallets'].includes(kind) ? `?search=${encodeURIComponent(search)}` : ''}`, adminId)
+    setError('')
+    const params = new URLSearchParams()
+    if (search && ['documents', 'transactions', 'wallets'].includes(kind)) params.set('search', search)
+    if (isTxn) {
+      params.set('page', String(page))
+      params.set('page_size', String(TXN_PAGE_SIZE))
+      if (passengerFilter) params.set('passenger_id', passengerFilter)
+    }
+    const qs = params.toString()
+    adminRequest(`${config[1]}${qs ? `?${qs}` : ''}`, adminId)
       .then((data) => {
         setResult(data && typeof data === 'object' ? data : { items: [] })
         setLoading(false)
@@ -139,11 +152,13 @@ function SimpleResource({ adminId, kind }) {
         setLoading(false)
       })
   }
-  useEffect(() => { load() }, [adminId, kind, search])
+  useEffect(() => { load() }, [adminId, kind, search, page, passengerFilter])
+  const applyPassenger = () => { const v = passengerId.trim(); if (v && !/^\d+$/.test(v)) { setError('Passenger ID must be a number.'); return } setPage(1); setPassengerFilter(v) }
+  const pageCount = isTxn ? Math.max(1, Math.ceil((result.total || 0) / TXN_PAGE_SIZE)) : 1
   const act = async (id, path, body) => { try { await adminRequest(path, adminId, { method: 'POST', body: JSON.stringify(body) }); load() } catch (err) { setError(err.message) } }
   const exportCsv = async () => { try { const response = await fetch(`${API_BASE}/api/admin/transactions/export`, { headers: adminAuthHeaders() }); if (!response.ok) throw new Error('Could not export transactions.'); const blob = await response.blob(); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'tapgo-transactions.csv'; link.click(); URL.revokeObjectURL(url) } catch (err) { setError(err.message) } }
   const rows = result.items || []; const columns = Object.keys(rows[0] || {}).filter((column) => !['proof_path', 'file_path', 'user_id', 'transaction_id'].includes(column))
-  return <section className="admin-section"><div className="section-heading"><div><span className="eyebrow">Live operational records</span><h2>{config[0]}</h2><p>{kind === 'documents' ? 'All uploaded files, generated dynamically from database fields.' : kind === 'fraud' ? 'Risk alerts ready for AI-generated signals.' : 'Search and act on records stored in MySQL.'}</p></div>{kind === 'transactions' && <button className="primary-button" onClick={exportCsv}>Export CSV</button>}</div>{['documents', 'transactions', 'wallets'].includes(kind) && <div className="table-controls"><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && load()} placeholder="Search live records" /><button className="secondary-button" onClick={load}>Search</button></div>}<LoadState error={error}>{loading ? <Empty text="Loading live records…" /> : <div className="table-wrap"><table><thead><tr>{columns.map((column) => <th key={column}>{column.replaceAll('_', ' ')}</th>)}<th>Actions</th></tr></thead><tbody>{rows.length ? rows.map((row, index) => <tr key={row.id || index}>{columns.map((column) => <td key={column}>{typeof row[column] === 'boolean' ? (row[column] ? 'Yes' : 'No') : column.includes('amount') || column === 'balance' ? money(row[column]) : /_at$/.test(column) ? date(row[column]) : row[column] || '—'}</td>)}<td className="actions">{kind === 'documents' && row.file_path && <a href={fileUrl(row.file_path)} target="_blank" rel="noreferrer">Open</a>}{kind === 'requests' && row.status === 'pending' && <><button onClick={() => act(row.id, `/edit-requests/${row.id}/review`, { action: 'approve' })}>Approve</button><button onClick={() => act(row.id, `/edit-requests/${row.id}/review`, { action: 'reject' })}>Reject</button></>}{kind === 'wallets' && <button onClick={() => act(row.id, `/wallets/${row.id}`, { frozen: !row.is_frozen })}>{row.is_frozen ? 'Unfreeze' : 'Freeze'}</button>}{kind === 'fraud' && row.status === 'open' && <><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'safe' })}>Mark safe</button><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'block' })}>Block</button><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'freeze' })}>Freeze</button></>}</td></tr>) : <tr><td colSpan={Math.max(columns.length + 1, 1)}><Empty /></td></tr>}</tbody></table></div>}</LoadState></section>
+  return <section className="admin-section"><div className="section-heading"><div><span className="eyebrow">Live operational records</span><h2>{config[0]}</h2><p>{kind === 'documents' ? 'All uploaded files, generated dynamically from database fields.' : kind === 'fraud' ? 'Risk alerts ready for AI-generated signals.' : 'Search and act on records stored in MySQL.'}</p></div>{kind === 'transactions' && <button className="primary-button" onClick={exportCsv}>Export CSV</button>}</div>{['documents', 'transactions', 'wallets'].includes(kind) && <div className="table-controls"><input value={search} onChange={(event) => { setPage(1); setSearch(event.target.value) }} onKeyDown={(event) => event.key === 'Enter' && load()} placeholder="Search live records" /><button className="secondary-button" onClick={load}>Search</button>{isTxn && <><input value={passengerId} onChange={(event) => setPassengerId(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyPassenger()} placeholder="Passenger ID" inputMode="numeric" aria-label="Filter by passenger ID" style={{ maxWidth: 140 }} /><button className="secondary-button" onClick={applyPassenger}>Filter</button>{passengerFilter && <button className="secondary-button" onClick={() => { setPassengerId(''); setPage(1); setPassengerFilter('') }}>Clear</button>}</>}</div>}<LoadState error={error}>{loading ? <Empty text="Loading live records…" /> : <div className="table-wrap"><table><thead><tr>{columns.map((column) => <th key={column}>{column.replaceAll('_', ' ')}</th>)}<th>Actions</th></tr></thead><tbody>{rows.length ? rows.map((row, index) => <tr key={row.id || index}>{columns.map((column) => <td key={column}>{column === 'is_demo' ? (row[column] ? <Badge value="demo" /> : '—') : typeof row[column] === 'boolean' ? (row[column] ? 'Yes' : 'No') : column.includes('amount') || column === 'balance' ? money(row[column]) : /_at$/.test(column) ? date(row[column]) : row[column] || '—'}</td>)}<td className="actions">{kind === 'documents' && row.file_path && <a href={fileUrl(row.file_path)} target="_blank" rel="noreferrer">Open</a>}{kind === 'requests' && row.status === 'pending' && <><button onClick={() => act(row.id, `/edit-requests/${row.id}/review`, { action: 'approve' })}>Approve</button><button onClick={() => act(row.id, `/edit-requests/${row.id}/review`, { action: 'reject' })}>Reject</button></>}{kind === 'wallets' && <button onClick={() => act(row.id, `/wallets/${row.id}`, { frozen: !row.is_frozen })}>{row.is_frozen ? 'Unfreeze' : 'Freeze'}</button>}{kind === 'fraud' && row.status === 'open' && <><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'safe' })}>Mark safe</button><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'block' })}>Block</button><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'freeze' })}>Freeze</button></>}</td></tr>) : <tr><td colSpan={Math.max(columns.length + 1, 1)}><Empty text={isTxn && passengerFilter ? `No transactions for passenger ${passengerFilter}.` : undefined} /></td></tr>}</tbody></table></div>}{isTxn && !loading && !error && (result.total || 0) > 0 && <div className="table-controls" role="navigation" aria-label="Transaction pages"><button className="secondary-button" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Previous</button><span>Page {page} of {pageCount} · {number(result.total)} transactions</span><button className="secondary-button" disabled={page >= pageCount} onClick={() => setPage(page + 1)}>Next ›</button></div>}</LoadState></section>
 }
 
 function Settings({ adminId }) {
