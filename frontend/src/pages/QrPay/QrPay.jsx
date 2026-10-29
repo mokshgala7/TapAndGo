@@ -34,8 +34,10 @@ const clock = (secs) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-// phase: loading | ready | paying | success | insufficient | expired | paid | cancelled |
+// phase: loading | ready | paying | otp | verifying | success | insufficient | expired | paid | cancelled |
 //        invalid | failed | busy | network | wrongrole
+// otp / verifying: the fraud check asked for the 6-digit code emailed to the passenger (money has not moved yet).
+const RESEND_COOLDOWN = 30
 const END_COPY = {
   expired: { icon: '⏱', title: 'This QR code has expired', body: 'Ask the driver to show a new code and scan it again.' },
   paid: { icon: '✓', title: 'Already paid', body: 'This fare has already been paid. Nothing more is needed.' },
@@ -57,6 +59,12 @@ function QrPay() {
   const [message, setMessage] = useState('')
   const [result, setResult] = useState(null)
   const [showTopUp, setShowTopUp] = useState(false)
+  const [otp, setOtp] = useState(null) // { challenge_id, email_hint, attempts_left, resends_left }
+  const [code, setCode] = useState('')
+  const [otpLeft, setOtpLeft] = useState(0)
+  const [resendIn, setResendIn] = useState(0)
+  const otpDeadline = useRef(0)
+  const resendAt = useRef(0)
 
   const idempotencyKey = useRef(null)
   if (idempotencyKey.current === null) idempotencyKey.current = newIdempotencyKey()
@@ -67,6 +75,17 @@ function QrPay() {
     phaseRef.current = next
     setPhase(next)
   }, [])
+
+  // Applies a challenge view from the server (otp_required / otp_invalid / resend) to the OTP step.
+  const showChallenge = useCallback((c, err = '') => {
+    const secs = Number(c.expires_in_seconds ?? 0)
+    if (c.expires_in_seconds != null) otpDeadline.current = performance.now() + secs * 1000
+    setOtp((prev) => ({ ...(prev || {}), ...c }))
+    setOtpLeft(Math.ceil((otpDeadline.current - performance.now()) / 1000))
+    setMessage(err)
+    setCode('')
+    setPhaseBoth('otp')
+  }, [setPhaseBoth])
 
   const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken()}` })
 
@@ -80,6 +99,7 @@ function QrPay() {
 
   const applyGone = useCallback((status) => {
     const map = { Expired: 'expired', Completed: 'paid', Cancelled: 'cancelled', Failed: 'failed', Processing: 'busy' }
+    if (status === 'AwaitingOtp') return setPhaseBoth('busy')
     setPhaseBoth(map[status] || 'failed')
   }, [setPhaseBoth])
 
@@ -99,6 +119,13 @@ function QrPay() {
         return setPhaseBoth('network')
       }
       const p = data.payment
+      if (p.status === 'AwaitingOtp' && data.otp) {
+        // The page was reopened mid-verification: resume the OTP step.
+        setInfo(p)
+        setBalance(Number(p.wallet_balance || 0))
+        resendAt.current = performance.now()
+        return showChallenge(data.otp)
+      }
       deadline.current = performance.now() + Number(p.seconds_remaining ?? p.remaining_seconds ?? 0) * 1000
       setInfo(p)
       setBalance(Number(p.wallet_balance || 0))
@@ -108,7 +135,7 @@ function QrPay() {
       setMessage('Could not reach the server. Check your connection and try again.')
       setPhaseBoth('network')
     }
-  }, [token, backToLogin, applyGone, setPhaseBoth])
+  }, [token, backToLogin, applyGone, setPhaseBoth, showChallenge])
 
   const reload = () => {
     setPhaseBoth('loading')
@@ -142,6 +169,101 @@ function QrPay() {
     return () => window.clearInterval(id)
   }, [phase, setPhaseBoth])
 
+  // OTP step timers: code expiry and resend cooldown.
+  useEffect(() => {
+    if (phase !== 'otp' && phase !== 'verifying') return undefined
+    const tick = () => {
+      setOtpLeft(Math.max(0, Math.ceil((otpDeadline.current - performance.now()) / 1000)))
+      setResendIn(Math.max(0, Math.ceil((resendAt.current + RESEND_COOLDOWN * 1000 - performance.now()) / 1000)))
+    }
+    tick()
+    const id = window.setInterval(tick, 500)
+    return () => window.clearInterval(id)
+  }, [phase])
+
+  // Success / failure shared by confirm and verify-otp.
+  const applyOutcome = useCallback((res, data) => {
+    if (res.ok && data.success) {
+      const newBalance = Number(data.wallet?.balance ?? 0)
+      setBalance(newBalance)
+      setResult({
+        amount: Number(data.transaction?.amount ?? info?.amount),
+        driver: data.transaction?.driver_name || info?.driver_name || 'the driver',
+        reference: data.transaction?.reference,
+        balance: newBalance,
+      })
+      setPhaseBoth('success')
+      refreshWallet?.()
+      return true
+    }
+    if (data.status === 'otp_required') {
+      resendAt.current = performance.now()
+      showChallenge(data)
+      return true
+    }
+    if (data.status === 'otp_invalid') {
+      showChallenge({ attempts_left: data.attempts_left }, data.detail || 'Wrong code.')
+      return true
+    }
+    return false
+  }, [info, refreshWallet, setPhaseBoth, showChallenge])
+
+  const verifyOtp = async () => {
+    if (!/^\d{6}$/.test(code) || phaseRef.current !== 'otp') return
+    setPhaseBoth('verifying')
+    setMessage('')
+    try {
+      const res = await fetch(`${API_BASE}/api/qr/${encodeURIComponent(token)}/verify-otp`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ challenge_id: otp.challenge_id, otp: code }),
+      })
+      if (res.status === 401) return backToLogin()
+      const data = await res.json().catch(() => ({}))
+      if (applyOutcome(res, data)) return
+      setMessage(data.detail || 'Payment failed.')
+      setPhaseBoth('failed')
+    } catch {
+      showChallenge({}, 'Could not reach the server. Your code was not used up; try again.')
+    }
+  }
+
+  const resendOtp = async () => {
+    if (resendIn > 0) return
+    try {
+      const res = await fetch(`${API_BASE}/api/qr/${encodeURIComponent(token)}/resend-otp`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ challenge_id: otp.challenge_id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.status === 'otp_required') {
+        resendAt.current = performance.now()
+        return showChallenge(data, 'A new code is on its way.')
+      }
+      if (data.code === 'resend_cooldown' || data.code === 'resend_limit') {
+        if (data.code === 'resend_cooldown') resendAt.current = performance.now()
+        return showChallenge({ resends_left: data.resends_left }, data.detail)
+      }
+      setMessage(data.detail || 'Payment failed.')
+      setPhaseBoth('failed')
+    } catch {
+      setMessage('Could not reach the server. Try again.')
+    }
+  }
+
+  const cancelOtp = async () => {
+    try {
+      await fetch(`${API_BASE}/api/qr/${encodeURIComponent(token)}/cancel-otp`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ challenge_id: otp.challenge_id }),
+      })
+    } catch { /* the code expires on its own; nothing was charged */ }
+    setMessage('You cancelled this payment. You have not been charged.')
+    setPhaseBoth('failed')
+  }
+
   const payNow = useCallback(async () => {
     if (payingRef.current) return
     payingRef.current = true
@@ -156,17 +278,8 @@ function QrPay() {
       if (res.status === 401) return backToLogin()
       const data = await res.json().catch(() => ({}))
 
-      if (res.ok && data.success) {
-        const newBalance = Number(data.wallet?.balance ?? 0)
-        setBalance(newBalance)
-        setResult({
-          amount: Number(data.transaction?.amount ?? info?.amount),
-          driver: data.transaction?.driver_name || info?.driver_name || 'the driver',
-          reference: data.transaction?.reference,
-          balance: newBalance,
-        })
-        setPhaseBoth('success')
-        refreshWallet?.()
+      if (applyOutcome(res, data)) {
+        // success or OTP step handled
       } else if (data.code === 'insufficient_balance') {
         setBalance(Number(data.balance || 0))
         setPhaseBoth('insufficient')
@@ -187,7 +300,7 @@ function QrPay() {
     } finally {
       payingRef.current = false
     }
-  }, [token, info, applyGone, backToLogin, refreshWallet, setPhaseBoth])
+  }, [token, applyGone, applyOutcome, backToLogin, setPhaseBoth])
 
   const finish = () => {
     clearPendingQrToken()
@@ -230,6 +343,45 @@ function QrPay() {
         <h1 className="qrpay-title">{c.title}</h1>
         <p className="qrpay-note">{shown === 'failed' && message ? message : c.body}</p>
         <button type="button" className="qrpay-btn" onClick={finish}>Back to my wallet</button>
+      </>
+    )
+  } else if ((shown === 'otp' || shown === 'verifying') && otp && info) {
+    const verifying = shown === 'verifying'
+    const expired = otpLeft === 0
+    body = (
+      <>
+        <p className="qrpay-label">Verify your payment</p>
+        <h1 className="qrpay-driver">{rupees(info.amount)} to {info.driver_name}</h1>
+        <p className="qrpay-note">
+          For your security, enter the 6-digit code we emailed to <strong>{otp.email_hint || 'your email'}</strong>.
+          Nothing is charged until you do.
+        </p>
+        <input
+          className="qrpay-otp"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          placeholder="••••••"
+          aria-label="6-digit verification code"
+          value={code}
+          disabled={verifying || expired}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          onKeyDown={(e) => { if (e.key === 'Enter') verifyOtp() }}
+        />
+        {message && <div className="qrpay-warn" role="alert">{message}</div>}
+        <dl className="qrpay-rows">
+          <div><dt>Code expires in</dt><dd className="qrpay-timer">{clock(otpLeft)}</dd></div>
+          <div><dt>Attempts left</dt><dd>{otp.attempts_left ?? 3}</dd></div>
+        </dl>
+        <button type="button" className="qrpay-btn" onClick={verifyOtp}
+                disabled={verifying || expired || code.length !== 6}>
+          {verifying ? 'Verifying…' : 'Verify and pay'}
+        </button>
+        <button type="button" className="qrpay-link" onClick={resendOtp}
+                disabled={verifying || resendIn > 0 || (otp.resends_left ?? 2) <= 0}>
+          {(otp.resends_left ?? 2) <= 0 ? 'No more codes can be sent' : resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
+        </button>
+        <button type="button" className="qrpay-link" onClick={cancelOtp} disabled={verifying}>Cancel payment</button>
       </>
     )
   } else if (shown === 'wrongrole') {
