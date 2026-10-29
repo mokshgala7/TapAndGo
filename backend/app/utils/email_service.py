@@ -1,8 +1,9 @@
 import re
+import contextvars
 import logging
 import threading
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -45,6 +46,30 @@ def _sanitize_error_message(err: Optional[str]) -> str:
     return sanitized
 
 
+# Recipient redaction (demo OTP redirect): while set, the address is replaced in this module's log lines, in error
+# strings and in email_logs, so a redirected inbox never lands in logs or the database.
+_REDACT_RECIPIENT = contextvars.ContextVar("email_redact_recipient", default=None)
+REDACTED_RECIPIENT = "<demo-redirect>"
+
+
+def _redact(text: str) -> str:
+    addr = _REDACT_RECIPIENT.get()
+    return re.sub(re.escape(addr), REDACTED_RECIPIENT, text, flags=re.IGNORECASE) if addr and text else text
+
+
+class _RedactRecipientFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if _REDACT_RECIPIENT.get():
+            try:
+                record.msg, record.args = _redact(record.getMessage()), ()
+            except Exception:
+                record.msg, record.args = "[redacted log record]", ()
+        return True
+
+
+logger.addFilter(_RedactRecipientFilter())
+
+
 def log_email_delivery(
     email_type: str,
     recipient: str,
@@ -54,11 +79,11 @@ def log_email_delivery(
 ) -> None:
     """Safely log email delivery attempt to database without failing the caller or storing secrets."""
     try:
-        clean_error = _sanitize_error_message(error_message) if error_message else None
+        clean_error = _redact(_sanitize_error_message(error_message)) if error_message else None
         with SessionLocal() as db:
             log_entry = EmailLog(
                 email_type=email_type,
-                recipient=recipient,
+                recipient=REDACTED_RECIPIENT if _REDACT_RECIPIENT.get() else recipient,
                 reference=reference,
                 status=status,
                 error_message=clean_error[:500] if clean_error else None,
@@ -286,14 +311,23 @@ def send_email(
     reference: Optional[str] = None,
     text_content: Optional[str] = None,
     attachments: Optional[list[dict]] = None,
+    redact_recipient: bool = False,
 ) -> bool:
     """
-    Central email delivery dispatcher.
+    Central email delivery dispatcher. `redact_recipient=True` keeps the address out of logs and email_logs.
     Uses Amazon SES HTTPS API (boto3) as the primary production delivery mechanism.
     Falls back to local SMTP only if AWS SES credentials are absent in development.
     Records delivery status in email_logs.
     """
     to_email = (to_email or "").strip()
+    token = _REDACT_RECIPIENT.set(to_email if redact_recipient and to_email else None)
+    try:
+        return _send_email_inner(to_email, subject, html_content, email_type, reference, text_content, attachments)
+    finally:
+        _REDACT_RECIPIENT.reset(token)
+
+
+def _send_email_inner(to_email, subject, html_content, email_type, reference, text_content, attachments) -> bool:
     _set_last_email_error(None)
     success = False
     err_msg = None
@@ -884,6 +918,90 @@ def send_withdrawal_otp(to_email: str, otp: str, amount: Optional[float] = None)
         html_content=html,
         email_type="withdrawal_otp",
         text_content=plain_text,
+    )
+
+
+def send_payment_otp(to_email: str, otp: str, amount: float, driver_name: str, expires_minutes: int = 5,
+                     channel: str = "nfc", demo_for: Optional[int] = None) -> bool:
+    """
+    Step-up verification code for one ride payment flagged by the fraud gate (QR, NFC card or wallet pay).
+    Subject: 'Tap & Go - Verify your ride payment'. The code is in the email only; it is never logged.
+    """
+    import html as _html
+
+    otp_cells = "".join([
+        f'''<td align="center" style="padding:0 3px;">
+            <div style="width:44px;height:54px;line-height:54px;text-align:center;
+            background-color:#1C1C1E;color:#10B981;font-size:26px;font-weight:900;
+            border-radius:10px;font-family:'Courier New',monospace;">{d}</div>
+        </td>'''
+        for d in otp
+    ])
+    how = {"nfc": "with your Tap &amp; Go card", "qr": "by scanning a QR code"}.get(channel, "from your wallet")
+    safe_driver = _html.escape(driver_name or "the driver")
+
+    body = f"""
+    <h2 style="margin:0 0 10px;font-size:22px;font-weight:900;color:#1C1C1E;letter-spacing:-0.3px;">
+        Verify your ride payment
+    </h2>
+    <p style="margin:0 0 22px;color:#4B5563;font-size:14px;line-height:1.6;">
+        A payment of <strong>₹{amount:.2f}</strong> to <strong>{safe_driver}</strong> was started {how}.
+        For your security it needs this one-time code before any money moves.
+    </p>
+
+    <div style="background-color:#ECFDF5;border:1px solid #A7F3D0;border-radius:14px;padding:22px 14px;text-align:center;margin-bottom:22px;">
+        <div style="font-size:11px;font-weight:800;color:#047857;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;">
+            PAYMENT VERIFICATION CODE
+        </div>
+        <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;">
+            <tr>{otp_cells}</tr>
+        </table>
+        <div style="font-size:12px;color:#DC2626;font-weight:700;margin-top:14px;">
+            &#9200; This code expires in {expires_minutes} minutes
+        </div>
+    </div>
+
+    <div style="border-left:4px solid #EF4444;background-color:#FEF2F2;border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:14px;">
+        <div style="font-size:12px;color:#991B1B;font-weight:600;line-height:1.6;">
+            &#9888;&#65039; <strong>Wasn&#39;t you?</strong> Ignore this email and do not share the code. Without it the
+            payment cannot go through and nothing is charged. If your card was used without you, block it from your
+            Tap &amp; Go account.
+        </div>
+    </div>
+    <p style="margin:0;color:#9CA3AF;font-size:12px;line-height:1.5;">
+        Tap &amp; Go staff and drivers will never ask you for this code.
+    </p>
+    """
+
+    if demo_for is not None:
+        body = body.replace('<h2 style="margin:0 0 10px;', f'<p style="margin:0 0 12px;padding:8px 12px;background:#FEF3C7;border-radius:8px;color:#92400E;font-size:12px;font-weight:700;">'
+                            f'DEMO: this code was redirected to this inbox for demo passenger account #{int(demo_for)}.</p><h2 style="margin:0 0 10px;', 1)
+    html = _render_email_shell(
+        badge="SECURITY &bull; PAYMENT VERIFICATION",
+        badge_bg="#064E3B",
+        badge_color="#6EE7B7",
+        title="Verify your ride payment",
+        body_html=body,
+        accent_bar_gradient="linear-gradient(90deg,#10B981,#059669)",
+    )
+    plain_text = (
+        (f"DEMO: this code was redirected to this inbox for demo passenger account #{int(demo_for)}.\n\n" if demo_for is not None else "")
+        + f"Tap & Go Payment Verification\n\n"
+        f"A payment of ₹{amount:.2f} to {driver_name or 'the driver'} needs verification.\n"
+        f"Your 6-digit code is: {otp}\n\n"
+        f"This code expires in {expires_minutes} minutes.\n\n"
+        f"Wasn't you? Ignore this email and do not share the code. Without it nothing is charged.\n"
+        f"Tap & Go staff and drivers will never ask you for this code.\n\n"
+        f"Tap & Go Smart Cashless Transit Payments\n"
+        f"Support: tapandgosupport@gmail.com"
+    )
+    return send_email(
+        to_email=to_email,
+        subject="Tap & Go - Verify your ride payment",
+        html_content=html,
+        email_type="payment_otp",
+        text_content=plain_text,
+        redact_recipient=demo_for is not None,
     )
 
 
