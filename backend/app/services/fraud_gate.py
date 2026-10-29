@@ -89,7 +89,7 @@ def enforce_user_ids() -> frozenset:
         if not item.isascii() or not item.isdigit() or int(item) < 1:
             raise FraudConfigError(
                 f"TAPGO_FRAUD_ENFORCE_USER_IDS is malformed (bad item {item[:20]!r}). Expected positive integer "
-                "passenger ids separated by commas, e.g. 69,70 (unset or empty = nobody).")
+                "passenger ids separated by commas, e.g. 12,34 (unset or empty = nobody).")
         ids.add(int(item))
     return frozenset(ids)
 
