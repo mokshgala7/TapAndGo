@@ -1,0 +1,13 @@
+{
+  "__init__.py": "aa75c3057335bc66a009e275f8348a3b02b17a185fcf75a6663df800d1dcb48a",
+  "adapter.py": "3fa02b6f4cc09aa7b80298840ec272b7ef5f63243aa4c910a4477e775678627a",
+  "features/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "features/feature_builder.py": "a7819caf61cddbd865eb63b8cad4a360edac6c9e51d47e5752894a7886974523",
+  "features/v3_features.py": "46717495c835343114dcf36071115a7a23081290f5654ede5cad174cf5363f18",
+  "models/tapgo_fraud_v6.meta.json": "4ab26e017f7a07d61dfad97d92703946014a41ff4d98f91042b2b79c4795568e",
+  "models/tapgo_fraud_v6.meta.json.sha256": "a9a0d2fe056f95ca688cb6535c6f10a43fd71c3b95bad2145b772c22a5eaf0cf",
+  "models/tapgo_fraud_v6.xgb.json": "d41cbe19d06622a54dc1f0a7584a2cc331f5d19056f7fd70aa1e612cc69bad5d",
+  "models/tapgo_fraud_v6.xgb.json.sha256": "a3b8143db4490f19ec29d5b948f911177faf583ddebe81d5b17e4be82d4de67b",
+  "scorer.py": "ece24579ad31048b442d0a00b9171f39b684bb2ba55fe19ace0b540758d91fca",
+  "service.py": "cabbcb06134d22e924e66b42950e4ae17850f61a094cecd88ce473c7b3443dd8"
+}

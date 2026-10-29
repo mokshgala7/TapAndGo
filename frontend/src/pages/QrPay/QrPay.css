@@ -143,3 +143,20 @@
   cursor: pointer;
 }
 .qrpay-link:disabled { opacity: 0.5; cursor: default; }
+
+.qrpay-otp {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0 12px;
+  padding: 14px 12px;
+  font-size: 28px;
+  letter-spacing: 0.4em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  border: 1.5px solid var(--qrpay-border, #d1d5db);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+}
+.qrpay-otp:focus { outline: 2px solid #10b981; outline-offset: 1px; }
+.qrpay-otp:disabled { opacity: 0.6; }

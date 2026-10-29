@@ -23,6 +23,10 @@ FAILURE_EMAIL_REASONS = {
     "WALLET_FROZEN": "Your wallet is frozen. Contact support.",
     "PASSENGER_INACTIVE": "Your Tap & Go account is not active. Contact support.",
     "AMOUNT_INVALID": "The fare entered at the terminal was not valid. Please ask the driver to try again.",
+    "OTP_FAILED": "The verification code was entered wrongly too many times. If this wasn't you, block your card.",
+    "OTP_EXPIRED": "The verification code was not entered in time.",
+    "OTP_CANCELLED": "The payment was cancelled before the verification code was entered.",
+    "OTP_UNAVAILABLE": "This payment needed email verification, but the code could not be sent to you.",
 }
 
 
@@ -38,6 +42,7 @@ def send_nfc_failure_email(
     vehicle_registration: Optional[str] = None,
     wallet_balance: Optional[float] = None,
     created_at: Optional[datetime] = None,
+    payment_mode: str = "Card (NFC)",
 ) -> bool:
     """Returns True when the email was handed to the provider. Never raises for delivery problems."""
     reason = FAILURE_EMAIL_REASONS.get(code, "The payment could not be completed.")
@@ -47,7 +52,7 @@ def send_nfc_failure_email(
 
     rows = [
         ("Driver", html.escape(driver_name or "Driver")),
-        ("Payment Mode", "Card (NFC)"),
+        ("Payment Mode", html.escape(payment_mode)),
         ("Transaction ID", f'<span style="font-family:monospace;">{html.escape(reference)}</span>'),
         ("Date &amp; Time", when),
         ("Status", "FAILED"),
@@ -67,7 +72,7 @@ def send_nfc_failure_email(
         status_label="FAILED",
         status_color="#EF4444",
         heading="Ride Payment Failed",
-        intro_html=f"Hi {first_name}, your card payment could not be completed. {html.escape(reason)}",
+        intro_html=f"Hi {first_name}, your {'card ' if payment_mode == 'Card (NFC)' else ''}payment could not be completed. {html.escape(reason)}",
         amount_str=fare_str,
         amount_label="RIDE FARE",
         rows=rows,

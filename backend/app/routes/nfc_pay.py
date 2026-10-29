@@ -29,9 +29,20 @@ Design decisions
   NFC_FAILURE_EMAIL_COOLDOWN_SECONDS (default 300; 0 = no throttle). Every failure is still a row.
   The throttle is process-local (like the admin login throttle): it resets on restart.
 
+Fraud gate (app/services/fraud_gate.py): after the card, account and wallet checks, every tap is
+scored (10-minute rule + V6 model). With TAPGO_FRAUD_MODE=enforce a flagged tap does NOT pay: the
+passenger gets a 6-digit code by email and the POS receives
+    {"success": false, "status": "otp_required", "challenge_id": "...", "email_hint": "m***@g***.com",
+     "expires_in_seconds": 300, "attempts_left": 3, "resends_left": 2}
+The POS then calls POST /api/nfc/pay/verify-otp {challenge_id, otp, idempotency_key} (success / failure
+body above, or {"success": false, "status": "otp_invalid", "attempts_left": n}), /resend-otp or
+/cancel-otp. Money moves only after a correct code (app/services/payment_otp.py). Wrong x3, expiry
+or cancel are recorded as failed taps (OTP_FAILED / OTP_EXPIRED / OTP_CANCELLED). The POS never sees
+the passenger's email (only the masked hint) or balance.
+
 Known demo limitation: the card UID is a plain identifier, not a secret. A UID can be read and
-cloned, so there is no cryptographic proof of card possession. OTP/fraud checks and per-card rate
-limiting are intentionally out of scope for now (fraud_status stays "clear").
+cloned, so there is no cryptographic proof of card possession; the email OTP step-up is the
+mitigation for risky taps. Per-card rate limiting is still out of scope.
 """
 import logging
 import os
@@ -39,6 +50,7 @@ import re
 import threading
 import time
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
@@ -51,6 +63,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import NFCCard, Transaction, User, Wallet
 from app.routes.auth import get_current_user
+from app.services import payment_otp
+from app.services.fraud_gate import evaluate_payment
 from app.routes.wallet import (
     MAX_PAYMENT_AMOUNT,
     _credit,
@@ -107,6 +121,12 @@ FAILURE_MESSAGES = {
     "AMOUNT_INVALID": "Amount is not valid.",
     "DRIVER_NOT_ALLOWED": "Only an active driver terminal can take NFC payments.",
     "IDEMPOTENCY_CONFLICT": "This payment key was already used for a different payment.",
+    "OTP_FAILED": "Wrong OTP entered too many times. Payment cancelled.",
+    "OTP_EXPIRED": "OTP expired. Payment cancelled.",
+    "OTP_CANCELLED": "Payment cancelled.",
+    "OTP_UNAVAILABLE": "Verification needed but no OTP could be sent. Payment declined.",
+    "DRIVER_UNAVAILABLE": "This terminal cannot receive payments right now.",
+    "CHALLENGE_INVALID": "This verification is not valid for this payment.",
 }
 # Short reason stored in the failed transaction's description.
 FAILURE_REASONS = {
@@ -117,6 +137,11 @@ FAILURE_REASONS = {
     "WALLET_FROZEN": "wallet frozen",
     "INSUFFICIENT_BALANCE": "insufficient balance",
     "AMOUNT_INVALID": "invalid amount",
+    "OTP_FAILED": "verification code entered wrongly 3 times",
+    "OTP_EXPIRED": "verification code expired",
+    "OTP_CANCELLED": "payment cancelled during verification",
+    "OTP_UNAVAILABLE": "verification code could not be sent",
+    "DRIVER_UNAVAILABLE": "driver cannot receive payments",
 }
 # Failure emails go to the owner for every recorded failure except an unknown card.
 _NO_OWNER_EMAIL = {"CARD_UNKNOWN"}
@@ -259,7 +284,14 @@ def nfc_pay(
         """The stored outcome for this key, or None. A key reused for a different tap is a conflict."""
         existing = db.query(Transaction).filter(Transaction.idempotency_key == scoped_key).first()
         if not existing:
-            return None
+            ch = payment_otp.pending_for_key(db, scoped_key)
+            if ch is None:
+                return None
+            if amount_problem or ch.amount != amount or ch.card_uid != uid:
+                return _fail("IDEMPOTENCY_CONFLICT", http_status=409)
+            # Same tap retried while its OTP is pending: the same challenge, no new email.
+            return _nfc_outcome(db, payment_otp.expire_if_due(db, ch, datetime.utcnow())
+                                or payment_otp.final_outcome(db, ch, datetime.utcnow()), background_tasks)
         conflict = _fail("IDEMPOTENCY_CONFLICT", http_status=409)
         if existing.status == "completed":
             if (amount_problem or existing.amount != amount or card is None
@@ -360,6 +392,20 @@ def nfc_pay(
         return record_failure("WALLET_FROZEN", owner=passenger, wallet=p_wallet)
     if d_wallet.is_frozen:
         return _fail("DRIVER_NOT_ALLOWED", "This terminal cannot receive payments right now.", 403)
+    if p_wallet.balance < amount:
+        # Checked before any OTP so a passenger is never asked to verify a payment that cannot succeed.
+        return record_failure("INSUFFICIENT_BALANCE", owner=passenger, wallet=p_wallet)
+
+    now = datetime.utcnow()
+    decision = evaluate_payment(db, passenger, driver, amount, now, scoped_key, "nfc")
+    if decision["action"] == "otp_required":
+        try:
+            out = payment_otp.open_challenge(db, passenger=passenger, driver=driver, channel="nfc",
+                                             scoped_key=scoped_key, amount=amount, now=now, card_uid=uid,
+                                             assessment_id=decision.get("assessment_id"))
+        except payment_otp.ChallengeConflict:
+            return _fail("IDEMPOTENCY_CONFLICT", http_status=409)
+        return _nfc_outcome(db, out, background_tasks)
 
     steps = {
         passenger.id: lambda: _debit(db, passenger.id, amount),
@@ -391,6 +437,7 @@ def nfc_pay(
         description=f"\u20b9{amount:.2f} paid to {driver.name} via NFC",
         balance_after=p_wallet.balance,
         idempotency_key=scoped_key,
+        created_at=now,
     )
     db.add(txn)
     try:
@@ -425,3 +472,136 @@ def nfc_pay(
     background_tasks.add_task(_send_passenger_receipt, **receipt)
     background_tasks.add_task(_send_driver_receipt, **receipt)
     return response
+
+
+# ── OTP step-up (fraud gate) ─────────────────────────────────────────────────
+
+def _receipt_values(txn: Transaction, passenger: User, driver: User, balance_after) -> dict:
+    return dict(
+        reference=txn.reference, fare=float(txn.amount), passenger_email=passenger.email,
+        passenger_name=passenger.name, driver_email=driver.email, driver_name=driver.name,
+        vehicle_type=driver.vehicle_type, vehicle_registration=driver.vehicle_registration,
+        payment_method=txn.payment_method, balance_after=float(balance_after) if balance_after is not None else None,
+        created_at=txn.created_at,
+    )
+
+
+def _nfc_outcome(db: Session, out, background_tasks: BackgroundTasks):
+    """POS response for an OTP outcome; queues receipts / failure notices after the response."""
+    now = datetime.utcnow()
+    for notice in out.notices:
+        background_tasks.add_task(_send_failure_notice, **notice)
+    ch = out.challenge
+    if out.kind == "otp_required":
+        view = payment_otp.public_view(ch, db.get(User, ch.passenger_id), now)
+        return JSONResponse(status_code=200, content={"success": False, "status": "otp_required", **view})
+    if out.kind == "otp_invalid":
+        n = out.attempts_left
+        return JSONResponse(status_code=200, content={
+            "success": False, "status": "otp_invalid", "attempts_left": n,
+            "message": f"Wrong OTP, {n} attempt{'s' if n != 1 else ''} left.",
+        })
+    if out.kind == "completed":
+        passenger = db.get(User, out.txn.passenger_id)
+        if not out.idempotent:
+            driver = db.get(User, out.txn.driver_id)
+            receipt = _receipt_values(out.txn, passenger, driver, out.txn.balance_after)
+            background_tasks.add_task(_send_passenger_receipt, **receipt)
+            background_tasks.add_task(_send_driver_receipt, **receipt)
+        return _ok(out.txn, passenger, idempotent=out.idempotent)
+    code = out.code if out.code in FAILURE_MESSAGES else "OTP_CANCELLED"
+    return _fail(code, reference=out.txn.reference if out.txn else None, idempotent=out.idempotent)
+
+
+@router.get("/pay/status")
+def nfc_pay_status(idempotency_key: Optional[str] = None, current_user: User = Depends(get_current_user),
+                   db: Session = Depends(get_db)):
+    """
+    Read-only outcome lookup for the POS, by the idempotency key it used for /api/nfc/pay. Lets the terminal
+    learn the truth after a timeout or lost response instead of guessing. Only payments received by THIS
+    driver are visible (the key is scoped to the driver, and the row's driver is checked too).
+
+        {"status": "completed" | "failed" | "otp_pending" | "not_found",
+         "transaction_ref": "TXN..." | null, "amount": 12.5 | null, "failure_code": "OTP_FAILED" | null}
+
+    No passenger identity, email or balance. Nothing is written: a challenge whose time has run out is
+    reported as failed/OTP_EXPIRED (verify can no longer succeed); the row itself is closed by the next
+    verify-otp / cancel-otp call.
+    """
+    driver = current_user
+    if driver.account_type != "driver" or driver.status != "active":
+        return _fail("DRIVER_NOT_ALLOWED", http_status=403)
+    key = (idempotency_key or "").strip()
+    if len(key) < 8 or len(key) > 100:
+        raise HTTPException(status_code=400, detail="A valid idempotency key (8-100 chars) is required.")
+    scoped_key = f"nfc:{driver.id}:{key}"
+
+    def body(status, ref=None, amount=None, code=None):
+        return {"status": status, "transaction_ref": ref,
+                "amount": float(amount) if amount is not None else None, "failure_code": code}
+
+    txn = db.query(Transaction).filter(Transaction.idempotency_key == scoped_key,
+                                       Transaction.driver_id == driver.id).first()
+    if txn is not None:
+        if txn.status == "completed":
+            return body("completed", txn.reference, txn.amount)
+        return body("failed", txn.reference, txn.amount, txn.failure_code)
+    ch = payment_otp.pending_for_key(db, scoped_key)
+    if ch is not None and ch.driver_id == driver.id and ch.channel == "nfc":
+        if datetime.utcnow() >= ch.expires_at:
+            return body("failed", None, ch.amount, "OTP_EXPIRED")
+        return body("otp_pending", None, ch.amount)
+    return body("not_found")
+
+
+class NFCOtpRequest(BaseModel):
+    challenge_id: Optional[str] = None
+    otp: Optional[str] = None
+    idempotency_key: Optional[str] = None
+
+
+def _driver_challenge(data: NFCOtpRequest, driver: User, db: Session, check_key: bool):
+    """(challenge, None) or (None, error response). Only the terminal that took the tap may act on it."""
+    if driver.account_type != "driver" or driver.status != "active":
+        return None, _fail("DRIVER_NOT_ALLOWED", http_status=403)
+    ch = payment_otp.get_challenge(db, data.challenge_id)
+    if ch is None or ch.channel != "nfc" or ch.driver_id != driver.id:
+        return None, _fail("CHALLENGE_INVALID", http_status=404)
+    if check_key:
+        key = (data.idempotency_key or "").strip()
+        if f"nfc:{driver.id}:{key}" != ch.idempotency_key:
+            return None, _fail("CHALLENGE_INVALID", http_status=409)
+    return ch, None
+
+
+@router.post("/pay/verify-otp")
+def nfc_verify_otp(data: NFCOtpRequest, background_tasks: BackgroundTasks,
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ch, err = _driver_challenge(data, current_user, db, check_key=True)
+    if err:
+        return err
+    return _nfc_outcome(db, payment_otp.verify(db, ch, data.otp, datetime.utcnow()), background_tasks)
+
+
+@router.post("/pay/resend-otp")
+def nfc_resend_otp(data: NFCOtpRequest, background_tasks: BackgroundTasks,
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ch, err = _driver_challenge(data, current_user, db, check_key=False)
+    if err:
+        return err
+    out, refused = payment_otp.resend(db, ch, datetime.utcnow())
+    if refused:
+        return JSONResponse(status_code=429 if refused[0] == "resend_cooldown" else 400,
+                            content={"success": False, "status": "otp_required", "code": refused[0],
+                                     "message": refused[1],
+                                     **payment_otp.public_view(ch, db.get(User, ch.passenger_id), datetime.utcnow())})
+    return _nfc_outcome(db, out, background_tasks)
+
+
+@router.post("/pay/cancel-otp")
+def nfc_cancel_otp(data: NFCOtpRequest, background_tasks: BackgroundTasks,
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ch, err = _driver_challenge(data, current_user, db, check_key=False)
+    if err:
+        return err
+    return _nfc_outcome(db, payment_otp.cancel(db, ch, datetime.utcnow()), background_tasks)

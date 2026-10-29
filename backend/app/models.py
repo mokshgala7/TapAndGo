@@ -353,6 +353,59 @@ class NFCCard(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
+class FraudAssessment(Base):
+    """One row per fraud-gate decision on a ride payment (QR, NFC or wallet pay). Audit only:
+    ids, amounts, scores and the decision; no names, contact data or location."""
+    __tablename__ = "fraud_assessments"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    passenger_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    driver_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    channel = Column(String(10), nullable=False)                 # qr, nfc, wallet
+    idempotency_key = Column(String(128), nullable=True, index=True)
+    amount = Column(Numeric(12, 2), nullable=False)
+    assessed_at = Column(DateTime, nullable=False)               # naive UTC, when the payment was initiated
+    mode = Column(String(10), nullable=False)                    # mode that applied to THIS payment: off, shadow, enforce
+    enforced_by_allowlist = Column(Boolean, nullable=False, default=False)   # enforce because the passenger is in TAPGO_FRAUD_ENFORCE_USER_IDS
+    risk_score = Column(Numeric(8, 6), nullable=True)            # NULL when the model produced no score
+    model_flag = Column(Boolean, nullable=True)
+    rule_10min = Column(Boolean, nullable=False, default=False)
+    elapsed_seconds = Column(Integer, nullable=True)             # since the previous COMPLETED ride; NULL if none
+    ml_status = Column(String(30), nullable=False)               # scored, disabled, model_unavailable, invalid_input, error, ...
+    decision = Column(String(20), nullable=False)                # proceed, otp_required
+    reasons = Column(Text, nullable=True)                        # comma-separated
+    model_version = Column(String(64), nullable=True)
+    threshold = Column(Numeric(8, 6), nullable=True)
+    challenge_id = Column(Integer, ForeignKey("payment_otp_challenges.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+
+
+class PaymentOtpChallenge(Base):
+    """Email OTP step-up for one ride payment. Money moves only after a correct OTP.
+    Only an HMAC of the code is stored. status: pending -> completed | failed | expired | cancelled."""
+    __tablename__ = "payment_otp_challenges"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    public_id = Column(String(36), nullable=False, unique=True, index=True)   # the challenge_id clients see
+    passenger_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    driver_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    channel = Column(String(10), nullable=False)                 # qr, nfc, wallet
+    idempotency_key = Column(String(128), nullable=False, index=True)   # the route's scoped key
+    amount = Column(Numeric(12, 2), nullable=False)
+    card_uid = Column(String(32), nullable=True)
+    payment_request_id = Column(Integer, ForeignKey("payment_requests.id"), nullable=True, index=True)
+    otp_hash = Column(String(64), nullable=False)
+    attempts = Column(Integer, nullable=False, default=0)
+    resend_count = Column(Integer, nullable=False, default=0)
+    last_sent_at = Column(DateTime, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    status = Column(String(20), nullable=False, default="pending", index=True)
+    failure_code = Column(String(40), nullable=True)
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+    resolved_at = Column(DateTime, nullable=True)
+
+
 class WithdrawalRequest(Base):
     __tablename__ = "withdrawal_requests"
 

@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from dotenv import load_dotenv
 
 # Search and load environment variables from all candidate .env paths
@@ -31,6 +32,10 @@ def _ses_from_setting() -> str:
         if value:
             return value
     return DEFAULT_SES_FROM
+
+
+# The development default of SECRET_KEY (committed in this repo, so it is not a secret).
+DEV_SECRET_KEY = "tapgo_super_secret_jwt_key_2026"
 
 
 class Settings:
@@ -72,7 +77,7 @@ class Settings:
 
     @property
     def SECRET_KEY(self) -> str:
-        return os.getenv("SECRET_KEY", "tapgo_super_secret_jwt_key_2026")
+        return os.getenv("SECRET_KEY", DEV_SECRET_KEY)
 
     @property
     def ADMIN_EMAIL(self) -> str:
