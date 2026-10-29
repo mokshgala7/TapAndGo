@@ -289,3 +289,19 @@ def test_regular_night_traveller_10x_fare_at_2300_flagged(scorer):
     assert out["model_flag"] is True, out["risk_score"]
     a = assess_ride_payment("p1", "d9", 2000, [_row(h) for h in hist], ENFORCE, at=at, idempotency_key="k")
     assert a.backend_action == "step_up_otp" and "model_flag" in a.reasons
+
+
+# ── real-data finding: driver 27's vehicle_type is the free text "Luxury Taxi" ──────────────────────────────
+
+def test_luxury_taxi_maps_to_the_unknown_vehicle_category(scorer):
+    """The model's mapping is exact: only 'taxi'/'cab'/'car' are taxi and anything containing 'auto' is an auto. Free text such as
+    'Luxury Taxi' falls back to 'unknown', so it is scored exactly like a driver with no vehicle type."""
+    from app.services.tapgo_fraud_risk.features.v3_features import norm_vehicle
+    assert [norm_vehicle(v) for v in ("Luxury Taxi", "Taxi", " taxi ", "Auto Rickshaw", "auto_rickshaw", None, "Sedan")] == \
+        ["unknown", "taxi", "taxi", "auto_rickshaw", "auto_rickshaw", "unknown", "unknown"]
+    hist = day_history(30, NOW.replace(hour=0, minute=0))
+    lux = score(scorer, {**tx(NOW, 150), "vehicle_type": "Luxury Taxi"}, hist)
+    none = score(scorer, {**tx(NOW, 150), "vehicle_type": None}, hist)
+    taxi = score(scorer, {**tx(NOW, 150), "vehicle_type": "Taxi"}, hist)
+    assert lux["risk_score"] == none["risk_score"] and "vehicle_type_missing_or_unknown" in lux["warnings"]
+    assert "vehicle_type_missing_or_unknown" not in taxi["warnings"]

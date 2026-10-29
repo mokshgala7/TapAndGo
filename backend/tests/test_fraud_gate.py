@@ -1333,3 +1333,20 @@ def test_commuter_flagged_fare_needs_otp_normal_fare_does_not_and_bystander_proc
     assert r2.json()["success"] is True and r2.json()["status"] == "Completed"
     a2 = rows(duo, FraudAssessment, passenger_id=duo["pax2_id"])[-1]
     assert (a2.mode, a2.decision, a2.model_flag) == ("shadow", "proceed", True)
+
+
+def test_ledger_with_only_a_deposit_is_history_none_not_an_error(scene, enforce):
+    """A passenger whose ledger holds a single wallet deposit (no rides) scores as 'no history' and is never treated as a failure."""
+    db = scene["env"].db()
+    try:
+        from app.services.fraud_risk_shadow import run_assessment
+        db.add(Transaction(reference="FAM-TEST1", passenger_id=scene["pax_id"], driver_id=None, amount=Decimal("5.00"), payment_method="FamPay Test",
+                           status="completed", otp_verified=True, fraud_status="clear", transaction_type="deposit", balance_after=Decimal("5.00"),
+                           provider="FAMPAY_TEST", payment_source="FAMPAY_TEST", created_at=datetime.utcnow() - timedelta(days=90)))
+        db.commit()
+        pax, drv = db.get(User, scene["pax_id"]), db.get(User, scene["driver_id"])
+        a, _ = run_assessment(db, pax.id, drv, Decimal("35"), datetime.utcnow(), "k-dep", mode="enforce")
+        assert a.status == "scored" and a.risk["history"]["prior_completed_rides"] == 0
+        assert a.risk["passenger_fare_anomaly"]["history_stage"] == "none"
+    finally:
+        db.close()
