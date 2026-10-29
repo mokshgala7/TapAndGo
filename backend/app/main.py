@@ -602,6 +602,10 @@ def run_database_migrations(eng):
 from app.services.fraud_gate import validate_fraud_config  # noqa: E402
 validate_fraud_config()
 
+# Load the ML model in the background so the first payment after a restart is not the one that pays for it.
+from app.services.fraud_risk_shadow import start_warm_up  # noqa: E402
+start_warm_up()
+
 # Execute migration at startup
 run_database_migrations(engine)
 

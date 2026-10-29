@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
     vehicle_registration VARCHAR(50) NULL,
     vehicle_make VARCHAR(100) NULL,
     vehicle_model VARCHAR(100) NULL,
+    driver_photo_url VARCHAR(500) NULL,
+    vehicle_photo_url VARCHAR(500) NULL,
     driving_licence_number VARCHAR(50) NULL,
     rc_document VARCHAR(255) NULL,
     licence_document VARCHAR(255) NULL,

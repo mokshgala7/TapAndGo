@@ -9,6 +9,7 @@ import {
   readQrTokenFromLocation,
   setPendingQrToken,
 } from '../../utils/qrLink.js'
+import { DriverAvatar, VehicleArt } from './QrPayArt.jsx'
 import './QrPay.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.thetapandgo.in'
@@ -34,10 +35,11 @@ const clock = (secs) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-// phase: loading | ready | paying | otp | verifying | success | insufficient | expired | paid | cancelled |
+// phase: loading | ready | paying | otp | success | insufficient | expired | paid | cancelled |
 //        invalid | failed | busy | network | wrongrole
-// otp / verifying: the fraud check asked for the 6-digit code emailed to the passenger (money has not moved yet).
-const RESEND_COOLDOWN = 30
+// otp: the payment needs the 6-digit code emailed to the passenger. It is entered ONLY on the driver's POS; this page
+//      just waits (polling my-status) and can cancel. Money has not moved yet.
+const OTP_POLL_MS = 2000
 const END_COPY = {
   expired: { icon: '⏱', title: 'This QR code has expired', body: 'Ask the driver to show a new code and scan it again.' },
   paid: { icon: '✓', title: 'Already paid', body: 'This fare has already been paid. Nothing more is needed.' },
@@ -60,11 +62,9 @@ function QrPay() {
   const [result, setResult] = useState(null)
   const [showTopUp, setShowTopUp] = useState(false)
   const [otp, setOtp] = useState(null) // { challenge_id, email_hint, attempts_left, resends_left }
-  const [code, setCode] = useState('')
   const [otpLeft, setOtpLeft] = useState(0)
-  const [resendIn, setResendIn] = useState(0)
   const otpDeadline = useRef(0)
-  const resendAt = useRef(0)
+  const [photoBroken, setPhotoBroken] = useState({ driver: false, vehicle: false })
 
   const idempotencyKey = useRef(null)
   if (idempotencyKey.current === null) idempotencyKey.current = newIdempotencyKey()
@@ -83,7 +83,6 @@ function QrPay() {
     setOtp((prev) => ({ ...(prev || {}), ...c }))
     setOtpLeft(Math.ceil((otpDeadline.current - performance.now()) / 1000))
     setMessage(err)
-    setCode('')
     setPhaseBoth('otp')
   }, [setPhaseBoth])
 
@@ -123,7 +122,6 @@ function QrPay() {
         // The page was reopened mid-verification: resume the OTP step.
         setInfo(p)
         setBalance(Number(p.wallet_balance || 0))
-        resendAt.current = performance.now()
         return showChallenge(data.otp)
       }
       deadline.current = performance.now() + Number(p.seconds_remaining ?? p.remaining_seconds ?? 0) * 1000
@@ -169,19 +167,46 @@ function QrPay() {
     return () => window.clearInterval(id)
   }, [phase, setPhaseBoth])
 
-  // OTP step timers: code expiry and resend cooldown.
+  // Waiting for the code to be entered on the POS: countdown, and poll the payment until it succeeds or fails.
   useEffect(() => {
-    if (phase !== 'otp' && phase !== 'verifying') return undefined
-    const tick = () => {
-      setOtpLeft(Math.max(0, Math.ceil((otpDeadline.current - performance.now()) / 1000)))
-      setResendIn(Math.max(0, Math.ceil((resendAt.current + RESEND_COOLDOWN * 1000 - performance.now()) / 1000)))
-    }
+    if (phase !== 'otp') return undefined
+    const tick = () => setOtpLeft(Math.max(0, Math.ceil((otpDeadline.current - performance.now()) / 1000)))
     tick()
-    const id = window.setInterval(tick, 500)
-    return () => window.clearInterval(id)
-  }, [phase])
+    const clockId = window.setInterval(tick, 500)
+    let stopped = false
+    const poll = async () => {
+      if (stopped || phaseRef.current !== 'otp') return
+      try {
+        const res = await fetch(`${API_BASE}/api/qr/${encodeURIComponent(token)}/my-status`, { headers: authHeaders() })
+        if (res.status === 401) return backToLogin()
+        const data = await res.json().catch(() => ({}))
+        if (stopped || phaseRef.current !== 'otp') return
+        if (res.ok && data.status === 'Completed') {
+          const newBalance = Number(data.wallet_balance ?? 0)
+          setBalance(newBalance)
+          setResult({ amount: Number(data.amount ?? info?.amount), driver: info?.driver_name || 'the driver',
+                      reference: data.reference, balance: newBalance })
+          setPhaseBoth('success')
+          refreshWallet?.()
+          return
+        }
+        if (res.ok && data.status === 'Failed') {
+          setMessage(data.message || 'The payment could not be completed. You have not been charged.')
+          setPhaseBoth('failed')
+          return
+        }
+        if (res.ok && data.status === 'AwaitingOtp' && data.otp) {
+          if (data.otp.expires_in_seconds != null) otpDeadline.current = performance.now() + Number(data.otp.expires_in_seconds) * 1000
+          setOtp((prev) => ({ ...(prev || {}), ...data.otp }))
+        }
+      } catch { /* offline for a moment: keep waiting, the POS decides the outcome */ }
+    }
+    const pollId = window.setInterval(poll, OTP_POLL_MS)
+    return () => { stopped = true; window.clearInterval(clockId); window.clearInterval(pollId) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, token])
 
-  // Success / failure shared by confirm and verify-otp.
+  // Success / OTP step shared by the confirm response.
   const applyOutcome = useCallback((res, data) => {
     if (res.ok && data.success) {
       const newBalance = Number(data.wallet?.balance ?? 0)
@@ -197,60 +222,11 @@ function QrPay() {
       return true
     }
     if (data.status === 'otp_required') {
-      resendAt.current = performance.now()
       showChallenge(data)
-      return true
-    }
-    if (data.status === 'otp_invalid') {
-      showChallenge({ attempts_left: data.attempts_left }, data.detail || 'Wrong code.')
       return true
     }
     return false
   }, [info, refreshWallet, setPhaseBoth, showChallenge])
-
-  const verifyOtp = async () => {
-    if (!/^\d{6}$/.test(code) || phaseRef.current !== 'otp') return
-    setPhaseBoth('verifying')
-    setMessage('')
-    try {
-      const res = await fetch(`${API_BASE}/api/qr/${encodeURIComponent(token)}/verify-otp`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ challenge_id: otp.challenge_id, otp: code }),
-      })
-      if (res.status === 401) return backToLogin()
-      const data = await res.json().catch(() => ({}))
-      if (applyOutcome(res, data)) return
-      setMessage(data.detail || 'Payment failed.')
-      setPhaseBoth('failed')
-    } catch {
-      showChallenge({}, 'Could not reach the server. Your code was not used up; try again.')
-    }
-  }
-
-  const resendOtp = async () => {
-    if (resendIn > 0) return
-    try {
-      const res = await fetch(`${API_BASE}/api/qr/${encodeURIComponent(token)}/resend-otp`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ challenge_id: otp.challenge_id }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok && data.status === 'otp_required') {
-        resendAt.current = performance.now()
-        return showChallenge(data, 'A new code is on its way.')
-      }
-      if (data.code === 'resend_cooldown' || data.code === 'resend_limit') {
-        if (data.code === 'resend_cooldown') resendAt.current = performance.now()
-        return showChallenge({ resends_left: data.resends_left }, data.detail)
-      }
-      setMessage(data.detail || 'Payment failed.')
-      setPhaseBoth('failed')
-    } catch {
-      setMessage('Could not reach the server. Try again.')
-    }
-  }
 
   const cancelOtp = async () => {
     try {
@@ -345,44 +321,27 @@ function QrPay() {
         <button type="button" className="qrpay-btn" onClick={finish}>Back to my wallet</button>
       </>
     )
-  } else if ((shown === 'otp' || shown === 'verifying') && otp && info) {
-    const verifying = shown === 'verifying'
+  } else if (shown === 'otp' && otp && info) {
     const expired = otpLeft === 0
     body = (
-      <>
+      <div className="qp-wait" role="status" aria-live="polite">
+        <div className="qp-pulse" aria-hidden="true"><span className="qp-pulse-dot" /></div>
         <p className="qrpay-label">Verify your payment</p>
         <h1 className="qrpay-driver">{rupees(info.amount)} to {info.driver_name}</h1>
         <p className="qrpay-note">
-          For your security, enter the 6-digit code we emailed to <strong>{otp.email_hint || 'your email'}</strong>.
-          Nothing is charged until you do.
+          A code was sent to your email <strong>{otp.email_hint || ''}</strong>.<br />
+          <strong>Enter it on the driver&rsquo;s POS screen.</strong>
         </p>
-        <input
-          className="qrpay-otp"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={6}
-          placeholder="••••••"
-          aria-label="6-digit verification code"
-          value={code}
-          disabled={verifying || expired}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          onKeyDown={(e) => { if (e.key === 'Enter') verifyOtp() }}
-        />
         {message && <div className="qrpay-warn" role="alert">{message}</div>}
         <dl className="qrpay-rows">
           <div><dt>Code expires in</dt><dd className="qrpay-timer">{clock(otpLeft)}</dd></div>
           <div><dt>Attempts left</dt><dd>{otp.attempts_left ?? 3}</dd></div>
         </dl>
-        <button type="button" className="qrpay-btn" onClick={verifyOtp}
-                disabled={verifying || expired || code.length !== 6}>
-          {verifying ? 'Verifying…' : 'Verify and pay'}
-        </button>
-        <button type="button" className="qrpay-link" onClick={resendOtp}
-                disabled={verifying || resendIn > 0 || (otp.resends_left ?? 2) <= 0}>
-          {(otp.resends_left ?? 2) <= 0 ? 'No more codes can be sent' : resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
-        </button>
-        <button type="button" className="qrpay-link" onClick={cancelOtp} disabled={verifying}>Cancel payment</button>
-      </>
+        <p className="qrpay-note qp-small">
+          {expired ? 'The code has expired. This payment will be cancelled.' : 'Nothing is charged until the driver enters the correct code. This page updates by itself.'}
+        </p>
+        <button type="button" className="qrpay-link" onClick={cancelOtp}>Cancel payment</button>
+      </div>
     )
   } else if (shown === 'wrongrole') {
     body = (
@@ -412,14 +371,46 @@ function QrPay() {
   } else if (info) {
     // ready | paying | insufficient | retry
     const paying = shown === 'paying'
+    const driverPhoto = info.driver_photo_url && !photoBroken.driver ? info.driver_photo_url : null
+    const vehiclePhoto = info.vehicle_photo_url && !photoBroken.vehicle ? info.vehicle_photo_url : null
+    const vehicleName = [info.vehicle_type, info.vehicle_registration].filter(Boolean).join(' ')
     body = (
       <>
-        <p className="qrpay-label">Pay driver</p>
-        <h1 className="qrpay-driver">{info.driver_name}</h1>
-        <p className="qrpay-amount">{rupees(info.amount)}</p>
+        <div className="qp-driver-row">
+          <div className="qp-avatar-wrap">
+            {driverPhoto ? (
+              <img className="qp-avatar-photo" src={driverPhoto} alt={`Photo of ${info.driver_name}`} width="88" height="88"
+                   decoding="async" onError={() => setPhotoBroken((p) => ({ ...p, driver: true }))} />
+            ) : (
+              <DriverAvatar label={`Cartoon avatar of ${info.driver_name}`} />
+            )}
+          </div>
+          <div className="qp-driver-text">
+            <p className="qrpay-label">You are paying</p>
+            <h1 className="qp-driver-name">{info.driver_name}</h1>
+          </div>
+        </div>
+
+        <figure className="qp-vehicle">
+          {vehiclePhoto ? (
+            <img className="qp-vehicle-photo" src={vehiclePhoto} alt={vehicleName ? `Vehicle: ${vehicleName}` : 'Driver’s vehicle'}
+                 width="640" height="360" decoding="async" loading="lazy"
+                 onError={() => setPhotoBroken((p) => ({ ...p, vehicle: true }))} />
+          ) : (
+            <VehicleArt type={info.vehicle_type} label={vehicleName ? `Vehicle: ${vehicleName}` : 'Vehicle illustration'} />
+          )}
+          <figcaption className="qp-vehicle-cap">
+            <span className="qp-plate">{info.vehicle_registration || 'Number not set'}</span>
+            <span className="qp-vtype">{info.vehicle_type || 'Vehicle'}</span>
+          </figcaption>
+        </figure>
+
+        <div className="qp-fare">
+          <span className="qp-fare-label">Fare to pay</span>
+          <span className="qp-fare-amount">{rupees(info.amount)}</span>
+        </div>
+
         <dl className="qrpay-rows">
-          <div><dt>Vehicle number</dt><dd>{info.vehicle_registration || '—'}</dd></div>
-          <div><dt>Vehicle type</dt><dd>{info.vehicle_type || '—'}</dd></div>
           <div><dt>Your wallet balance</dt><dd className={short ? 'qrpay-low' : ''}>{rupees(balance)}</dd></div>
           <div><dt>Time left</dt><dd className="qrpay-timer">{clock(secondsLeft)}</dd></div>
         </dl>

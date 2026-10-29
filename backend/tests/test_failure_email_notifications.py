@@ -68,8 +68,8 @@ def wallet_pay(scene, fare=5000, key=None):
 
 
 def wallet_verify(scene, cid, otp):
-    return scene["env"].client.post("/api/wallet/pay/verify-otp", json={"challenge_id": cid, "otp": otp},
-                                    headers=scene["pax_headers"])
+    return scene["env"].client.post("/api/wallet/pos/verify-otp", json={"challenge_id": cid, "otp": otp},
+                                    headers=scene["driver_headers"])
 
 
 def wallet_cancel(scene, cid):
@@ -77,8 +77,7 @@ def wallet_cancel(scene, cid):
 
 
 def qr_verify(scene, token, cid, otp):
-    return scene["env"].client.post(f"/api/qr/{token}/verify-otp", json={"challenge_id": cid, "otp": otp},
-                                    headers=scene["pax_headers"])
+    return scene["env"].client.post(f"/api/qr/{token}/pos/verify-otp", json={"otp": otp}, headers=scene["driver_headers"])
 
 
 def qr_cancel_otp(scene, token, cid):

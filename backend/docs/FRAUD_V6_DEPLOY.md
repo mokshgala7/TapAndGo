@@ -36,6 +36,8 @@ Modes: `TAPGO_FRAUD_MODE` unset = **shadow** (everything is scored and recorded,
 | `TAPGO_RISK_DB_TIMEZONE` | `UTC` | Timezone of the naive `transactions.created_at` values. |
 | `TAPGO_OTP_EMAIL_TIMEOUT_SECONDS` | `10` | How long a request waits for the mail provider before declining an enforced payment. |
 | `TAPGO_OTP_DEMO_REDIRECT_EMAIL` | unset | **Demo only.** Sends the payment OTPs of the *listed* demo users to this one address instead of their own. Never applies to withdrawals, receipts or other mail; ignored (with a warning) in mode `off`/`enforce` or with an empty list; must be one valid address or the app refuses to start (the value is never echoed). The address is never logged, stored or returned by an API; the website/POS hint refers to it. **Remove it after the demo.** |
+| `TAPGO_NEWUSER_POLICY` | unset = `off` | `off` / `enforce`. With `enforce` (and mode `shadow`) every passenger **not** in `TAPGO_FRAUD_ENFORCE_USER_IDS` follows the fixed new-account policy (section 9). Any other value stops the app at startup. **Needs `PAYMENT_OTP_SECRET`** (the app refuses to start without it). Ignored, with a warning, in mode `off` and `enforce`. |
+| `TAPGO_NEWUSER_OTP_ABOVE` | `300` | Rupees. Under the new-account policy a payment of MORE than this needs the email OTP; the threshold is exclusive (300 passes, 301 asks). A non-number, zero, negative or absurd value stops the app. |
 
 Recommended for the demo: `TAPGO_FRAUD_MODE` unset (shadow), `TAPGO_FRAUD_ENFORCE_USER_IDS=4,69,70`,
 `PAYMENT_OTP_SECRET=<private random value>`, `TAPGO_OTP_DEMO_REDIRECT_EMAIL=<an inbox you can open>`.
@@ -138,7 +140,83 @@ screen and must be adapted to the background art.
 * **App refuses to start:** read the error: it names the variable (`TAPGO_FRAUD_MODE`, `TAPGO_FRAUD_ENFORCE_USER_IDS`,
   `PAYMENT_OTP_SECRET`, `TAPGO_OTP_DEMO_REDIRECT_EMAIL`) without echoing secrets.
 
-## 8. Limitations (honest)
+## 8. Two groups of passengers, the new-account policy, and where the code is typed
+
+| | Personal-model users (`TAPGO_FRAUD_ENFORCE_USER_IDS`, today `4,69,70`) | Everyone else |
+|---|---|---|
+| Decided by | the V6 model + the 10-minute rule (unchanged) | with `TAPGO_NEWUSER_POLICY=enforce`: **the amount alone**; with the policy `off` (default): nobody is stopped (shadow) |
+| Amount <= threshold (default Rs300) | model decides | pays normally |
+| Amount > threshold | model decides | email OTP (all three channels), entered on the POS |
+| 10-minute rule | applies | does **not** apply |
+| V6 score | decides | only **recorded** (`fraud_assessments.risk_score`); a scoring failure never blocks these users |
+| Recorded as | `mode=enforce`, `enforced_by_allowlist=true` | `mode=newuser`, `reasons=new_account_policy` when an OTP was required (existing columns, no migration) |
+
+*The new-account rule is a fixed amount policy. It is not the V6 model, it does not learn anything about a passenger, and
+it is deliberately blunt: a genuine ride above the threshold costs one OTP. It exists because brand-new accounts have no
+history for a personal model to use.* If the OTP cannot be emailed (no email on file, provider down) the payment above the
+threshold is declined, as for the personal-model users; a passenger without an email is declined **only** above the
+threshold. The insufficient-balance check still happens before any OTP email, and retrying the same payment never sends a second code.
+
+**Where the code is typed.** For QR and wallet payments the emailed code is entered **only on the driver's POS** (NFC always
+worked that way). The website shows a waiting screen ("A code was sent to your email. Enter it on the driver's POS screen."),
+polls the status and may cancel. The website endpoints `POST /api/qr/{token}/verify-otp|resend-otp` and
+`POST /api/wallet/pay/verify-otp|resend-otp` answer `403 OTP_ENTRY_POS_ONLY` and change nothing.
+
+Demo card for a **brand-new account** (policy `enforce`, passenger not in the list, wallet at least Rs1,000, any channel):
+
+| # | Fare | Result |
+|---|---|---|
+| 1 | Rs150 | pays normally (a normal fare) |
+| 2 | Rs300 | pays normally (the threshold itself passes) |
+| 3 | Rs301 | email OTP; type the code on the POS |
+| 4 | Rs500 | email OTP; type the code on the POS |
+
+Switch it on for a demo: set `PAYMENT_OTP_SECRET`, then `TAPGO_NEWUSER_POLICY=enforce` (and optionally
+`TAPGO_NEWUSER_OTP_ABOVE`). Switch it off again by removing `TAPGO_NEWUSER_POLICY`. Nothing changes until you set it.
+
+### POS endpoints for the code (QR and wallet payments)
+
+All are driver-authenticated (`Authorization: Bearer <driver session token>`) and **driver-scoped**: only the driver who
+owns the QR request (or the wallet payment's `driver_id`) can use them; anything else is `404 CHALLENGE_INVALID`, a
+passenger or inactive driver is `403 DRIVER_NOT_ALLOWED`, no token is `401`. Business results are HTTP 200 (like NFC).
+The POS only ever sees the amount, a **masked** email hint and counters; never the passenger's email, name or balance.
+
+| Purpose | QR request (the POS knows the `token`) | Wallet payment (the POS lists its pending codes) |
+|---|---|---|
+| Find a code waiting | `GET /api/qr/{token}/status` -> `status:"AwaitingOtp"` and `otp:{challenge_id,email_hint,expires_in_seconds,attempts_left,resends_left}` | `GET /api/wallet/pos/pending-otp` -> `{"success":true,"pending":[{amount,challenge_id,email_hint,expires_in_seconds,attempts_left,resends_left}]}` |
+| Verify | `POST /api/qr/{token}/pos/verify-otp` `{"otp":"123456"}` | `POST /api/wallet/pos/verify-otp` `{"challenge_id":"...","otp":"123456"}` |
+| Resend | `POST /api/qr/{token}/pos/resend-otp` (no body) | `POST /api/wallet/pos/resend-otp` `{"challenge_id":"..."}` |
+| Cancel | `POST /api/qr/{token}/pos/cancel-otp` (no body) | `POST /api/wallet/pos/cancel-otp` `{"challenge_id":"..."}` |
+| Status lookup | `GET /api/qr/{token}/pos/otp-status` | `GET /api/wallet/pos/otp-status?challenge_id=...` |
+
+Responses (verify / cancel; resend returns the first `otp_required` shape):
+
+* paid: `200 {"success":true,"status":"Completed","reference":"QR...","amount":500.0}` (`"idempotent":true` when repeated)
+* wrong code: `200 {"success":false,"status":"otp_invalid","attempts_left":2,"message":"Wrong OTP, 2 attempts left."}`
+* failed: `200 {"success":false,"status":"Failed","code":"OTP_FAILED|OTP_EXPIRED|OTP_CANCELLED|OTP_UNAVAILABLE|INSUFFICIENT_BALANCE|WALLET_FROZEN|PASSENGER_INACTIVE|DRIVER_UNAVAILABLE","message":"...","reference":"..."}`
+* resend ok: `200 {"success":false,"status":"otp_required","challenge_id":"...","email_hint":"m***@g***.com","expires_in_seconds":300,"attempts_left":3,"resends_left":1}`
+* resend refused: `429 {"code":"resend_cooldown",...}` (wait 30 s) or `400 {"code":"resend_limit",...}` (same fields as above plus `message`)
+* status lookup: `200 {"status":"otp_pending"|"completed"|"failed","transaction_ref":...,"amount":...,"failure_code":...}` plus the `otp` fields above while pending
+* not yours / unknown: `404 {"success":false,"status":"Failed","code":"CHALLENGE_INVALID","message":"..."}`
+
+Rules unchanged: single use, 5-minute expiry, 3 attempts stored in the database, 2 resends 30 s apart, HMAC-hashed code bound to
+passenger / driver / amount / channel / idempotency key, no money before a verified code, one failure email per failed payment.
+The paying passenger's page polls `GET /api/qr/{token}/my-status` (QR) or `GET /api/wallet/pay/otp-status?challenge_id=` (wallet):
+`status` is `AwaitingOtp` (with the masked hint and countdown), `Completed` (with the new `wallet_balance`) or `Failed` (with `code`).
+The existing NFC endpoints (`/api/nfc/pay/verify-otp|resend-otp|cancel-otp`, `/api/nfc/pay/status`) are unchanged.
+
+### Latency (what was measured, what was changed)
+
+A normal payment is dominated by **network round trips to the database** (one per SQL statement, plus one connection check
+per transaction), not by the model: local stage timings (warm) are about 10-15 ms per payment in total. Changes: the shadow
+score and its record are produced **after** the response (shadow and new-account passengers pay without any fraud database
+work on the critical path; enforced passengers are still decided synchronously and fail closed), objects are no longer
+re-read after each commit (25 -> 18 statements for an NFC payment, 28 -> 19 for QR, 24 -> 17 for wallet), the history query
+reads only the columns the scorer needs, and the model is loaded by a background thread at startup (it can neither delay nor
+crash startup). The Render free-tier **cold start** (the instance sleeping) is separate and cannot be fixed in code; the
+distance between the Render region and the Supabase region multiplies every round trip, so keep them in the same region.
+
+## 9. Limitations (honest)
 
 * All metrics are synthetic/demo-derived (held-out synthetic set: about 4.8% of legitimate rides get an OTP at threshold
   0.0633, recall 0.50, precision 0.13). They are **not** evidence of real-world performance.
@@ -152,6 +230,9 @@ screen and must be adapted to the background art.
 * Scores are not monotone in the fare for low scores, and fares far *below* the usual can flag in rapid sequences;
   the flag itself is monotone above Rs30 in the tested settings (one exception class: user 70 in rapid sequences).
 * Not verified in production, and not tested on real hardware.
+* The confirm-payment page's vehicle photo is a third-party CC BY-SA 4.0 image (see `frontend/public/vehicles/CREDITS.md`);
+  the driver avatar is original artwork, never a real person's photo. Photos per driver need the optional migration
+  `2026_11_driver_vehicle_photo_urls.sql`; without it the page shows the avatar and a vehicle illustration chosen by type.
 
 ## Mandatory 10-minute rule (all passengers, all channels)
 
