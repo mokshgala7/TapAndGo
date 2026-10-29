@@ -328,6 +328,17 @@ def run_database_migrations(eng):
         except Exception as create_ex:
             logger.warning(f"[Warning] Base.metadata.create_all: {create_ex}")
 
+        # 5b. fraud_assessments.enforced_by_allowlist (create_all never adds a column to an existing table;
+        #     only matters if an earlier version of the table was already created).
+        try:
+            insp = inspect(eng)
+            if "fraud_assessments" in set(insp.get_table_names()):
+                if "enforced_by_allowlist" not in {c["name"] for c in insp.get_columns("fraud_assessments")}:
+                    _exec_safe(eng, "ALTER TABLE fraud_assessments ADD COLUMN enforced_by_allowlist BOOLEAN NOT NULL DEFAULT FALSE",
+                               "fraud_assessments.enforced_by_allowlist")
+        except Exception as fa_ex:
+            logger.warning(f"[Warning] fraud_assessments column check: {fa_ex}")
+
         # 5b. UNIQUE provider_transaction_id (guarded; never deletes data)
         ensure_unique_provider_transaction_index(eng)
 
@@ -585,6 +596,10 @@ def run_database_migrations(eng):
     except Exception as e:
         logger.error(f"[Database Migration Critical] Startup migration error: {e}")
 
+
+# Refuse to start on an invalid TAPGO_FRAUD_MODE, or on enforce without a real PAYMENT_OTP_SECRET.
+from app.services.fraud_gate import validate_fraud_config  # noqa: E402
+validate_fraud_config()
 
 # Execute migration at startup
 run_database_migrations(engine)

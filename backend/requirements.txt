@@ -13,3 +13,8 @@ razorpay>=1.4.1
 boto3>=1.34.0
 supabase>=2.0.0
 reportlab>=4.0.0
+# Fraud risk scoring (shadow mode, app/services/fraud_risk_shadow.py). xgboost 2.x / 3.0.x load the model but score it
+# differently; the loader's self-check refuses them, so keep >=3.1.
+numpy>=1.26,<3
+pandas>=2.1,<4
+xgboost>=3.1,<4

@@ -5,7 +5,7 @@ import os
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -643,6 +643,7 @@ def _pay_response(txn: Transaction, wallet: Wallet, driver_name: str, message: s
 @router.post("/pay")
 def pay_fare(
     data: PayRequest,
+    background_tasks: BackgroundTasks = None,       # injected by FastAPI; optional for direct callers
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -657,6 +658,9 @@ def pay_fare(
       credited, and a failed request changes nothing.
     - `idempotency_key` is mandatory and scoped to the payer; a replay returns
       the original transaction, a conflicting reuse is refused.
+    - Fraud gate (app/services/fraud_gate.py): with TAPGO_FRAUD_MODE=enforce a flagged payment answers
+      {"success": false, "status": "otp_required", "challenge_id", ...} and moves no money until
+      POST /api/wallet/pay/verify-otp succeeds.
     """
     passenger = current_user
     own_user_id(data.passenger_id, passenger)
@@ -678,6 +682,8 @@ def pay_fare(
             return None
         if existing.driver_id != data.driver_id or existing.amount != fare_dec:
             raise HTTPException(status_code=409, detail="This idempotency key was used for a different payment.")
+        if existing.status != "completed":
+            return _otp_failed_response(existing, existing.failure_code, idempotent=True)
         drv = db.get(User, existing.driver_id)
         return _pay_response(
             existing, get_or_create_wallet(passenger.id, db), drv.name if drv else "Driver",
@@ -687,6 +693,17 @@ def pay_fare(
     done = replay()
     if done:
         return done
+
+    from app.services import payment_otp
+    from app.services.fraud_gate import evaluate_payment
+
+    pending = payment_otp.pending_for_key(db, scoped_key)
+    if pending is not None:
+        if pending.driver_id != data.driver_id or pending.amount != fare_dec:
+            raise HTTPException(status_code=409, detail="This idempotency key was used for a different payment.")
+        now = datetime.utcnow()
+        return _wallet_otp_outcome(db, payment_otp.expire_if_due(db, pending, now)
+                                   or payment_otp.final_outcome(db, pending, now), background_tasks)
 
     driver = db.get(User, data.driver_id)
     if not driver or driver.account_type != "driver" or driver.status != "active" or driver.id == passenger.id:
@@ -699,6 +716,22 @@ def pay_fare(
         raise HTTPException(status_code=400, detail="Your passenger wallet is frozen. Payment failed.")
     if d_wallet.is_frozen:
         raise HTTPException(status_code=400, detail="The driver cannot receive payments right now.")
+    if p_wallet.balance < fare_dec:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient wallet balance (₹{float(p_wallet.balance):.2f}). Please add funds first."
+        )
+
+    now = datetime.utcnow()
+    decision = evaluate_payment(db, passenger, driver, fare_dec, now, scoped_key, "wallet")
+    if decision["action"] == "otp_required":
+        try:
+            out = payment_otp.open_challenge(db, passenger=passenger, driver=driver, channel="wallet",
+                                             scoped_key=scoped_key, amount=fare_dec, now=now,
+                                             assessment_id=decision.get("assessment_id"))
+        except payment_otp.ChallengeConflict:
+            raise HTTPException(status_code=409, detail="This idempotency key was used for a different payment.")
+        return _wallet_otp_outcome(db, out, background_tasks)
 
     steps = {
         passenger.id: lambda: _debit(db, passenger.id, fare_dec),
@@ -727,12 +760,13 @@ def pay_fare(
         amount=fare_dec,
         payment_method=(data.payment_method or "QR")[:20],
         status="completed",
-        otp_verified=True,
+        otp_verified=False,
         fraud_status="clear",
         transaction_type="ride_payment",
         description=f"₹{fare_dec:.2f} paid to {driver.name}",
         balance_after=p_wallet.balance,
         idempotency_key=scoped_key,
+        created_at=now,
     )
     db.add(txn)
     try:
@@ -780,3 +814,132 @@ def pay_fare(
         logger.warning(f"[RideEmail] Driver credit receipt failed: {e}")
 
     return _pay_response(txn, p_wallet, driver.name, f"Payment of ₹{fare_dec:.2f} completed.")
+
+
+# ───────────────────────────── ride payment OTP step-up ─────────────────────
+
+_WALLET_OTP_MESSAGES = {
+    "OTP_FAILED": "Wrong code entered too many times. The payment was cancelled and nothing was charged.",
+    "OTP_EXPIRED": "The verification code expired. The payment was cancelled and nothing was charged.",
+    "OTP_CANCELLED": "The payment was cancelled. Nothing was charged.",
+    "OTP_UNAVAILABLE": "This payment needs email verification, but no code could be sent to your registered "
+                       "email. The payment was declined and nothing was charged.",
+    "INSUFFICIENT_BALANCE": "Insufficient wallet balance. Nothing was charged.",
+    "WALLET_FROZEN": "Your passenger wallet is frozen. Payment failed.",
+    "PASSENGER_INACTIVE": "Your account is not active. Payment failed.",
+    "DRIVER_UNAVAILABLE": "The driver cannot receive payments right now.",
+}
+
+
+def _otp_failed_response(txn: Optional[Transaction], code: Optional[str], idempotent: bool = False):
+    from fastapi.responses import JSONResponse
+    content = {"success": False, "status": "Failed", "code": code or "FAILED",
+               "detail": _WALLET_OTP_MESSAGES.get(code, "The payment could not be completed. Nothing was charged.")}
+    if txn is not None:
+        content["reference"] = txn.reference
+    if idempotent:
+        content["idempotent"] = True
+    return JSONResponse(status_code=400, content=content)
+
+
+def _send_otp_failure_notice(**kwargs):
+    from app.utils.nfc_failure_email import send_nfc_failure_email
+    try:
+        send_nfc_failure_email(**kwargs)
+    except Exception as e:
+        logger.warning(f"[RideEmail] Failure notice failed: {e}")
+
+
+def _wallet_otp_outcome(db: Session, out, background_tasks: BackgroundTasks):
+    from fastapi.responses import JSONResponse
+    from app.services import payment_otp
+    now = datetime.utcnow()
+    for notice in out.notices:
+        if background_tasks is not None:
+            background_tasks.add_task(_send_otp_failure_notice, **notice)
+        else:
+            _send_otp_failure_notice(**notice)
+    ch = out.challenge
+    if out.kind == "otp_required":
+        return JSONResponse(status_code=200, content={
+            "success": False, "status": "otp_required",
+            "detail": "For your security, enter the code we emailed you to complete this payment.",
+            **payment_otp.public_view(ch, db.get(User, ch.passenger_id), now),
+        })
+    if out.kind == "otp_invalid":
+        n = out.attempts_left
+        return JSONResponse(status_code=200, content={
+            "success": False, "status": "otp_invalid", "attempts_left": n,
+            "detail": f"Wrong code. {n} attempt{'s' if n != 1 else ''} left.",
+        })
+    if out.kind == "completed":
+        txn = out.txn
+        passenger, driver = db.get(User, txn.passenger_id), db.get(User, txn.driver_id)
+        p_wallet = get_or_create_wallet(passenger.id, db)
+        if not out.idempotent:
+            try:
+                if passenger.email:
+                    send_ride_passenger_email(
+                        to_email=passenger.email, passenger_name=passenger.name, fare=float(txn.amount),
+                        driver_name=driver.name, reference=txn.reference, status="Successful",
+                        vehicle_type=driver.vehicle_type, vehicle_registration=driver.vehicle_registration,
+                        payment_method=txn.payment_method, balance_after=float(txn.balance_after),
+                        created_at=txn.created_at,
+                    )
+            except Exception as e:
+                logger.warning(f"[RideEmail] Passenger receipt failed: {e}")
+            try:
+                if driver.email:
+                    send_ride_driver_email(
+                        to_email=driver.email, driver_name=driver.name, fare=float(txn.amount),
+                        passenger_name=passenger.name, reference=txn.reference, payment_method=txn.payment_method,
+                    )
+            except Exception as e:
+                logger.warning(f"[RideEmail] Driver credit receipt failed: {e}")
+        return _pay_response(txn, p_wallet, driver.name if driver else "Driver",
+                             f"Payment of ₹{float(txn.amount):.2f} completed.", idempotent=out.idempotent)
+    return _otp_failed_response(out.txn, out.code, idempotent=out.idempotent)
+
+
+class PayOtpRequest(BaseModel):
+    challenge_id: Optional[str] = None
+    otp: Optional[str] = None
+
+
+def _own_wallet_challenge(data: PayOtpRequest, passenger: User, db: Session):
+    from app.services import payment_otp
+    ch = payment_otp.get_challenge(db, data.challenge_id)
+    if ch is None or ch.channel != "wallet" or ch.passenger_id != passenger.id:
+        raise HTTPException(status_code=404, detail="Verification not found for this payment.")
+    return ch
+
+
+@router.post("/pay/verify-otp")
+def verify_pay_otp(data: PayOtpRequest, background_tasks: BackgroundTasks,
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.services import payment_otp
+    ch = _own_wallet_challenge(data, current_user, db)
+    return _wallet_otp_outcome(db, payment_otp.verify(db, ch, data.otp, datetime.utcnow()), background_tasks)
+
+
+@router.post("/pay/resend-otp")
+def resend_pay_otp(data: PayOtpRequest, background_tasks: BackgroundTasks,
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from fastapi.responses import JSONResponse
+    from app.services import payment_otp
+    ch = _own_wallet_challenge(data, current_user, db)
+    now = datetime.utcnow()
+    out, refused = payment_otp.resend(db, ch, now)
+    if refused:
+        return JSONResponse(status_code=429 if refused[0] == "resend_cooldown" else 400,
+                            content={"success": False, "status": "otp_required", "code": refused[0],
+                                     "detail": refused[1], **payment_otp.public_view(ch, current_user, now)})
+    return _wallet_otp_outcome(db, out, background_tasks)
+
+
+@router.post("/pay/cancel-otp")
+def cancel_pay_otp(data: PayOtpRequest, background_tasks: BackgroundTasks,
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.services import payment_otp
+    ch = _own_wallet_challenge(data, current_user, db)
+    return _wallet_otp_outcome(db, payment_otp.cancel(db, ch, datetime.utcnow()), background_tasks)
