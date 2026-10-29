@@ -640,6 +640,15 @@ def _pay_response(txn: Transaction, wallet: Wallet, driver_name: str, message: s
     return body
 
 
+def _notify_insufficient_balance(db: Session, passenger: User, driver: User, amount: Decimal, scoped_key: str) -> None:
+    """Email the passenger that a wallet payment was declined for lack of funds. This route answers with
+    HTTPException, which drops BackgroundTasks, so the notice is handed to a worker pool: the response never waits
+    for the mail provider and a failed send never changes it."""
+    from app.utils.nfc_failure_email import queue_decline_notice
+    queue_decline_notice(db, None, passenger=passenger, driver=driver, amount=amount,
+                         code="INSUFFICIENT_BALANCE", channel="wallet", scoped_key=scoped_key)
+
+
 @router.post("/pay")
 def pay_fare(
     data: PayRequest,
@@ -717,6 +726,7 @@ def pay_fare(
     if d_wallet.is_frozen:
         raise HTTPException(status_code=400, detail="The driver cannot receive payments right now.")
     if p_wallet.balance < fare_dec:
+        _notify_insufficient_balance(db, passenger, driver, fare_dec, scoped_key)
         raise HTTPException(
             status_code=400,
             detail=f"Insufficient wallet balance (₹{float(p_wallet.balance):.2f}). Please add funds first."
@@ -744,6 +754,7 @@ def pay_fare(
                 db.refresh(p_wallet)
                 if p_wallet.is_frozen:
                     raise HTTPException(status_code=400, detail="Your passenger wallet is frozen. Payment failed.")
+                _notify_insufficient_balance(db, passenger, driver, fare_dec, scoped_key)
                 raise HTTPException(
                     status_code=400,
                     detail=f"Insufficient wallet balance (₹{float(p_wallet.balance):.2f}). Please add funds first."

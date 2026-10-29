@@ -58,7 +58,7 @@ from app.models import PaymentRequest, Transaction, User, Wallet
 from app.routes.auth import get_current_user
 from app.services import payment_otp
 from app.services.fraud_gate import evaluate_payment
-from app.utils.nfc_failure_email import send_nfc_failure_email
+from app.utils.nfc_failure_email import queue_decline_notice, send_nfc_failure_email
 from app.utils.email_service import send_ride_passenger_email, send_ride_driver_email
 from app.routes.wallet import (
     _credit,
@@ -518,6 +518,8 @@ def confirm_qr_payment(
     p_wallet = get_or_create_wallet(passenger.id, db)
     if not p_wallet.is_frozen and p_wallet.balance < fare_dec:
         # Never ask for an OTP on a payment that cannot succeed; the request stays Pending.
+        queue_decline_notice(db, background_tasks, passenger=passenger, driver=driver, amount=fare_dec,
+                             code="INSUFFICIENT_BALANCE", channel="qr", scoped_key=scoped_key)
         return JSONResponse(status_code=400, content={
             "success": False,
             "code": "insufficient_balance",
@@ -583,6 +585,8 @@ def confirm_qr_payment(
                 if not p_wallet.is_frozen:
                     # Short of funds: the request is Pending again, so the passenger can top up and
                     # retry before it expires. Nothing was charged.
+                    queue_decline_notice(db, background_tasks, passenger=passenger, driver=driver, amount=fare_dec,
+                                         code="INSUFFICIENT_BALANCE", channel="qr", scoped_key=scoped_key)
                     return JSONResponse(status_code=400, content={
                         "success": False,
                         "code": "insufficient_balance",
