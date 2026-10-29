@@ -49,8 +49,12 @@ import re
 import sys
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from types import SimpleNamespace
+
+from sqlalchemy import or_
 
 from app.config import DEV_SECRET_KEY
+from app.database import commit_keep_loaded
 from app.models import FraudAssessment, Transaction
 from app.services.fraud_risk_shadow import ml_disabled, run_assessment
 
@@ -92,6 +96,35 @@ def enforce_user_ids() -> frozenset:
                 "passenger ids separated by commas, e.g. 12,34 (unset or empty = nobody).")
         ids.add(int(item))
     return frozenset(ids)
+
+
+NEWUSER_POLICIES = ("off", "enforce")
+DEFAULT_NEWUSER_OTP_ABOVE = Decimal("300")
+MAX_NEWUSER_OTP_ABOVE = Decimal("1000000")
+
+
+def newuser_policy() -> str:
+    """TAPGO_NEWUSER_POLICY: off (default) | enforce. Anything else is a configuration error."""
+    raw = os.getenv("TAPGO_NEWUSER_POLICY", "").strip().lower() or "off"
+    if raw not in NEWUSER_POLICIES:
+        raise FraudConfigError(f"TAPGO_NEWUSER_POLICY={raw[:30]!r} is not valid. Allowed values: off | enforce "
+                               "(unset means off).")
+    return raw
+
+
+def newuser_otp_above() -> Decimal:
+    """TAPGO_NEWUSER_OTP_ABOVE in rupees (default 300). The threshold is exclusive: an amount EQUAL to it passes."""
+    raw = os.getenv("TAPGO_NEWUSER_OTP_ABOVE", "").strip()
+    if not raw:
+        return DEFAULT_NEWUSER_OTP_ABOVE
+    try:
+        value = Decimal(raw)
+    except InvalidOperation:
+        value = None
+    if value is None or not value.is_finite() or value <= 0 or value > MAX_NEWUSER_OTP_ABOVE:
+        raise FraudConfigError(f"TAPGO_NEWUSER_OTP_ABOVE={raw[:20]!r} is not valid. Expected a positive amount in "
+                               f"rupees up to {MAX_NEWUSER_OTP_ABOVE}, e.g. 300 (unset means 300).")
+    return value
 
 
 def effective_mode(passenger_id):
@@ -141,7 +174,21 @@ def validate_fraud_config() -> str:
     a warning: no OTP is issued."""
     mode = fraud_mode()
     listed = enforce_user_ids()                         # validates the list even when mode is off
+    policy = newuser_policy()                           # validated even when it would be ignored
+    above = newuser_otp_above()
     redirect = otp_demo_redirect()                      # validates the address (never echoed)
+    if policy == "enforce":
+        if mode != "shadow":
+            logger.warning(json.dumps({"status": "newuser_policy_ignored", "note": "TAPGO_NEWUSER_POLICY is IGNORED: " + (
+                "mode is off" if mode == "off" else "TAPGO_FRAUD_MODE=enforce already covers everyone with the model")}))
+        elif not otp_secret_is_safe():
+            raise FraudConfigError(
+                "TAPGO_NEWUSER_POLICY=enforce requires PAYMENT_OTP_SECRET to be set to a private random value "
+                "(unset, or equal to the development SECRET_KEY default, is refused). Set PAYMENT_OTP_SECRET first, "
+                "then enable the policy.")
+        else:
+            logger.warning(json.dumps({"status": "newuser_policy_active", "otp_above": str(above),
+                                       "note": "passengers outside TAPGO_FRAUD_ENFORCE_USER_IDS need an email OTP above this amount"}))
     if redirect:
         note = ("TAPGO_OTP_DEMO_REDIRECT_EMAIL is IGNORED: " + ("mode is off" if mode == "off" else
                 "TAPGO_FRAUD_MODE=enforce covers everyone (the redirect is only for the listed demo users)" if mode == "enforce" else
@@ -170,31 +217,53 @@ def _ensure_handler() -> None:
         logger.propagate = False
 
 
-def ten_minute_rule(db, passenger_id: int, now: datetime):
-    """(fired, elapsed_seconds or None) against the previous COMPLETED ride payment. No ML involved."""
-    last = (
+def ten_minute_rule(db, passenger_id: int, now: datetime, exclude_key=None):
+    """(fired, elapsed_seconds or None) against the previous COMPLETED ride payment. No ML involved.
+    `exclude_key` skips the payment being assessed (used when the record is written after that payment was saved)."""
+    q = (
         db.query(Transaction.created_at)
         .filter(Transaction.passenger_id == passenger_id, Transaction.transaction_type == "ride_payment",
                 Transaction.status == "completed", Transaction.created_at.isnot(None))
-        .order_by(Transaction.created_at.desc())
-        .first()
     )
+    if exclude_key is not None:
+        q = q.filter(or_(Transaction.idempotency_key.is_(None), Transaction.idempotency_key != exclude_key))
+    last = q.order_by(Transaction.created_at.desc()).first()
     if not last:
         return False, None
     elapsed = max(0, int((now - last[0]).total_seconds() // 1))
     return elapsed <= TEN_MINUTES_S, elapsed
 
 
+def _clean_amount(amount):
+    """(amount as Decimal, usable?). A value that is not a finite number > 0 is invalid input: never scored, never
+    low risk, stored as 0."""
+    try:
+        amount = Decimal(str(amount))
+        ok = amount.is_finite() and amount > 0
+    except (InvalidOperation, ValueError, TypeError):
+        ok = False
+    return (amount if ok else Decimal("0.00")), ok
+
+
 def evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_key: str, channel: str,
-                     payment_request_id=None) -> dict:
+                     payment_request_id=None, background_tasks=None) -> dict:
     """Decide whether this payment may proceed or needs an email OTP first. Commits one fraud_assessments row
     (call it while nothing else is pending in the session). Returns the decision dict with `assessment_id`.
     Never raises for fraud-code problems: an unexpected error is otp_required for an enforced passenger (fail
-    closed) and proceed for everyone else (payment unchanged)."""
+    closed) and proceed for everyone else (payment unchanged).
+
+    Three groups of passengers (see the module docstring):
+      personal model   (allowlist, or mode enforce)  decided by the V6 model + 10-minute rule, synchronously;
+      new-account policy (mode shadow + TAPGO_NEWUSER_POLICY=enforce, not in the allowlist)  decided by the amount alone;
+      shadow           nothing is decided; the model is only scored and recorded.
+    When `background_tasks` is given and nothing depends on the scoring (shadow, or a new-account payment that needs
+    no OTP) the scoring and the record are produced AFTER the response, so that fraud code adds no database
+    round trips or model time to the payment. The payment's own row is excluded from that history by its key."""
     if channel not in CHANNELS:
         raise ValueError(f"channel must be one of {CHANNELS}")
     try:
-        return _evaluate_payment(db, passenger, driver, amount, now, idempotency_key, channel, payment_request_id)
+        return _evaluate_payment(db, passenger, driver, amount, now, idempotency_key, channel, payment_request_id,
+                                 background_tasks)
     except Exception as exc:  # noqa: BLE001
         try:
             db.rollback()
@@ -202,30 +271,49 @@ def evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_k
             pass
         try:
             mode, by_allowlist = effective_mode(passenger.id)
+            policy_on = mode == "shadow" and newuser_policy() == "enforce"
+            mode_label = "newuser" if policy_on else mode
+            policy_otp = False
+            if policy_on:
+                clean, ok = _clean_amount(amount)
+                policy_otp = (not ok) or clean > newuser_otp_above()
         except FraudConfigError:
-            mode, by_allowlist = "enforce", False               # unreadable configuration: fail closed
-        logger.error(json.dumps({"status": "gate_error", "error": type(exc).__name__, "mode": mode}))
-        enforced = mode == "enforce"
-        return {"action": "otp_required" if enforced else "proceed", "would_require_otp": mode != "off", "mode": mode,
+            mode, by_allowlist, mode_label, policy_on, policy_otp = "enforce", False, "enforce", False, False  # unreadable configuration: fail closed
+        logger.error(json.dumps({"status": "gate_error", "error": type(exc).__name__, "mode": mode_label}))
+        enforced = mode == "enforce" or policy_otp
+        return {"action": "otp_required" if enforced else "proceed", "would_require_otp": mode != "off", "mode": mode_label,
                 "enforced_by_allowlist": by_allowlist, "reasons": ["ml_failure:gate_error"], "risk_score": None,
                 "model_flag": None, "rule_10min": False, "elapsed_seconds": None, "ml_status": "gate_error",
                 "model_version": None, "threshold": None, "assessment_id": None}
 
 
 def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_key: str, channel: str,
-                      payment_request_id=None) -> dict:
+                      payment_request_id=None, background_tasks=None) -> dict:
     mode, by_allowlist = effective_mode(passenger.id)
-    # The routes validate amounts before calling the gate; the gate still never raises on a bad one. An amount that
-    # is not a finite number > 0 counts as invalid input: never scored, never "low risk" (OTP in enforce), stored as 0.
-    try:
-        amount = Decimal(str(amount))
-        amount_ok = amount.is_finite() and amount > 0
-    except (InvalidOperation, ValueError, TypeError):
-        amount_ok = False
-    if not amount_ok:
-        amount = Decimal("0.00")
+    # The routes validate amounts before calling the gate; the gate still never raises on a bad one.
+    amount, amount_ok = _clean_amount(amount)
+    policy_on = mode == "shadow" and newuser_policy() == "enforce"
+    policy_otp = policy_on and ((not amount_ok) or amount > newuser_otp_above())
+    mode_label = "newuser" if policy_on else mode
 
-    rule_fired, elapsed = ten_minute_rule(db, passenger.id, now)
+    if mode == "shadow" and not policy_otp and background_tasks is not None:
+        # Nothing here depends on the scoring: answer now, score and record after the response.
+        background_tasks.add_task(_record_after_response, db.get_bind(), passenger.id, driver.id, driver.vehicle_type,
+                                  amount, amount_ok, now, idempotency_key, channel, payment_request_id, mode_label,
+                                  policy_on)
+        return {"action": "proceed", "would_require_otp": None, "mode": mode_label, "enforced_by_allowlist": False,
+                "reasons": [], "risk_score": None, "model_flag": None, "rule_10min": None, "elapsed_seconds": None,
+                "ml_status": "deferred", "model_version": None, "threshold": None, "assessment_id": None}
+
+    return _assess_and_store(db, passenger.id, driver, amount, amount_ok, now, idempotency_key, channel,
+                             payment_request_id, mode, mode_label, by_allowlist, policy_on, policy_otp)
+
+
+def _assess_and_store(db, passenger_id, driver, amount, amount_ok, now, idempotency_key, channel, payment_request_id,
+                      mode, mode_label, by_allowlist, policy_on, policy_otp, exclude_key=None) -> dict:
+    """Score (rule + model), decide, store one fraud_assessments row and log one line. `driver` needs .id and
+    .vehicle_type. A scoring failure never decides for shadow / new-account passengers."""
+    rule_fired, elapsed = ten_minute_rule(db, passenger_id, now, exclude_key)
 
     risk = None
     if mode == "off":
@@ -235,9 +323,10 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
     elif ml_disabled():
         ml_status = "disabled"
     else:
-        assessment, audit = run_assessment(db, passenger.id, driver, amount, now, idempotency_key,
+        assessment, audit = run_assessment(db, passenger_id, driver, amount, now, idempotency_key,
                                            mode="enforce" if mode == "enforce" else "shadow",
-                                           payment_request_id=payment_request_id, channel=channel)
+                                           payment_request_id=payment_request_id, channel=channel,
+                                           exclude_key=exclude_key)
         if assessment is None:
             ml_status = "error"
         else:
@@ -245,19 +334,25 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
             risk = assessment.risk if assessment.status == "scored" else None
 
     model_flag = bool(risk["model_flag"]) if risk else None
-    reasons = []
-    if rule_fired:
-        reasons.append("rule_10min")
-    if model_flag:
-        reasons.append("model_flag")
-    if ml_status not in ("scored", "disabled", "off"):
-        reasons.append(f"ml_failure:{ml_status}")
-
-    action = "otp_required" if (mode == "enforce" and reasons) else "proceed"
+    if policy_on:
+        # The new-account policy decides on the amount alone; the model and the 10-minute rule are only recorded.
+        reasons = ["new_account_policy"] if policy_otp else []
+        action = "otp_required" if policy_otp else "proceed"
+        would = policy_otp
+    else:
+        reasons = []
+        if rule_fired:
+            reasons.append("rule_10min")
+        if model_flag:
+            reasons.append("model_flag")
+        if ml_status not in ("scored", "disabled", "off"):
+            reasons.append(f"ml_failure:{ml_status}")
+        action = "otp_required" if (mode == "enforce" and reasons) else "proceed"
+        would = bool(reasons) and mode != "off"
     decision = {
         "action": action,
-        "would_require_otp": bool(reasons) and mode != "off",
-        "mode": mode,
+        "would_require_otp": would,
+        "mode": mode_label,
         "enforced_by_allowlist": by_allowlist,
         "reasons": reasons,
         "risk_score": risk["risk_score"] if risk else None,
@@ -270,14 +365,14 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
     }
 
     row = FraudAssessment(
-        passenger_id=passenger.id, driver_id=driver.id, channel=channel, idempotency_key=idempotency_key,
-        amount=amount, assessed_at=now, mode=mode, enforced_by_allowlist=by_allowlist, risk_score=decision["risk_score"], model_flag=model_flag,
+        passenger_id=passenger_id, driver_id=driver.id, channel=channel, idempotency_key=idempotency_key,
+        amount=amount, assessed_at=now, mode=mode_label, enforced_by_allowlist=by_allowlist, risk_score=decision["risk_score"], model_flag=model_flag,
         rule_10min=rule_fired, elapsed_seconds=elapsed, ml_status=ml_status[:30], decision=action,
         reasons=",".join(reasons) or None, model_version=decision["model_version"], threshold=decision["threshold"],
     )
     try:
         db.add(row)
-        db.commit()
+        commit_keep_loaded(db)                  # keep passenger/driver/wallet loaded: no re-read round trips afterwards
         decision["assessment_id"] = row.id
     except Exception as exc:  # noqa: BLE001 - an audit write must not decide the payment
         db.rollback()
@@ -287,12 +382,29 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
     try:
         _ensure_handler()
         logger.info(json.dumps({k: v for k, v in decision.items()} | {
-            "channel": channel, "passenger_id": passenger.id, "driver_id": driver.id,
+            "channel": channel, "passenger_id": passenger_id, "driver_id": driver.id,
             "amount": float(amount), "at": now.isoformat(timespec="seconds"),
         }, default=str))
     except Exception:  # noqa: BLE001
         pass
     return decision
+
+
+def _record_after_response(bind, passenger_id, driver_id, vehicle_type, amount, amount_ok, now, idempotency_key,
+                           channel, payment_request_id, mode_label, policy_on) -> None:
+    """Background task (runs after the response, own session, never raises): the shadow score and record of a payment
+    that was already allowed to proceed. Fraud code can therefore never slow or break a shadow / new-account payment."""
+    try:
+        from sqlalchemy.orm import sessionmaker
+        with sessionmaker(bind=bind, autoflush=False)() as db:
+            _assess_and_store(db, passenger_id, SimpleNamespace(id=driver_id, vehicle_type=vehicle_type), amount,
+                              amount_ok, now, idempotency_key, channel, payment_request_id, "shadow", mode_label,
+                              False, policy_on, False, exclude_key=idempotency_key)
+    except Exception as exc:  # noqa: BLE001
+        try:
+            logger.warning(json.dumps({"status": "deferred_assessment_failed", "error": type(exc).__name__}))
+        except Exception:  # noqa: BLE001
+            pass
 
 
 def link_challenge(db, assessment_id, challenge_id) -> None:

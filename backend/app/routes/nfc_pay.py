@@ -60,7 +60,7 @@ from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import commit_keep_loaded, get_db
 from app.models import NFCCard, Transaction, User, Wallet
 from app.routes.auth import get_current_user
 from app.services import payment_otp
@@ -397,7 +397,7 @@ def nfc_pay(
         return record_failure("INSUFFICIENT_BALANCE", owner=passenger, wallet=p_wallet)
 
     now = datetime.utcnow()
-    decision = evaluate_payment(db, passenger, driver, amount, now, scoped_key, "nfc")
+    decision = evaluate_payment(db, passenger, driver, amount, now, scoped_key, "nfc", background_tasks=background_tasks)
     if decision["action"] == "otp_required":
         try:
             out = payment_otp.open_challenge(db, passenger=passenger, driver=driver, channel="nfc",
@@ -441,7 +441,7 @@ def nfc_pay(
     )
     db.add(txn)
     try:
-        db.commit()
+        commit_keep_loaded(db)          # values are fresh (p_wallet was refreshed after the debit): no re-read round trips
     except IntegrityError:
         # Another request with the same key committed first: nothing of ours persists.
         db.rollback()
@@ -450,8 +450,6 @@ def nfc_pay(
             return done
         logger.warning("[NFCPay] commit conflict for driver %s card ...%s", driver.id, uid[-4:])
         raise HTTPException(status_code=409, detail="Could not record the payment. Please tap again.")
-    db.refresh(p_wallet)
-    db.refresh(txn)
 
     # Receipts run after the response. The request's DB session is closed by then, so everything
     # the emails need is copied into plain values here.

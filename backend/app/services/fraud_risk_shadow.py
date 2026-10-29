@@ -22,8 +22,12 @@ import json
 import logging
 import os
 import sys
+import threading
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Optional
+
+from sqlalchemy import or_
 
 from app.models import Transaction, User
 
@@ -72,7 +76,7 @@ def _clean_history(history, at: datetime):
 
 
 def run_assessment(db, passenger_id, driver, amount, at: datetime, idempotency_key: str, mode: str = "shadow",
-                   payment_request_id=None, channel=None):
+                   payment_request_id=None, channel=None, exclude_key=None):
     """Score one ride payment and log the audit record. Never raises.
     Returns (Assessment or None, audit dict or None). None/None only when ML is disabled by the kill switch."""
     if ml_disabled():
@@ -83,9 +87,14 @@ def run_assessment(db, passenger_id, driver, amount, at: datetime, idempotency_k
 
         config = RiskConfig(db_timezone=os.getenv("TAPGO_RISK_DB_TIMEZONE", "UTC"), mode=mode, model="v6")
         with db.begin_nested():
+            # Only the columns the scorer reads (not whole ORM rows): up to 1000 rows are fetched per payment.
             history = (
-                db.query(Transaction)
-                .filter(Transaction.passenger_id == passenger_id, Transaction.transaction_type == "ride_payment")
+                db.query(Transaction.id, Transaction.passenger_id, Transaction.driver_id, Transaction.amount,
+                         Transaction.payment_method, Transaction.status, Transaction.transaction_type,
+                         Transaction.idempotency_key, Transaction.created_at)
+                .filter(Transaction.passenger_id == passenger_id, Transaction.transaction_type == "ride_payment",
+                        *([or_(Transaction.idempotency_key.is_(None), Transaction.idempotency_key != exclude_key)]
+                          if exclude_key is not None else []))
                 .order_by(Transaction.created_at.desc())
                 .limit(HISTORY_LIMIT)
                 .all()
@@ -113,6 +122,42 @@ def run_assessment(db, passenger_id, driver, amount, at: datetime, idempotency_k
         except Exception:  # noqa: BLE001
             pass
         return None, audit
+
+
+def warm_up(model: str = "v6") -> bool:
+    """Import the ML package, load the model and run one throw-away scoring, so the first real payment does not pay
+    for it (lazy imports and model loading cost seconds on a small server). Touches no database, sends nothing,
+    logs nothing about any user and NEVER raises: a failure only means the first payment warms things up as before."""
+    try:
+        if ml_disabled():
+            return False
+        from app.services.tapgo_fraud_risk import RiskConfig, assess_ride_payment
+        from app.services.tapgo_fraud_risk.service import load_scorer
+        load_scorer(model)
+        history = [{"passenger_id": 0, "driver_id": f"warm{i}", "amount": 100 + i, "payment_method": "QR",
+                    "status": "completed", "transaction_type": "ride_payment", "idempotency_key": f"warm-{i}",
+                    "created_at": datetime(2026, 1, 1, 9 + i, 0)} for i in range(3)]
+        assess_ride_payment(0, "warm-driver", 100, history,
+                            RiskConfig(db_timezone="UTC", mode="shadow", model=model),
+                            at=datetime(2026, 1, 2, 9, 0), driver_vehicle_type="taxi", idempotency_key="warm-up",
+                            history_vehicle_types={})
+        return True
+    except Exception as exc:  # noqa: BLE001 - warming up must never hurt startup
+        try:
+            logger.warning(json.dumps({"status": "warm_up_failed", "error": type(exc).__name__}))
+        except Exception:  # noqa: BLE001
+            pass
+        return False
+
+
+def start_warm_up() -> Optional[threading.Thread]:
+    """Run warm_up() in a daemon thread (it can neither delay nor crash startup). Skipped under tests and when the
+    ML is switched off."""
+    if os.getenv("TAPGO_TESTING") == "1" or ml_disabled():
+        return None
+    thread = threading.Thread(target=warm_up, name="fraud-warm-up", daemon=True)
+    thread.start()
+    return thread
 
 
 def log_shadow_assessment(db, passenger_id, driver, amount, at: datetime, idempotency_key: str,

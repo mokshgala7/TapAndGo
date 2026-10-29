@@ -100,6 +100,21 @@ engine = get_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+def commit_keep_loaded(db) -> None:
+    """Commit WITHOUT expiring the session's loaded objects.
+
+    A plain commit() expires every loaded instance, so the next attribute access (passenger.email, driver.name, a
+    wallet balance) silently re-SELECTs the row: one network round trip each against a remote database. Payment code
+    calls this where it already holds fresh values (it refreshes explicitly after its own raw UPDATEs), which removes
+    those re-reads without changing any value. Use it only on a session whose loaded rows were read in this request."""
+    previous = db.expire_on_commit
+    db.expire_on_commit = False
+    try:
+        db.commit()
+    finally:
+        db.expire_on_commit = previous
+
+
 def get_db():
     """Dependency to yield a database session per request."""
     db = SessionLocal()

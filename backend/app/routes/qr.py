@@ -42,6 +42,7 @@ import secrets
 import uuid
 import math
 import logging
+import re
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Optional
@@ -49,14 +50,16 @@ from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import get_db
+from app.database import commit_keep_loaded, get_db
 from app.models import PaymentRequest, Transaction, User, Wallet
 from app.routes.auth import get_current_user
 from app.services import payment_otp
+from app.services import pos_otp
 from app.services.fraud_gate import evaluate_payment
 from app.utils.nfc_failure_email import queue_decline_notice, send_nfc_failure_email
 from app.utils.email_service import send_ride_passenger_email, send_ride_driver_email
@@ -135,7 +138,27 @@ def _unavailable(pr: PaymentRequest, now: datetime) -> JSONResponse:
     return JSONResponse(status_code=410, content={"success": False, "detail": msg, "status": status})
 
 
-def _pr_to_public_dict(pr: PaymentRequest, driver: User, now: datetime, passenger_balance: Optional[float] = None) -> dict:
+_PHOTO_URL_OK = re.compile(r"^(https://[^\s]{3,490}|/(?!/)(?!.*\.\.)[A-Za-z0-9_./-]{1,200})$")
+
+
+def _display_photos(db: Session, user_id: int):
+    """(driver_photo_url, vehicle_photo_url) for the confirm page, or (None, None). The two columns come from the
+    additive migration 2026_11_driver_vehicle_photo_urls.sql; until it has run (or on any problem) this returns
+    nothing and the page shows its built-in avatar and a vehicle image chosen by type. Read in a SAVEPOINT so a
+    missing column can never break the payment page. Only https:// URLs and site-relative /paths are passed on."""
+    try:
+        with db.begin_nested():
+            row = db.execute(text("SELECT driver_photo_url, vehicle_photo_url FROM users WHERE id = :i"),
+                             {"i": user_id}).first()
+    except Exception:  # noqa: BLE001
+        return None, None
+    if not row:
+        return None, None
+    return tuple(v if isinstance(v, str) and _PHOTO_URL_OK.match(v.strip()) else None for v in row)
+
+
+def _pr_to_public_dict(pr: PaymentRequest, driver: User, now: datetime, passenger_balance: Optional[float] = None,
+                       photos=(None, None)) -> dict:
     """Safe subset of a PaymentRequest row suitable for the passenger-facing GET."""
     remaining = _seconds_remaining(pr, now)
     out = {
@@ -149,6 +172,8 @@ def _pr_to_public_dict(pr: PaymentRequest, driver: User, now: datetime, passenge
         "remaining_seconds": remaining,
         "seconds_remaining": remaining,
         "payment_method": "QR_WALLET",
+        "driver_photo_url": photos[0],
+        "vehicle_photo_url": photos[1],
     }
     if passenger_balance is not None:
         out["wallet_balance"] = passenger_balance
@@ -280,7 +305,7 @@ def _qr_outcome(db: Session, out, background_tasks) -> object:
     if out.kind == "otp_required":
         return JSONResponse(status_code=200, content={
             "success": False, "status": "otp_required",
-            "detail": "For your security, enter the code we emailed you to complete this payment.",
+            "detail": "A code was sent to your email. Enter it on the driver's POS screen to complete this payment.",
             **payment_otp.public_view(ch, db.get(User, ch.passenger_id), now),
         })
     if out.kind == "otp_invalid":
@@ -414,7 +439,8 @@ def get_qr_details(
         p_wallet = get_or_create_wallet(current_user.id, db)
         return {
             "success": True,
-            "payment": _pr_to_public_dict(pr, driver, now, passenger_balance=float(p_wallet.balance)),
+            "payment": _pr_to_public_dict(pr, driver, now, passenger_balance=float(p_wallet.balance),
+                                          photos=_display_photos(db, driver.id)),
             "otp": payment_otp.public_view(ch, current_user, now),
         }
 
@@ -425,7 +451,8 @@ def get_qr_details(
     p_wallet = get_or_create_wallet(current_user.id, db)
     return {
         "success": True,
-        "payment": _pr_to_public_dict(pr, driver, now, passenger_balance=float(p_wallet.balance)),
+        "payment": _pr_to_public_dict(pr, driver, now, passenger_balance=float(p_wallet.balance),
+                                      photos=_display_photos(db, driver.id)),
     }
 
 
@@ -527,7 +554,8 @@ def confirm_qr_payment(
             "balance": float(p_wallet.balance),
             "required": float(fare_dec),
         })
-    decision = evaluate_payment(db, passenger, driver, fare_dec, now, scoped_key, "qr", payment_request_id=pr.id)
+    decision = evaluate_payment(db, passenger, driver, fare_dec, now, scoped_key, "qr", payment_request_id=pr.id,
+                                background_tasks=background_tasks)
     if decision["action"] == "otp_required":
         awaiting = db.query(PaymentRequest).filter(
             PaymentRequest.id == pr.id, PaymentRequest.status == "Pending",
@@ -639,7 +667,7 @@ def confirm_qr_payment(
     )
 
     try:
-        db.commit()
+        commit_keep_loaded(db)          # values are fresh (p_wallet was refreshed after the debit): no re-read round trips
     except IntegrityError:
         db.rollback()
         # Check for idempotency replay (same key committed concurrently).
@@ -650,9 +678,6 @@ def confirm_qr_payment(
             return _success_body(existing, get_or_create_wallet(passenger.id, db), db.get(User, existing.driver_id),
                                  idempotent=True)
         raise HTTPException(status_code=409, detail="Could not record the payment. Please try again.")
-
-    db.refresh(p_wallet)
-    db.refresh(txn)
 
     # Post-commit notifications (never affect the financial record). Replays and
     # lost races return earlier, so each completed payment is notified once.
@@ -706,6 +731,12 @@ def get_qr_status(
         "remaining_seconds": remaining,
         "seconds_remaining": remaining,
     }
+
+    if pr.status == "AwaitingOtp":
+        # The code is entered on THIS terminal: give it what it needs (masked email hint, countdown, attempts).
+        ch = _challenge_for_request(db, pr)
+        if ch is not None and ch.status == "pending":
+            resp["otp"] = payment_otp.public_view(ch, db.get(User, ch.passenger_id), now)
 
     # Include the transaction reference on success (but NOT passenger identity).
     if pr.status == "Completed":
@@ -780,7 +811,9 @@ def cancel_qr_request(
     return {"success": True, "status": status, "message": f"Request is already {status}."}
 
 
-# ──────────────────────────── OTP step-up (passenger) ─────────────────────────
+# ───────────────────── OTP step-up: entered on the POS only ──────────────────────
+# The emailed code is typed on the driver's terminal, never on the website. The passenger's page only waits
+# (my-status) and may cancel. The verify / resend endpoints below remain so that old clients get a clear error.
 
 class QROtpRequest(BaseModel):
     challenge_id: Optional[str] = None
@@ -800,23 +833,15 @@ def _passenger_challenge(token: str, data: QROtpRequest, passenger: User, db: Se
 
 
 @router.post("/{token}/verify-otp")
-def verify_qr_otp(token: str, data: QROtpRequest, background_tasks: BackgroundTasks,
-                  current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    ch = _passenger_challenge(token, data, current_user, db)
-    return _qr_outcome(db, payment_otp.verify(db, ch, data.otp, datetime.utcnow()), background_tasks)
+def verify_qr_otp(token: str, data: Optional[QROtpRequest] = None, current_user: User = Depends(get_current_user)):
+    """Refused: the code is entered on the driver's POS (POST /api/qr/{token}/pos/verify-otp)."""
+    return pos_otp.passenger_refusal()
 
 
 @router.post("/{token}/resend-otp")
-def resend_qr_otp(token: str, data: QROtpRequest, background_tasks: BackgroundTasks,
-                  current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    ch = _passenger_challenge(token, data, current_user, db)
-    now = datetime.utcnow()
-    out, refused = payment_otp.resend(db, ch, now)
-    if refused:
-        return JSONResponse(status_code=429 if refused[0] == "resend_cooldown" else 400,
-                            content={"success": False, "status": "otp_required", "code": refused[0],
-                                     "detail": refused[1], **payment_otp.public_view(ch, current_user, now)})
-    return _qr_outcome(db, out, background_tasks)
+def resend_qr_otp(token: str, data: Optional[QROtpRequest] = None, current_user: User = Depends(get_current_user)):
+    """Refused: a new code is requested on the driver's POS (POST /api/qr/{token}/pos/resend-otp)."""
+    return pos_otp.passenger_refusal()
 
 
 @router.post("/{token}/cancel-otp")
@@ -824,3 +849,97 @@ def cancel_qr_otp(token: str, data: QROtpRequest, background_tasks: BackgroundTa
                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     ch = _passenger_challenge(token, data, current_user, db)
     return _qr_outcome(db, payment_otp.cancel(db, ch, datetime.utcnow()), background_tasks)
+
+
+@router.get("/{token}/my-status")
+def qr_my_status(token: str, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user),
+                 db: Session = Depends(get_db)):
+    """The paying passenger's page polls this while the code is being entered on the POS. Only the passenger who
+    owns the payment sees it; a code whose time has run out is closed here (the failure email goes out once)."""
+    if current_user.account_type != "passenger":
+        raise HTTPException(status_code=403, detail="Only passenger accounts can check their QR payment.")
+    pr = db.query(PaymentRequest).filter(PaymentRequest.utr == token, PaymentRequest.provider == "QR_WALLET").first()
+    if pr is None:
+        raise HTTPException(status_code=404, detail="Payment not found.")
+    now = datetime.utcnow()
+    _settle_awaiting_otp(db, pr, now, background_tasks)
+    ch = _challenge_for_request(db, pr)
+    if ch is None or ch.passenger_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Payment not found.")
+    body = pos_otp.passenger_status_body(db, ch, now)
+    if body["status"] == "Completed":
+        body["wallet_balance"] = float(get_or_create_wallet(current_user.id, db).balance)
+    return body
+
+
+# ───────────────────── OTP step-up: driver POS endpoints ─────────────────────
+# Mirror /api/nfc/pay/{verify-otp,resend-otp,cancel-otp} and /pay/status for a QR request the driver created.
+# Driver-scoped: only the driver who owns the request can act on its challenge.
+
+class PosOtpRequest(BaseModel):
+    otp: Optional[str] = None
+
+
+def _pos_challenge(token: str, driver: User, db: Session):
+    """(challenge, None) or (None, error response). The challenge of THIS driver's request, whatever its state."""
+    if not pos_otp.driver_allowed(driver):
+        return None, pos_otp.error("DRIVER_NOT_ALLOWED", 403)
+    pr = db.query(PaymentRequest).filter(
+        PaymentRequest.utr == token, PaymentRequest.provider == "QR_WALLET", PaymentRequest.user_id == driver.id,
+    ).first()
+    ch = _challenge_for_request(db, pr) if pr is not None else None
+    if ch is None or ch.channel != "qr":
+        return None, pos_otp.error("CHALLENGE_INVALID", 404)
+    return ch, None
+
+
+def _pos_outcome(db: Session, out, background_tasks):
+    """POS response for an OTP outcome; queues failure notices and receipts after the response."""
+    _queue_notices(out, background_tasks)
+    if out.kind == "completed" and not out.idempotent:
+        passenger, driver = db.get(User, out.txn.passenger_id), db.get(User, out.txn.driver_id)
+        _send_receipts(out.txn, passenger, driver, out.txn.balance_after)
+    return pos_otp.outcome_response(db, out)
+
+
+@router.post("/{token}/pos/verify-otp")
+def pos_verify_qr_otp(token: str, data: PosOtpRequest, background_tasks: BackgroundTasks,
+                      current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ch, err = _pos_challenge(token, current_user, db)
+    if err:
+        return err
+    return _pos_outcome(db, payment_otp.verify(db, ch, data.otp, datetime.utcnow()), background_tasks)
+
+
+@router.post("/{token}/pos/resend-otp")
+def pos_resend_qr_otp(token: str, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user),
+                      db: Session = Depends(get_db)):
+    ch, err = _pos_challenge(token, current_user, db)
+    if err:
+        return err
+    now = datetime.utcnow()
+    out, refused = payment_otp.resend(db, ch, now)
+    if refused:
+        return JSONResponse(status_code=429 if refused[0] == "resend_cooldown" else 400,
+                            content={"success": False, "status": "otp_required", "code": refused[0],
+                                     "message": refused[1], **payment_otp.public_view(ch, db.get(User, ch.passenger_id), now)})
+    return _pos_outcome(db, out, background_tasks)
+
+
+@router.post("/{token}/pos/cancel-otp")
+def pos_cancel_qr_otp(token: str, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user),
+                      db: Session = Depends(get_db)):
+    ch, err = _pos_challenge(token, current_user, db)
+    if err:
+        return err
+    return _pos_outcome(db, payment_otp.cancel(db, ch, datetime.utcnow()), background_tasks)
+
+
+@router.get("/{token}/pos/otp-status")
+def pos_qr_otp_status(token: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Read-only. {"status": "otp_pending"|"completed"|"failed", "transaction_ref", "amount", "failure_code", and while
+    pending: challenge_id, email_hint, expires_in_seconds, attempts_left, resends_left}. Nothing is written."""
+    ch, err = _pos_challenge(token, current_user, db)
+    if err:
+        return err
+    return pos_otp.status_body(db, ch)

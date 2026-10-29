@@ -154,6 +154,16 @@ def qr_status(scene, token):
     return scene["env"].client.get(f"/api/qr/{token}/status", headers=scene["driver_headers"]).json()["status"]
 
 
+def qr_pos_verify(scene, token, otp):
+    """The code is entered on the driver's POS (driver-authenticated), never on the website."""
+    return scene["env"].client.post(f"/api/qr/{token}/pos/verify-otp", json={"otp": otp}, headers=scene["driver_headers"])
+
+
+def wallet_pos_verify(scene, cid, otp, headers=None):
+    return scene["env"].client.post("/api/wallet/pos/verify-otp", json={"challenge_id": cid, "otp": otp},
+                                    headers=headers or scene["driver_headers"])
+
+
 def balances(scene):
     env = scene["env"]
     return env.balance(scene["pax_id"]), env.balance(scene["driver_id"])
@@ -507,8 +517,7 @@ def test_verify_bound_to_terminal_and_key(scene, enforce):
     assert nfc_verify(scene, cid, otp, "a-different-key").status_code == 409
     assert nfc_verify(scene, cid, otp, key, headers=scene["other_headers"]).status_code == 404
     assert nfc_verify(scene, "not-a-challenge", otp, key).status_code == 404
-    assert scene["env"].client.post("/api/wallet/pay/verify-otp", json={"challenge_id": cid, "otp": otp},
-                                    headers=scene["pax_headers"]).status_code == 404
+    assert wallet_pos_verify(scene, cid, otp).status_code == 404            # an NFC challenge is not a wallet one
     assert completed(scene) == []
     assert rows(scene, PaymentOtpChallenge)[0].attempts == 0
 
@@ -583,9 +592,7 @@ def test_qr_awaiting_otp_survives_refresh_and_expiry_then_completes(scene, enfor
     # confirm pressed again: same challenge, no new email
     assert qr_confirm(scene, token).json()["challenge_id"] == body["challenge_id"]
     assert len(scene["mail"]["otp"]) == 1
-    v = scene["env"].client.post(f"/api/qr/{token}/verify-otp",
-                                 json={"challenge_id": body["challenge_id"], "otp": last_otp(scene)},
-                                 headers=scene["pax_headers"])
+    v = qr_pos_verify(scene, token, last_otp(scene))
     assert v.status_code == 200 and v.json()["success"] is True, v.text
     assert qr_status(scene, token) == "Completed"
     assert balances(scene) == (before[0] - 5000, before[1] + 5000)
@@ -600,13 +607,11 @@ def test_qr_wrong_otp_fails_request(scene, enforce):
     cid = qr_confirm(scene, token).json()["challenge_id"]
     otp = last_otp(scene)
     for left in (2, 1):
-        r = scene["env"].client.post(f"/api/qr/{token}/verify-otp", json={"challenge_id": cid, "otp": wrong(otp)},
-                                     headers=scene["pax_headers"])
+        r = qr_pos_verify(scene, token, wrong(otp))
         assert r.json() == {"success": False, "status": "otp_invalid", "attempts_left": left,
-                            "detail": f"Wrong code. {left} attempt{'s' if left != 1 else ''} left."}
-    r = scene["env"].client.post(f"/api/qr/{token}/verify-otp", json={"challenge_id": cid, "otp": wrong(otp)},
-                                 headers=scene["pax_headers"])
-    assert r.status_code == 400 and r.json()["code"] == "OTP_FAILED"
+                            "message": f"Wrong OTP, {left} attempt{'s' if left != 1 else ''} left."}
+    r = qr_pos_verify(scene, token, wrong(otp))
+    assert r.status_code == 200 and r.json()["code"] == "OTP_FAILED"
     assert qr_status(scene, token) == "Failed"
     assert balances(scene) == before and completed(scene) == []
 
@@ -643,8 +648,7 @@ def test_wallet_pay_otp_flow(scene, enforce):
     assert r.json()["status"] == "otp_required", r.text
     assert balances(scene) == before
     cid = r.json()["challenge_id"]
-    v = scene["env"].client.post("/api/wallet/pay/verify-otp", json={"challenge_id": cid, "otp": last_otp(scene)},
-                                 headers=scene["pax_headers"])
+    v = wallet_pos_verify(scene, cid, last_otp(scene))
     assert v.json()["success"] is True, v.text
     r2 = scene["env"].client.post("/api/wallet/pay", json=body, headers=scene["pax_headers"])
     assert r2.json()["idempotent"] is True
@@ -753,9 +757,8 @@ def test_driver_cancels_awaiting_otp_qr_request(scene, enforce):
     assert (f.status, f.payment_method, f.amount) == ("failed", "QR", 5000)
     assert rows(scene, PaymentOtpChallenge)[0].status == "cancelled"
     # the passenger's code is dead
-    v = scene["env"].client.post(f"/api/qr/{token}/verify-otp", json={"challenge_id": cid, "otp": last_otp(scene)},
-                                 headers=scene["pax_headers"])
-    assert v.status_code == 400 and v.json()["code"] == "OTP_CANCELLED"
+    v = qr_pos_verify(scene, token, last_otp(scene))
+    assert v.status_code == 200 and v.json()["code"] == "OTP_CANCELLED"
     assert balances(scene) == before
     again = scene["env"].client.post(f"/api/qr/{token}/cancel", headers=scene["driver_headers"])
     assert again.status_code == 200 and again.json()["status"] == "Failed"            # idempotent
@@ -769,8 +772,7 @@ def test_driver_cannot_cancel_another_drivers_awaiting_request(scene, enforce):
     r = scene["env"].client.post(f"/api/qr/{token}/cancel", headers=scene["other_headers"])
     assert r.status_code == 404
     assert qr_status(scene, token) == "AwaitingOtp" and rows(scene, PaymentOtpChallenge)[0].status == "pending"
-    v = scene["env"].client.post(f"/api/qr/{token}/verify-otp", json={"challenge_id": cid, "otp": last_otp(scene)},
-                                 headers=scene["pax_headers"])
+    v = qr_pos_verify(scene, token, last_otp(scene))
     assert v.json()["success"] is True
 
 
@@ -779,8 +781,7 @@ def test_completed_payment_cannot_be_cancelled(scene, enforce):
     before = balances(scene)
     token = qr_create(scene, 5000)
     cid = qr_confirm(scene, token).json()["challenge_id"]
-    scene["env"].client.post(f"/api/qr/{token}/verify-otp", json={"challenge_id": cid, "otp": last_otp(scene)},
-                             headers=scene["pax_headers"])
+    qr_pos_verify(scene, token, last_otp(scene))
     r = scene["env"].client.post(f"/api/qr/{token}/cancel", headers=scene["driver_headers"])
     assert r.status_code == 200 and r.json()["status"] == "Completed"
     assert balances(scene) == (before[0] - 5000, before[1] + 5000) and len(completed(scene)) == 1
