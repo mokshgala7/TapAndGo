@@ -26,6 +26,8 @@ registered address (`app/services/payment_otp.py`). Decisions are stored in `fra
 | `TAPGO_RISK_DB_TIMEZONE` | `UTC` | Timezone of the naive `transactions.created_at` values. |
 | `TAPGO_OTP_EMAIL_TIMEOUT_SECONDS` | `10` | How long a payment request waits for the mail provider before an enforced payment is declined. |
 | `TAPGO_OTP_DEMO_REDIRECT_EMAIL` | unset | **Demo only.** Sends the payment OTPs of the listed demo users to one inbox; see `docs/FRAUD_V6_DEPLOY.md`. Remove it after the demo. |
+| `TAPGO_NEWUSER_POLICY` | unset = `off` | `off` / `enforce`. With `enforce`, passengers NOT in the list use the fixed new-account policy (email OTP above `TAPGO_NEWUSER_OTP_ABOVE`, entered on the POS). Needs `PAYMENT_OTP_SECRET`. See `docs/FRAUD_V6_DEPLOY.md` section 8. |
+| `TAPGO_NEWUSER_OTP_ABOVE` | `300` | Rupees; exclusive (300 passes, 301 asks for an OTP). |
 
 Render checklist for turning the gate on:
 

@@ -11,7 +11,7 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import commit_keep_loaded, get_db
 from app.models import Transaction, User, Wallet, EmailOTP, WithdrawalRequest
 from app.utils.email_service import (
     send_withdrawal_otp,
@@ -733,7 +733,8 @@ def pay_fare(
         )
 
     now = datetime.utcnow()
-    decision = evaluate_payment(db, passenger, driver, fare_dec, now, scoped_key, "wallet")
+    decision = evaluate_payment(db, passenger, driver, fare_dec, now, scoped_key, "wallet",
+                                background_tasks=background_tasks)
     if decision["action"] == "otp_required":
         try:
             out = payment_otp.open_challenge(db, passenger=passenger, driver=driver, channel="wallet",
@@ -781,7 +782,7 @@ def pay_fare(
     )
     db.add(txn)
     try:
-        db.commit()
+        commit_keep_loaded(db)          # values are fresh (p_wallet was refreshed after the debit): no re-read round trips
     except IntegrityError:
         # Another request with the same key committed first: nothing of ours persists.
         db.rollback()
@@ -789,8 +790,6 @@ def pay_fare(
         if done:
             return done
         raise HTTPException(status_code=409, detail="Could not record the payment. Please try again.")
-    db.refresh(p_wallet)
-    db.refresh(txn)
 
     # Post-commit notifications (never affect the financial record)
     try:
@@ -861,6 +860,29 @@ def _send_otp_failure_notice(**kwargs):
         logger.warning(f"[RideEmail] Failure notice failed: {e}")
 
 
+def _send_wallet_receipts(txn: Transaction, passenger: User, driver: User) -> None:
+    """Passenger receipt and driver credit email after a verified wallet payment (never affects the payment)."""
+    try:
+        if passenger.email:
+            send_ride_passenger_email(
+                to_email=passenger.email, passenger_name=passenger.name, fare=float(txn.amount),
+                driver_name=driver.name, reference=txn.reference, status="Successful",
+                vehicle_type=driver.vehicle_type, vehicle_registration=driver.vehicle_registration,
+                payment_method=txn.payment_method, balance_after=float(txn.balance_after),
+                created_at=txn.created_at,
+            )
+    except Exception as e:
+        logger.warning(f"[RideEmail] Passenger receipt failed: {e}")
+    try:
+        if driver.email:
+            send_ride_driver_email(
+                to_email=driver.email, driver_name=driver.name, fare=float(txn.amount),
+                passenger_name=passenger.name, reference=txn.reference, payment_method=txn.payment_method,
+            )
+    except Exception as e:
+        logger.warning(f"[RideEmail] Driver credit receipt failed: {e}")
+
+
 def _wallet_otp_outcome(db: Session, out, background_tasks: BackgroundTasks):
     from fastapi.responses import JSONResponse
     from app.services import payment_otp
@@ -874,7 +896,7 @@ def _wallet_otp_outcome(db: Session, out, background_tasks: BackgroundTasks):
     if out.kind == "otp_required":
         return JSONResponse(status_code=200, content={
             "success": False, "status": "otp_required",
-            "detail": "For your security, enter the code we emailed you to complete this payment.",
+            "detail": "A code was sent to your email. Enter it on the driver's POS screen to complete this payment.",
             **payment_otp.public_view(ch, db.get(User, ch.passenger_id), now),
         })
     if out.kind == "otp_invalid":
@@ -888,25 +910,7 @@ def _wallet_otp_outcome(db: Session, out, background_tasks: BackgroundTasks):
         passenger, driver = db.get(User, txn.passenger_id), db.get(User, txn.driver_id)
         p_wallet = get_or_create_wallet(passenger.id, db)
         if not out.idempotent:
-            try:
-                if passenger.email:
-                    send_ride_passenger_email(
-                        to_email=passenger.email, passenger_name=passenger.name, fare=float(txn.amount),
-                        driver_name=driver.name, reference=txn.reference, status="Successful",
-                        vehicle_type=driver.vehicle_type, vehicle_registration=driver.vehicle_registration,
-                        payment_method=txn.payment_method, balance_after=float(txn.balance_after),
-                        created_at=txn.created_at,
-                    )
-            except Exception as e:
-                logger.warning(f"[RideEmail] Passenger receipt failed: {e}")
-            try:
-                if driver.email:
-                    send_ride_driver_email(
-                        to_email=driver.email, driver_name=driver.name, fare=float(txn.amount),
-                        passenger_name=passenger.name, reference=txn.reference, payment_method=txn.payment_method,
-                    )
-            except Exception as e:
-                logger.warning(f"[RideEmail] Driver credit receipt failed: {e}")
+            _send_wallet_receipts(txn, passenger, driver)
         return _pay_response(txn, p_wallet, driver.name if driver else "Driver",
                              f"Payment of ₹{float(txn.amount):.2f} completed.", idempotent=out.idempotent)
     return _otp_failed_response(out.txn, out.code, idempotent=out.idempotent)
@@ -925,27 +929,21 @@ def _own_wallet_challenge(data: PayOtpRequest, passenger: User, db: Session):
     return ch
 
 
+# The emailed code is entered on the driver's POS only. The passenger's endpoints below refuse verify / resend with
+# a clear code, keep cancel, and add a status poll for the waiting screen.
+
 @router.post("/pay/verify-otp")
-def verify_pay_otp(data: PayOtpRequest, background_tasks: BackgroundTasks,
-                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    from app.services import payment_otp
-    ch = _own_wallet_challenge(data, current_user, db)
-    return _wallet_otp_outcome(db, payment_otp.verify(db, ch, data.otp, datetime.utcnow()), background_tasks)
+def verify_pay_otp(data: Optional[PayOtpRequest] = None, current_user: User = Depends(get_current_user)):
+    """Refused: the code is entered on the driver's POS (POST /api/wallet/pos/verify-otp)."""
+    from app.services import pos_otp
+    return pos_otp.passenger_refusal()
 
 
 @router.post("/pay/resend-otp")
-def resend_pay_otp(data: PayOtpRequest, background_tasks: BackgroundTasks,
-                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    from fastapi.responses import JSONResponse
-    from app.services import payment_otp
-    ch = _own_wallet_challenge(data, current_user, db)
-    now = datetime.utcnow()
-    out, refused = payment_otp.resend(db, ch, now)
-    if refused:
-        return JSONResponse(status_code=429 if refused[0] == "resend_cooldown" else 400,
-                            content={"success": False, "status": "otp_required", "code": refused[0],
-                                     "detail": refused[1], **payment_otp.public_view(ch, current_user, now)})
-    return _wallet_otp_outcome(db, out, background_tasks)
+def resend_pay_otp(data: Optional[PayOtpRequest] = None, current_user: User = Depends(get_current_user)):
+    """Refused: a new code is requested on the driver's POS (POST /api/wallet/pos/resend-otp)."""
+    from app.services import pos_otp
+    return pos_otp.passenger_refusal()
 
 
 @router.post("/pay/cancel-otp")
@@ -954,3 +952,128 @@ def cancel_pay_otp(data: PayOtpRequest, background_tasks: BackgroundTasks,
     from app.services import payment_otp
     ch = _own_wallet_challenge(data, current_user, db)
     return _wallet_otp_outcome(db, payment_otp.cancel(db, ch, datetime.utcnow()), background_tasks)
+
+
+@router.get("/pay/otp-status")
+def pay_otp_status(challenge_id: Optional[str] = None, background_tasks: BackgroundTasks = None,
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """The paying passenger's page polls this while the code is being entered on the POS. A code whose time has run
+    out is closed here (the failure email goes out once)."""
+    from app.services import payment_otp, pos_otp
+    ch = _own_wallet_challenge(PayOtpRequest(challenge_id=challenge_id), current_user, db)
+    now = datetime.utcnow()
+    expired = payment_otp.expire_if_due(db, ch, now)
+    if expired is not None:
+        for notice in expired.notices:
+            if background_tasks is not None:
+                background_tasks.add_task(_send_otp_failure_notice, **notice)
+            else:
+                _send_otp_failure_notice(**notice)
+        db.refresh(ch)
+    body = pos_otp.passenger_status_body(db, ch, now)
+    if body["status"] == "Completed":
+        body["wallet_balance"] = float(get_or_create_wallet(current_user.id, db).balance)
+    return body
+
+
+# ───────────────────── ride payment OTP: driver POS endpoints ─────────────────────
+# A wallet payment has no QR for the terminal to poll, so the POS lists its own pending codes and acts on a
+# challenge_id. Driver-scoped: a driver only ever sees and acts on challenges addressed to THEM.
+
+class PosOtpRequest(BaseModel):
+    challenge_id: Optional[str] = None
+    otp: Optional[str] = None
+
+
+def _pos_wallet_challenge(challenge_id: Optional[str], driver: User, db: Session):
+    """(challenge, None) or (None, error response)."""
+    from app.services import payment_otp, pos_otp
+    if not pos_otp.driver_allowed(driver):
+        return None, pos_otp.error("DRIVER_NOT_ALLOWED", 403)
+    ch = payment_otp.get_challenge(db, challenge_id)
+    if ch is None or ch.channel != "wallet" or ch.driver_id != driver.id:
+        return None, pos_otp.error("CHALLENGE_INVALID", 404)
+    return ch, None
+
+
+def _pos_wallet_outcome(db: Session, out, background_tasks: BackgroundTasks):
+    from app.services import pos_otp
+    for notice in out.notices:
+        if background_tasks is not None:
+            background_tasks.add_task(_send_otp_failure_notice, **notice)
+        else:
+            _send_otp_failure_notice(**notice)
+    if out.kind == "completed" and not out.idempotent:
+        _send_wallet_receipts(out.txn, db.get(User, out.txn.passenger_id), db.get(User, out.txn.driver_id))
+    return pos_otp.outcome_response(db, out)
+
+
+@router.get("/pos/pending-otp")
+def pos_pending_wallet_otp(background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user),
+                           db: Session = Depends(get_db)):
+    """The wallet payments addressed to this driver that are waiting for their code. Masked email hint only."""
+    from app.models import PaymentOtpChallenge
+    from app.services import payment_otp, pos_otp
+    if not pos_otp.driver_allowed(current_user):
+        return pos_otp.error("DRIVER_NOT_ALLOWED", 403)
+    now = datetime.utcnow()
+    pending = []
+    rows = db.query(PaymentOtpChallenge).filter(
+        PaymentOtpChallenge.channel == "wallet", PaymentOtpChallenge.driver_id == current_user.id,
+        PaymentOtpChallenge.status == "pending").order_by(PaymentOtpChallenge.id.desc()).limit(5).all()
+    for ch in rows:
+        expired = payment_otp.expire_if_due(db, ch, now)
+        if expired is not None:
+            for notice in expired.notices:
+                background_tasks.add_task(_send_otp_failure_notice, **notice)
+            continue
+        pending.append({"amount": float(ch.amount), **payment_otp.public_view(ch, db.get(User, ch.passenger_id), now)})
+    return {"success": True, "pending": pending}
+
+
+@router.post("/pos/verify-otp")
+def pos_verify_wallet_otp(data: PosOtpRequest, background_tasks: BackgroundTasks,
+                          current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.services import payment_otp
+    ch, err = _pos_wallet_challenge(data.challenge_id, current_user, db)
+    if err:
+        return err
+    return _pos_wallet_outcome(db, payment_otp.verify(db, ch, data.otp, datetime.utcnow()), background_tasks)
+
+
+@router.post("/pos/resend-otp")
+def pos_resend_wallet_otp(data: PosOtpRequest, background_tasks: BackgroundTasks,
+                          current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from fastapi.responses import JSONResponse
+    from app.services import payment_otp
+    ch, err = _pos_wallet_challenge(data.challenge_id, current_user, db)
+    if err:
+        return err
+    now = datetime.utcnow()
+    out, refused = payment_otp.resend(db, ch, now)
+    if refused:
+        return JSONResponse(status_code=429 if refused[0] == "resend_cooldown" else 400,
+                            content={"success": False, "status": "otp_required", "code": refused[0],
+                                     "message": refused[1], **payment_otp.public_view(ch, db.get(User, ch.passenger_id), now)})
+    return _pos_wallet_outcome(db, out, background_tasks)
+
+
+@router.post("/pos/cancel-otp")
+def pos_cancel_wallet_otp(data: PosOtpRequest, background_tasks: BackgroundTasks,
+                          current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.services import payment_otp
+    ch, err = _pos_wallet_challenge(data.challenge_id, current_user, db)
+    if err:
+        return err
+    return _pos_wallet_outcome(db, payment_otp.cancel(db, ch, datetime.utcnow()), background_tasks)
+
+
+@router.get("/pos/otp-status")
+def pos_wallet_otp_status(challenge_id: Optional[str] = None, current_user: User = Depends(get_current_user),
+                          db: Session = Depends(get_db)):
+    """Read-only. Same shape as the QR and NFC status lookups. Nothing is written."""
+    from app.services import pos_otp
+    ch, err = _pos_wallet_challenge(challenge_id, current_user, db)
+    if err:
+        return err
+    return pos_otp.status_body(db, ch)

@@ -144,19 +144,127 @@
 }
 .qrpay-link:disabled { opacity: 0.5; cursor: default; }
 
-.qrpay-otp {
-  width: 100%;
-  box-sizing: border-box;
-  margin: 8px 0 12px;
-  padding: 14px 12px;
-  font-size: 28px;
-  letter-spacing: 0.4em;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  border: 1.5px solid var(--qrpay-border, #d1d5db);
-  border-radius: 12px;
-  background: transparent;
-  color: inherit;
+.qrpay-note.qp-small { margin: 4px 0 6px; font-size: 14px; }
+
+/* ── confirm-payment card: driver, vehicle, fare ─────────────────────────────── */
+.qp-driver-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 14px;
+  text-align: left;
 }
-.qrpay-otp:focus { outline: 2px solid #10b981; outline-offset: 1px; }
-.qrpay-otp:disabled { opacity: 0.6; }
+.qp-avatar-wrap {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--tg-butter);
+  box-shadow: 0 0 0 4px var(--tg-surface), 0 0 0 6px var(--tg-yellow);
+}
+.qp-avatar, .qp-avatar-photo { display: block; width: 100%; height: 100%; object-fit: cover; }
+.qp-driver-text { min-width: 0; }
+.qp-driver-name {
+  margin: 2px 0 0;
+  font-family: var(--tg-font-display);
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.qp-vehicle {
+  margin: 0 0 14px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--tg-fill);
+}
+.qp-vehicle-photo, .qp-vehicle-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--tg-butter);
+}
+.qp-vehicle-art { object-fit: contain; padding: 10px 14px 0; }
+.qp-vehicle-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  text-align: left;
+}
+.qp-plate {
+  white-space: nowrap;
+  padding: 4px 10px;
+  border: 2px solid var(--tg-ink);
+  border-radius: 8px;
+  background: var(--tg-yellow-light);
+  font-family: var(--tg-font-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.qp-vtype { color: var(--tg-ink-soft); font-size: 15px; font-weight: 600; text-align: right; }
+
+.qp-fare {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: var(--tg-butter);
+}
+.qp-fare-label { color: var(--tg-on-yellow-soft); font-size: 15px; font-weight: 700; }
+.qp-fare-amount {
+  font-family: var(--tg-font-display);
+  font-size: 56px;
+  line-height: 1.05;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── waiting for the code on the POS ──────────────────────────────────────────── */
+.qp-wait { padding-top: 4px; }
+.qp-pulse {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 8px;
+}
+.qp-pulse::before, .qp-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--tg-yellow);
+  opacity: 0.35;
+  animation: qp-ping 1.8s var(--tg-ease) infinite;
+}
+.qp-pulse::after { animation-delay: 0.9s; }
+.qp-pulse-dot { position: relative; width: 26px; height: 26px; border-radius: 50%; background: var(--tg-yellow-deep); }
+
+/* ── avatar life: blink + a slight head bob ───────────────────────────────────── */
+.qp-avatar-head { animation: qp-bob 3.6s ease-in-out infinite; transform-origin: 60px 80px; }
+.qp-avatar-eyes { animation: qp-blink 4.2s infinite; transform-origin: 60px 54px; }
+@keyframes qp-bob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-2px) rotate(-1.2deg); } }
+@keyframes qp-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.08); } }
+@keyframes qp-ping { 0% { transform: scale(0.55); opacity: 0.5; } 100% { transform: scale(1.35); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .qp-avatar-head, .qp-avatar-eyes, .qp-pulse::before, .qp-pulse::after { animation: none; }
+  .qp-pulse::before { opacity: 0.25; transform: scale(1); }
+  .qp-pulse::after { display: none; }
+}
+
+@media (max-width: 360px) {
+  .qp-driver-name { font-size: 22px; }
+  .qp-fare-amount { font-size: 46px; }
+}
