@@ -4,6 +4,10 @@ Tap&Go is a modern, secure, and instant cashless payment and payout ecosystem bu
 
 ---
 
+## ML fraud detection
+
+Ride payments are checked by an XGBoost fraud-risk model (V6) plus plain rules; a flagged payment needs an emailed OTP that is entered on the driver's POS. Trained and evaluated on synthetic data only. See [docs/ML_FRAUD_OVERVIEW.md](docs/ML_FRAUD_OVERVIEW.md) and the training code, data notes and results in [`ml/`](ml/README.md).
+
 ## 1. Project Architecture
 
 **Frontend:**
