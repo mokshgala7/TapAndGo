@@ -200,3 +200,61 @@ def test_a_frozen_wallet_cannot_arm(scene):
     db.commit()
     db.close()
     assert arm(scene).status_code == 400
+
+
+# ── with the server's fraud check asking for the emailed code (TAPGO_FRAUD_MODE=enforce) ──
+
+def _enforce(monkeypatch, scene):
+    from app.services import payment_otp
+    sent = []
+    monkeypatch.setenv("TAPGO_FRAUD_MODE", "enforce")
+    monkeypatch.setenv("PAYMENT_OTP_SECRET", "a-long-private-random-value-for-tests")
+    monkeypatch.setenv("TAPGO_RISK_DISABLED", "1")   # the 10-minute rule alone is enough to ask for a code
+    monkeypatch.setattr(payment_otp, "send_payment_otp",
+                        lambda to_email, otp, amount, driver_name, expires_minutes=5, channel="nfc", demo_for=None:
+                        sent.append({"to": to_email, "otp": otp}) or True)
+    db = scene["env"].db()
+    db.add(Transaction(reference="HIST1", passenger_id=scene["pax"], driver_id=scene["driver"], amount=10,
+                       payment_method="QR", status="completed", otp_verified=False, fraud_status="clear",
+                       transaction_type="ride_payment", idempotency_key=f"hist:{uuid.uuid4().hex}",
+                       created_at=datetime.utcnow() - timedelta(minutes=2)))
+    db.commit()
+    db.close()
+    return sent
+
+
+def _verify(scene, challenge_id, otp, key):
+    return scene["env"].client.post("/api/nfc/pay/verify-otp", headers=scene["dh"],
+                                    json={"challenge_id": challenge_id, "otp": otp, "idempotency_key": key})
+
+
+def test_phone_tap_with_the_emailed_code_asked_on_the_pos(scene, monkeypatch):
+    sent = _enforce(monkeypatch, scene)
+    a = arm(scene).json()
+    with patch("app.routes.nfc_pay._send_passenger_receipt"), patch("app.routes.nfc_pay._send_driver_receipt"):
+        r = tap(scene, amount=20.0, key="phone-otp-key-1").json()
+        assert r["status"] == "otp_required" and r["challenge_id"]
+        assert scene["env"].balance(scene["pax"]) == 500                       # nothing moved yet
+        assert sent[-1]["to"] == "pax@phonetest.local"                         # the armed passenger's own email
+        st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+        assert st["status"] == "awaiting_otp"
+        wrong = _verify(scene, r["challenge_id"], "000000" if sent[-1]["otp"] != "000000" else "111111", "phone-otp-key-1").json()
+        assert wrong["status"] == "otp_invalid"
+        ok = _verify(scene, r["challenge_id"], sent[-1]["otp"], "phone-otp-key-1").json()
+    assert ok["success"] is True and ok["status"] == "Completed"
+    assert scene["env"].balance(scene["pax"]) == 480 and scene["env"].balance(scene["driver"]) == 20
+    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+    assert st["status"] == "paid" and st["amount"] == 20.0 and st["reference"] == ok["reference"]
+
+
+def test_phone_tap_code_failure_is_reported_to_the_app(scene, monkeypatch):
+    sent = _enforce(monkeypatch, scene)
+    a = arm(scene).json()
+    r = tap(scene, amount=20.0, key="phone-otp-key-2").json()
+    bad = "000000" if sent[-1]["otp"] != "000000" else "111111"
+    for _ in range(3):
+        last = _verify(scene, r["challenge_id"], bad, "phone-otp-key-2").json()
+    assert last["success"] is False
+    assert scene["env"].balance(scene["pax"]) == 500
+    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+    assert st["status"] == "failed"

@@ -37,6 +37,7 @@ from app.models import NFCCard, Transaction, User
 from app.routes import nfc_pay
 from app.routes.auth import get_current_user
 from app.routes.wallet import get_or_create_wallet
+from app.services import payment_otp
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +89,11 @@ def _expire_due(db: Session, now: datetime) -> None:
     db.query(NfcPhoneArm).filter(
         NfcPhoneArm.status == "armed", NfcPhoneArm.expires_at < now
     ).update({"status": "expired"}, synchronize_session=False)
+    # A tap whose emailed code was never entered on the POS (the code itself lasts 5 minutes).
+    db.query(NfcPhoneArm).filter(
+        NfcPhoneArm.status == "awaiting_otp", NfcPhoneArm.expires_at < now - timedelta(minutes=10)
+    ).update({"status": "expired", "message": "The verification code was not entered in time. Nothing was charged."},
+             synchronize_session=False)
     db.commit()
 
 
@@ -231,6 +237,8 @@ def _response_body(resp) -> dict:
 
 def _finish_arm(db: Session, arm_id: int, resp, driver_name: str) -> None:
     body = _response_body(resp)
+    if body.get("status") == "otp_invalid":
+        return  # wrong code: the challenge is still open, the arm keeps waiting
     values = {"driver_name": driver_name[:100] if driver_name else None}
     if body.get("success") is True:
         values.update(status="paid", reference=body.get("reference"), amount=Decimal(str(body.get("amount", 0))))
@@ -286,4 +294,31 @@ def nfc_pay_with_phone(
         raise
     if arm_id is not None:
         _finish_arm(db, arm_id, resp, driver_name)
+    return resp
+
+
+@router.post("/api/nfc/pay/verify-otp")
+def nfc_verify_otp_with_phone(
+    data: nfc_pay.NFCOtpRequest,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """The code typed on the POS for a phone tap. The server's fraud check (when it asks for a code)
+    re-checks the card when the code is accepted; for a phone that card is the armed passenger's."""
+    ch = payment_otp.get_challenge(db, data.challenge_id)
+    if (ch is None or ch.channel != "nfc" or not looks_like_phone_uid(ch.card_uid)
+            or db.query(NFCCard.id).filter(NFCCard.card_uid == ch.card_uid).first() is not None):
+        return nfc_pay.nfc_verify_otp(data, background_tasks, current_user, db)
+
+    passenger_id = ch.passenger_id
+    stub = NFCCard(user_id=passenger_id, card_reference=f"PHONE-{passenger_id}", card_uid=ch.card_uid,
+                   card_type="mobile", status="active")
+    driver_name = current_user.name
+    resp = nfc_pay.nfc_verify_otp(data, background_tasks, current_user, _PhoneDb(db, stub))
+    arm = db.query(NfcPhoneArm).filter(
+        NfcPhoneArm.user_id == passenger_id, NfcPhoneArm.status == "awaiting_otp"
+    ).order_by(NfcPhoneArm.id.desc()).first()
+    if arm is not None:
+        _finish_arm(db, arm.id, resp, driver_name)
     return resp
