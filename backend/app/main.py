@@ -9,6 +9,7 @@ from sqlalchemy import inspect, text
 
 from app.config import settings
 from app.database import engine, Base
+from app.routes import payment_test, nfc_phone
 from app.routes import admin, auth, wallet, payment, card_order, support, nfc_security, nfc_pay, qr as qr_routes
 
 logger = logging.getLogger("tapgo")
@@ -647,11 +648,14 @@ app.include_router(admin.router)
 app.include_router(wallet.router)
 app.include_router(payment.router)
 app.include_router(payment.debug_router)
+app.include_router(payment_test.router)
 app.include_router(card_order.router)
 app.include_router(card_order.admin_router)
 app.include_router(support.router)
 app.include_router(support.admin_router)
 app.include_router(nfc_security.router)
+# nfc_phone first: its POST /api/nfc/pay passes every non-phone tap to nfc_pay unchanged.
+app.include_router(nfc_phone.router)
 app.include_router(nfc_pay.router)
 app.include_router(qr_routes.router)
 
