@@ -28,7 +28,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from sqlalchemy import Column, DateTime, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import Session
 
@@ -113,6 +113,13 @@ def _arm_view(arm: NfcPhoneArm, now: datetime) -> dict:
 
 # ── passenger endpoints (signed-in mobile app) ───────────────────────────────
 
+def mobile_app_only(x_tapgo_client: Optional[str] = Header(None, alias="X-Tapgo-Client")) -> None:
+    """Phone Tap & Pay is started from the mobile app only; a website session is refused.
+    The website never sends this header (the app's HTTP client always does)."""
+    if (x_tapgo_client or "").strip().lower() != "mobile-app":
+        raise HTTPException(status_code=403, detail="Tap & Pay with your phone works only in the Tap&Go mobile app.")
+
+
 def _require_passenger(user: User) -> None:
     if user.account_type != "passenger":
         raise HTTPException(status_code=403, detail="Only passenger accounts can pay with a phone.")
@@ -122,7 +129,7 @@ def _require_passenger(user: User) -> None:
         raise HTTPException(status_code=403, detail="Phone Tap & Pay is not enabled for this account yet.")
 
 
-@router.post("/api/nfc/phone/arm")
+@router.post("/api/nfc/phone/arm", dependencies=[Depends(mobile_app_only)])
 def arm_phone(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """The passenger is about to hold the phone at a POS reader."""
     _require_passenger(current_user)
@@ -150,7 +157,7 @@ def _own_arm(db: Session, arm_id: int, user: User) -> NfcPhoneArm:
     return arm
 
 
-@router.get("/api/nfc/phone/arm/{arm_id}")
+@router.get("/api/nfc/phone/arm/{arm_id}", dependencies=[Depends(mobile_app_only)])
 def arm_status(arm_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     arm = _own_arm(db, arm_id, current_user)
     now = datetime.utcnow()
@@ -159,7 +166,7 @@ def arm_status(arm_id: int, current_user: User = Depends(get_current_user), db: 
     return _arm_view(arm, now)
 
 
-@router.post("/api/nfc/phone/arm/{arm_id}/cancel")
+@router.post("/api/nfc/phone/arm/{arm_id}/cancel", dependencies=[Depends(mobile_app_only)])
 def arm_cancel(arm_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     arm = _own_arm(db, arm_id, current_user)
     db.query(NfcPhoneArm).filter(

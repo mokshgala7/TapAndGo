@@ -32,8 +32,11 @@ def scene():
                 ph=env.user_headers(pax), oh=env.user_headers(other))
 
 
+APP = {"X-Tapgo-Client": "mobile-app"}
+
+
 def arm(s, headers=None):
-    return s["env"].client.post("/api/nfc/phone/arm", headers=headers or s["ph"])
+    return s["env"].client.post("/api/nfc/phone/arm", headers={**(headers or s["ph"]), **APP})
 
 
 def tap(s, uid=PHONE_UID, amount=20.0, key=None):
@@ -70,7 +73,7 @@ def test_armed_phone_tap_pays_the_armed_passenger_and_writes_no_card(scene):
     assert env.balance(scene["pax"]) == 480 and env.balance(scene["driver"]) == 20
     assert env.balance(scene["other"]) == 500
     assert card_count(scene) == cards_before          # nothing added to nfc_cards
-    st = env.client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+    st = env.client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers={**scene["ph"], **APP}).json()
     assert st["status"] == "paid" and st["reference"] == body["reference"] and st["amount"] == 20.0
     assert st["driver_name"] == "Rakesh Sharma"
     db = env.db()
@@ -118,7 +121,7 @@ def test_an_expired_arm_is_not_used(scene):
     db.commit()
     db.close()
     assert tap(scene).json()["code"] == "CARD_UNKNOWN"
-    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers={**scene["ph"], **APP}).json()
     assert st["status"] == "expired" and scene["env"].balance(scene["pax"]) == 500
 
 
@@ -159,7 +162,7 @@ def test_insufficient_balance_is_recorded_like_a_card_and_reported_to_the_app(sc
     with patch("app.routes.nfc_pay._send_failure_notice"):
         r = tap(scene, amount=900.0).json()
     assert r["success"] is False and r["code"] == "INSUFFICIENT_BALANCE"
-    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers={**scene["ph"], **APP}).json()
     assert st["status"] == "failed" and st["failure_code"] == "INSUFFICIENT_BALANCE"
     db = scene["env"].db()
     t = db.query(Transaction).filter(Transaction.status == "failed").one()
@@ -169,12 +172,12 @@ def test_insufficient_balance_is_recorded_like_a_card_and_reported_to_the_app(sc
 
 def test_cancel_and_ownership_and_roles(scene):
     a = arm(scene).json()
-    assert scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["oh"]).status_code == 404
-    c = scene["env"].client.post(f"/api/nfc/phone/arm/{a['arm_id']}/cancel", headers=scene["ph"]).json()
+    assert scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers={**scene["oh"], **APP}).status_code == 404
+    c = scene["env"].client.post(f"/api/nfc/phone/arm/{a['arm_id']}/cancel", headers={**scene["ph"], **APP}).json()
     assert c["status"] == "cancelled"
     assert tap(scene).json()["code"] == "CARD_UNKNOWN"
     assert arm(scene, scene["dh"]).status_code == 403          # drivers cannot arm
-    assert scene["env"].client.post("/api/nfc/phone/arm").status_code == 401
+    assert scene["env"].client.post("/api/nfc/phone/arm", headers=APP).status_code == 401
 
 
 def test_arming_again_replaces_the_earlier_arm(scene):
@@ -236,14 +239,14 @@ def test_phone_tap_with_the_emailed_code_asked_on_the_pos(scene, monkeypatch):
         assert r["status"] == "otp_required" and r["challenge_id"]
         assert scene["env"].balance(scene["pax"]) == 500                       # nothing moved yet
         assert sent[-1]["to"] == "pax@phonetest.local"                         # the armed passenger's own email
-        st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+        st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers={**scene["ph"], **APP}).json()
         assert st["status"] == "awaiting_otp"
         wrong = _verify(scene, r["challenge_id"], "000000" if sent[-1]["otp"] != "000000" else "111111", "phone-otp-key-1").json()
         assert wrong["status"] == "otp_invalid"
         ok = _verify(scene, r["challenge_id"], sent[-1]["otp"], "phone-otp-key-1").json()
     assert ok["success"] is True and ok["status"] == "Completed"
     assert scene["env"].balance(scene["pax"]) == 480 and scene["env"].balance(scene["driver"]) == 20
-    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers={**scene["ph"], **APP}).json()
     assert st["status"] == "paid" and st["amount"] == 20.0 and st["reference"] == ok["reference"]
 
 
@@ -256,5 +259,14 @@ def test_phone_tap_code_failure_is_reported_to_the_app(scene, monkeypatch):
         last = _verify(scene, r["challenge_id"], bad, "phone-otp-key-2").json()
     assert last["success"] is False
     assert scene["env"].balance(scene["pax"]) == 500
-    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).json()
+    st = scene["env"].client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers={**scene["ph"], **APP}).json()
     assert st["status"] == "failed"
+
+
+def test_a_website_session_cannot_start_or_read_phone_tap(scene):
+    env = scene["env"]
+    assert env.client.post("/api/nfc/phone/arm", headers=scene["ph"]).status_code == 403          # no app marker
+    assert env.client.post("/api/nfc/phone/arm", headers={**scene["ph"], "X-Tapgo-Client": "web"}).status_code == 403
+    a = arm(scene).json()
+    assert env.client.get(f"/api/nfc/phone/arm/{a['arm_id']}", headers=scene["ph"]).status_code == 403
+    assert env.client.post(f"/api/nfc/phone/arm/{a['arm_id']}/cancel", headers=scene["ph"]).status_code == 403
