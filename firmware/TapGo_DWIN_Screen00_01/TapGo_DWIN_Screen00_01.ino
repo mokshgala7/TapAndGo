@@ -36,16 +36,16 @@
  *   SCAN QR -> page 04, QR appears after the backend answers (~4 s)
  *   status checked about every 3 s
  *   QR expires (120 s) -> a new QR is created automatically for the same fare
- *   paid    -> page 05 for 3 s (always) -> page 07 for 4 s -> home
- *   failed  -> page 05 for 3 s (always) -> page 08 for 4 s -> home
+ *   paid    -> page 05 for 1.5 s (always) -> page 07 for 4 s -> home
+ *   failed  -> page 05 for 1.5 s (always) -> page 08 for 4 s -> home
  *   BACK    -> QR cancelled on the backend -> page 02 (fare kept)
  *   CANCEL  -> QR cancelled on the backend -> home (fare cleared)
  *
  * NFC payment flow (PN532 reads cards only while page 03 is showing):
  *   TAP NFC CARD -> page 03, waits for a card
  *   card read -> page 05 at once, POST /api/nfc/pay {card_uid, amount, idempotency_key}
- *   paid   -> page 05 for 3 s (always) -> page 07 for 4 s -> home
- *   failed -> page 05 for 3 s (always) -> page 08 for 4 s -> home
+ *   paid   -> page 05 for 1.5 s (always) -> page 07 for 4 s -> home
+ *   failed -> page 05 for 1.5 s (always) -> page 08 for 4 s -> home
  *   network error -> status lookup with the SAME idempotency key (see "Timeout safety"), never page 08 on a guess
  *   BACK -> page 02 (fare kept)   CANCEL -> home (fare cleared)
  *
@@ -106,9 +106,9 @@ const uint8_t  MAX_DEC_DIGITS = 2;
 const uint8_t  SCREEN_BRIGHTNESS = 90;   // DWIN backlight, 0-100 %
 
 // Timings (ms)
-const uint32_t QR_POLL_GAP_MS      = 1500;   // pause after each status reply (~3 s cycle on Render)
+const uint32_t QR_POLL_GAP_MS      = 500;    // pause after each status reply (~1 s cycle on Render)
 const uint32_t QR_RETRY_MS         = 3000;   // retry a failed QR create
-const uint32_t PROCESSING_MS       = 3000;   // page 05 — always shown this long
+const uint32_t PROCESSING_MS       = 1500;   // page 05 — always shown this long
 const uint32_t RESULT_MS           = 4000;   // page 07 / 08
 const uint32_t PROCESSING_GIVEUP_MS = 30000; // no final answer after this -> failed
 const uint16_t NFC_READ_TIMEOUT_MS = 50;     // each card check on page 03 (keeps touch responsive)

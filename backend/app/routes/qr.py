@@ -42,6 +42,7 @@ import secrets
 import uuid
 import math
 import logging
+from types import SimpleNamespace
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Optional
@@ -231,6 +232,18 @@ def _send_receipts(txn: Transaction, passenger: User, driver: User, balance_afte
         logger.warning(f"[QREmail] Driver credit receipt failed: {e}")
 
 
+def _queue_receipts(background_tasks: BackgroundTasks, txn: Transaction, passenger: User, driver: User,
+                    balance_after) -> None:
+    """Send the receipts AFTER the response (SES + PDF take seconds and must not delay the payment answer).
+    The request's DB session is closed by then, so everything the e-mails need is copied into plain values."""
+    snap_txn = SimpleNamespace(amount=txn.amount, reference=txn.reference, payment_method=txn.payment_method,
+                               created_at=txn.created_at)
+    snap_passenger = SimpleNamespace(email=passenger.email, name=passenger.name)
+    snap_driver = SimpleNamespace(email=driver.email, name=driver.name, vehicle_type=driver.vehicle_type,
+                                  vehicle_registration=driver.vehicle_registration)
+    background_tasks.add_task(_send_receipts, snap_txn, snap_passenger, snap_driver, float(balance_after))
+
+
 def _success_body(txn: Transaction, p_wallet: Wallet, driver: Optional[User], idempotent: bool = False) -> dict:
     body = {
         "success": True,
@@ -293,7 +306,7 @@ def _qr_outcome(db: Session, out, background_tasks) -> object:
         passenger, driver = db.get(User, out.txn.passenger_id), db.get(User, out.txn.driver_id)
         p_wallet = get_or_create_wallet(passenger.id, db)
         if not out.idempotent:
-            _send_receipts(out.txn, passenger, driver, out.txn.balance_after)
+            _queue_receipts(background_tasks, out.txn, passenger, driver, out.txn.balance_after)
         return _success_body(out.txn, p_wallet, driver, idempotent=out.idempotent)
     return _failed_body(out.txn, out.code, idempotent=out.idempotent)
 
@@ -656,7 +669,7 @@ def confirm_qr_payment(
 
     # Post-commit notifications (never affect the financial record). Replays and
     # lost races return earlier, so each completed payment is notified once.
-    _send_receipts(txn, passenger, driver, p_wallet.balance)
+    _queue_receipts(background_tasks, txn, passenger, driver, p_wallet.balance)
     return _success_body(txn, p_wallet, driver)
 
 
