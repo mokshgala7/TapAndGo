@@ -1,0 +1,63 @@
+{
+ "experiment": "passenger_fraud_v6",
+ "synthetic_data_only": true,
+ "seeds": {
+  "model": 42,
+  "D6_dev": 61001,
+  "D6_dev_groups": 61002,
+  "D6_valshift": 61501,
+  "D6_dr_master": 62000,
+  "D6_dr1": 62001,
+  "D6_dr2": 62002,
+  "D6_fresh": 64001,
+  "D6_shift": 65001,
+  "D6_scenario": 66001,
+  "bootstrap": [
+   1,
+   2,
+   3
+  ],
+  "causality_sample": 0
+ },
+ "splits": {
+  "train": "D6_dev panel rows before 2026-07-01 (+ all D6_dr1/D6_dr2 rows)",
+  "validation": "D6_dev panel July + heldout_val",
+  "T1_temporal": "D6_dev panel August (sealed)",
+  "T2_unseen": "D6_dev heldout_test (sealed)",
+  "inner_hp": "train rows before 2026-06-01 -> June train rows",
+  "groups": "panel 80% / heldout_val 10% / heldout_test 10%"
+ },
+ "timezone": "Asia/Kolkata",
+ "night_hours": "22:00-05:59",
+ "history_boundaries": {
+  "insufficient_below": 20,
+  "personal_from": 100
+ },
+ "candidates": [
+  "C0_lr_transparent",
+  "C1_lr_P6",
+  "C2_et_P6",
+  "C3_xgb_mono_P6",
+  "C4_xgb_mono_P6_fam",
+  "C5_lr_P6b",
+  "C6_xgb_mono2_P6b",
+  "C7_xgb_mono2_P6b_fam",
+  "C8_xgb_mono2_P6c",
+  "C9_xgb_mono2_P6c_fam"
+ ],
+ "selected": "C9_xgb_mono2_P6c_fam",
+ "selection": "gates G1-G10 (all must pass) -> validation AP shortlist (0.01) -> valshift veto (0.03) -> recall@FPR<=2% -> fewer features/latency",
+ "threshold_rule": "highest-recall threshold with validation FPR <= 0.02",
+ "rule_cost_limit": 20,
+ "commands": [
+  "PYTHONDONTWRITEBYTECODE=1 python3 data/build_datasets.py --stage dev",
+  "PYTHONDONTWRITEBYTECODE=1 python3 training/data_diagnostics.py",
+  "PYTHONDONTWRITEBYTECODE=1 python3 training/train_candidates.py   (then --round2, --round3; amendments A3/A4)",
+  "PYTHONDONTWRITEBYTECODE=1 python3 training/select_model.py",
+  "PYTHONDONTWRITEBYTECODE=1 python3 training/evaluate_final.py   (generates post-freeze data, runs score_references.py)",
+  "PYTHONDONTWRITEBYTECODE=1 python3 training/benchmark_inference.py",
+  "PYTHONDONTWRITEBYTECODE=1 python3 training/reproduce_check.py",
+  "PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider tests",
+  "PYTHONDONTWRITEBYTECODE=1 python3 training/write_manifest.py"
+ ]
+}

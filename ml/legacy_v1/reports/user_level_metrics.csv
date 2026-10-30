@@ -1,0 +1,6 @@
+user_label,user_id,test_transactions,legitimate_count,fraudulent_count,mean_amount,median_amount,max_amount,avg_tx_last_1hour,avg_tx_last_24hours,actual_fraud,predicted_fraud,tp,tn,fp,fn,precision,recall,f1
+User A (Low Spender),USR006363,6,6,0,46.38,45.41,64.68,0.0,0.0,0,0,0,6,0,0,N/A — no fraud,N/A — no positive fraud examples for this user,N/A — no positive fraud examples for this user
+User B (High Spender),USR003028,4,4,0,795.71,741.25,1121.84,0.0,0.25,0,0,0,4,0,0,N/A — no fraud,N/A — no positive fraud examples for this user,N/A — no positive fraud examples for this user
+User C (High Frequency),USR006506,15,15,0,135.98,139.47,186.11,0.0,0.2,0,0,0,15,0,0,N/A — no fraud,N/A — no positive fraud examples for this user,N/A — no positive fraud examples for this user
+User D (Occasional),USR001360,5,4,1,204.94,206.07,227.15,0.0,0.2,1,1,1,4,0,0,1.0000,1.0000,1.0000
+User E (Mixed/Irregular),USR007152,9,7,2,289.64,180.74,1276.99,2.11,2.11,2,4,2,5,2,0,0.5000,1.0000,0.6667

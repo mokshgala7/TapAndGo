@@ -1,0 +1,11 @@
+{
+ "rides": 300,
+ "latency_ms": {
+  "p50": 5.451833494589664,
+  "p95": 7.436050600517775,
+  "max": 25.043750007171184
+ },
+ "median_passenger_history": 81.5,
+ "max_abs_diff_rounded6": 0.0,
+ "mismatches_gt_1e-6": 0
+}

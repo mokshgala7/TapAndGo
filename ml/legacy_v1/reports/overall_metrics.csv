@@ -1,0 +1,26 @@
+metric,value
+model_algorithm,XGBoost (XGBClassifier)
+threshold,0.3104
+total_test_transactions,7676
+legitimate_transactions,7432
+fraud_transactions,244
+true_positives,177
+false_positives,441
+false_negatives,67
+true_negatives,6991
+accuracy,0.9338
+precision,0.2864
+recall,0.7254
+f1_score,0.4107
+roc_auc,0.9619
+pr_auc,0.7053
+false_positive_rate,0.0593
+false_negative_rate,0.2746
+specificity,0.9407
+otp_trigger_rate_pct,8.05
+legit_triggering_otp_count,441
+legit_triggering_otp_pct,5.93
+fraud_triggering_otp_count,177
+fraud_triggering_otp_pct,72.54
+fraud_bypassing_otp_count,67
+fraud_bypassing_otp_pct,27.46

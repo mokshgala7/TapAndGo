@@ -1,0 +1,205 @@
+diff --git a/backend/app/services/fraud_gate.py b/backend/app/services/fraud_gate.py
+index ff649b0..b5bfefd 100644
+--- a/backend/app/services/fraud_gate.py
++++ b/backend/app/services/fraud_gate.py
+@@ -31,6 +31,12 @@ Per-user enforcement (env TAPGO_FRAUD_ENFORCE_USER_IDS, comma-separated passenge
+   Verify/resend/cancel and the status lookup act on existing challenges, so they follow automatically.
+   Every fraud_assessments row records the mode that applied to that payment and whether the allowlist caused it.
+ 
++Optional own-median rule (env TAPGO_FRAUD_MEDIAN_RULE=1, default OFF, independent of the ML package): the payment needs
++OTP when it is >= TAPGO_FRAUD_MEDIAN_MULT (default 2.0) times the median of the passenger's own strictly earlier
++COMPLETED ride payments, once there are at least TAPGO_FRAUD_MEDIAN_MIN_RIDES (default 20) of them. Failed rides and
++repeated idempotency keys are excluded; later rows never count. Same enforcement path and fail-closed behaviour as
++the 10-minute rule. The reason "rule_median" is recorded in fraud_assessments.reasons (no schema change).
++
+ Demo OTP redirect (env TAPGO_OTP_DEMO_REDIRECT_EMAIL, default unset): payment-OTP emails of passengers in the
+ allowlist go to that one address instead of the passenger's own (never withdrawals, receipts or other mail). Ignored
+ (with a warning) in mode off and in mode enforce; it must be one valid address or the app refuses to start. The address
+@@ -129,6 +135,46 @@ def otp_recipient(passenger):
+     return (passenger.email or ""), False
+ 
+ 
++def median_rule_enabled() -> bool:
++    return os.getenv("TAPGO_FRAUD_MEDIAN_RULE", "").strip().lower() in ("1", "true", "yes", "on")
++
++
++def median_rule_params():
++    """(multiplier, minimum earlier completed rides). Raises FraudConfigError for a malformed value."""
++    try:
++        mult = Decimal(os.getenv("TAPGO_FRAUD_MEDIAN_MULT", "2.0").strip() or "2.0")
++        minimum = int(os.getenv("TAPGO_FRAUD_MEDIAN_MIN_RIDES", "20").strip() or "20")
++    except (InvalidOperation, ValueError):
++        raise FraudConfigError("TAPGO_FRAUD_MEDIAN_MULT / TAPGO_FRAUD_MEDIAN_MIN_RIDES must be numbers (e.g. 2.0 and 20).")
++    if not mult.is_finite() or mult <= 0 or minimum < 1:
++        raise FraudConfigError("TAPGO_FRAUD_MEDIAN_MULT must be > 0 and TAPGO_FRAUD_MEDIAN_MIN_RIDES must be >= 1.")
++    return mult, minimum
++
++
++def median_rule(db, passenger_id: int, amount: Decimal, now: datetime) -> bool:
++    """True when `amount` >= K x the median of the passenger's own strictly earlier COMPLETED ride payments."""
++    mult, minimum = median_rule_params()
++    rows = (
++        db.query(Transaction.amount, Transaction.idempotency_key)
++        .filter(Transaction.passenger_id == passenger_id, Transaction.transaction_type == "ride_payment",
++                Transaction.status == "completed", Transaction.created_at.isnot(None), Transaction.created_at < now)
++        .all()
++    )
++    seen, amounts = set(), []
++    for amt, key in rows:
++        if amt is None or Decimal(str(amt)) <= 0 or (key is not None and key in seen):
++            continue
++        if key is not None:
++            seen.add(key)
++        amounts.append(Decimal(str(amt)))
++    if len(amounts) < minimum:
++        return False
++    amounts.sort()
++    n = len(amounts)
++    median = amounts[n // 2] if n % 2 else (amounts[n // 2 - 1] + amounts[n // 2]) / 2
++    return amount >= mult * median
++
++
+ def otp_secret_is_safe() -> bool:
+     secret = os.getenv("PAYMENT_OTP_SECRET", "").strip()
+     return bool(secret) and secret != DEV_SECRET_KEY
+@@ -142,6 +188,8 @@ def validate_fraud_config() -> str:
+     mode = fraud_mode()
+     listed = enforce_user_ids()                         # validates the list even when mode is off
+     redirect = otp_demo_redirect()                      # validates the address (never echoed)
++    if median_rule_enabled():
++        median_rule_params()                            # validates the multiplier / minimum
+     if redirect:
+         note = ("TAPGO_OTP_DEMO_REDIRECT_EMAIL is IGNORED: " + ("mode is off" if mode == "off" else
+                 "TAPGO_FRAUD_MODE=enforce covers everyone (the redirect is only for the listed demo users)" if mode == "enforce" else
+@@ -248,6 +296,13 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
+     reasons = []
+     if rule_fired:
+         reasons.append("rule_10min")
++    if mode != "off" and amount_ok and median_rule_enabled():
++        try:
++            if median_rule(db, passenger.id, amount, now):
++                reasons.append("rule_median")
++        except Exception:  # noqa: BLE001 - a rule that cannot be evaluated is a failure, never "low risk"
++            db.rollback()
++            reasons.append("rule_failure:median")
+     if model_flag:
+         reasons.append("model_flag")
+     if ml_status not in ("scored", "disabled", "off"):
+diff --git a/backend/tests/test_median_rule.py b/backend/tests/test_median_rule.py
+new file mode 100644
+index 0000000..55d2548
+--- /dev/null
++++ b/backend/tests/test_median_rule.py
+@@ -0,0 +1,112 @@
++"""Optional own-median rule (TAPGO_FRAUD_MEDIAN_RULE). Uses the gate-test fixtures. demo/synthetic data."""
++import uuid
++from datetime import datetime, timedelta
++from decimal import Decimal
++
++import pytest
++
++from app.models import FraudAssessment, Transaction
++from tests.test_fraud_gate import (  # noqa: F401  (fixtures)
++    UID, UID2, add_history_for, completed_for, duo, enforce, last_otp, logs, mail, nfc_verify, qr_confirm, qr_create,
++    rows, scene, tap, tap_uid,
++)
++
++
++@pytest.fixture
++def rule(monkeypatch):
++    monkeypatch.setenv("TAPGO_FRAUD_MEDIAN_RULE", "1")
++    monkeypatch.setenv("TAPGO_RISK_DISABLED", "1")               # isolate the rule from the model
++    monkeypatch.delenv("TAPGO_FRAUD_MODE", raising=False)
++
++
++def hist(scene, pid, n=25, amount=100, status="completed", offset_days=40, future=False):
++    db = scene["env"].db()
++    try:
++        base = datetime.utcnow() + (timedelta(days=5) if future else -timedelta(days=offset_days))
++        for i in range(n):
++            db.add(Transaction(reference=f"M{uuid.uuid4().hex[:12]}", passenger_id=pid, driver_id=scene["driver_id"], amount=Decimal(amount),
++                               payment_method="NFC", status=status, otp_verified=False, fraud_status="clear", transaction_type="ride_payment",
++                               idempotency_key=f"hist:{uuid.uuid4().hex}", created_at=base + timedelta(hours=i * 4)))
++        db.commit()
++    finally:
++        db.close()
++
++
++def listed(monkeypatch, *ids):
++    monkeypatch.setenv("TAPGO_FRAUD_ENFORCE_USER_IDS", ",".join(str(i) for i in ids))
++
++
++@pytest.mark.parametrize("amount,fires", [(199, False), (199.99, False), (200, True), (200.01, True), (500, True), (100, False)])
++def test_threshold_is_inclusive_at_exactly_k_times_the_median(duo, rule, monkeypatch, amount, fires):
++    listed(monkeypatch, duo["pax_id"]); hist(duo, duo["pax_id"], 25, 100)
++    r, _ = tap_uid(duo, UID, amount=amount)
++    assert (r.json()["status"] == "otp_required") is fires, r.text
++    a = rows(duo, FraudAssessment, passenger_id=duo["pax_id"])[-1]
++    assert ("rule_median" in (a.reasons or "")) is fires
++
++
++def test_failed_rides_do_not_move_the_median(duo, rule, monkeypatch):
++    listed(monkeypatch, duo["pax_id"]); hist(duo, duo["pax_id"], 25, 100); hist(duo, duo["pax_id"], 40, 5, status="failed")
++    assert tap_uid(duo, UID, amount=150)[0].json()["success"] is True           # median stays 100 (failed rows ignored)
++
++
++def test_short_history_is_a_no_op_and_the_boundary_is_20(duo, rule, monkeypatch):
++    listed(monkeypatch, duo["pax_id"]); hist(duo, duo["pax_id"], 19, 100)
++    assert tap_uid(duo, UID, amount=1000)[0].json()["success"] is True
++    hist(duo, duo["pax_id"], 1, 100, offset_days=60)                              # now 20 earlier completed rides (+1 paid above = 21)
++    assert tap_uid(duo, UID, amount=1000)[0].json()["status"] == "otp_required"
++
++
++def test_rule_is_off_by_default(duo, monkeypatch):
++    monkeypatch.setenv("TAPGO_RISK_DISABLED", "1"); monkeypatch.delenv("TAPGO_FRAUD_MEDIAN_RULE", raising=False)
++    listed(monkeypatch, duo["pax_id"]); hist(duo, duo["pax_id"], 25, 100)
++    assert tap_uid(duo, UID, amount=1000)[0].json()["success"] is True
++
++
++def test_applies_only_to_enforced_users(duo, rule, monkeypatch):
++    listed(monkeypatch, duo["pax_id"])
++    for pid in (duo["pax_id"], duo["pax2_id"]):
++        hist(duo, pid, 25, 100)
++    assert tap_uid(duo, UID, amount=300)[0].json()["status"] == "otp_required"
++    r2, _ = tap_uid(duo, UID2, amount=300)                                         # same history, not listed -> shadow
++    assert r2.json()["success"] is True
++    a2 = rows(duo, FraudAssessment, passenger_id=duo["pax2_id"])[-1]
++    assert (a2.mode, a2.decision, a2.reasons) == ("shadow", "proceed", "rule_median")
++    monkeypatch.setenv("TAPGO_FRAUD_MODE", "enforce"); monkeypatch.setenv("PAYMENT_OTP_SECRET", "a-long-private-random-value")
++    hist(duo, duo["pax3_id"], 25, 100)
++    assert tap_uid(duo, "04A2B3C4D5E6AA", amount=300)[0].json()["status"] == "otp_required"   # enforce mode: everyone
++
++
++def test_future_rows_never_count(duo, rule, monkeypatch):
++    listed(monkeypatch, duo["pax_id"]); hist(duo, duo["pax_id"], 25, 100); hist(duo, duo["pax_id"], 60, 5, future=True)
++    tap_uid(duo, UID, amount=150)
++    a = rows(duo, FraudAssessment, passenger_id=duo["pax_id"])[-1]
++    # the future-dated rows trip the 10-minute rule (clock-skew handling), but never the median (it ignores later rows)
++    assert "rule_median" not in (a.reasons or "")
++
++
++def test_same_decision_on_nfc_qr_and_wallet(duo, rule, monkeypatch):
++    listed(monkeypatch, duo["pax_id"]); hist(duo, duo["pax_id"], 25, 100)
++    nfc = tap_uid(duo, UID, amount=250)[0].json()["status"]
++    token = qr_create(duo, 250); qr = qr_confirm(duo, token).json()["status"]
++    w = duo["env"].client.post("/api/wallet/pay", json={"driver_id": duo["driver_id"], "fare": 250, "idempotency_key": f"pay-{uuid.uuid4().hex}"},
++                               headers=duo["pax_headers"]).json()["status"]
++    assert nfc == qr == w == "otp_required"
++    assert completed_for(duo, duo["pax_id"]) == [t for t in completed_for(duo, duo["pax_id"])]
++
++
++def test_flagged_by_the_rule_moves_no_money_until_the_otp(duo, rule, monkeypatch):
++    listed(monkeypatch, duo["pax_id"]); hist(duo, duo["pax_id"], 25, 100)
++    before = duo["env"].balance(duo["pax_id"]); n = len(completed_for(duo, duo["pax_id"]))
++    r, key = tap_uid(duo, UID, amount=300)
++    assert r.json()["status"] == "otp_required" and duo["env"].balance(duo["pax_id"]) == before and len(completed_for(duo, duo["pax_id"])) == n
++    assert nfc_verify(duo, r.json()["challenge_id"], last_otp(duo), key).json()["success"] is True
++    assert duo["env"].balance(duo["pax_id"]) == before - 300
++
++
++@pytest.mark.parametrize("env", [{"TAPGO_FRAUD_MEDIAN_MULT": "abc"}, {"TAPGO_FRAUD_MEDIAN_MULT": "0"}, {"TAPGO_FRAUD_MEDIAN_MIN_RIDES": "0"},
++                                 {"TAPGO_FRAUD_MEDIAN_MIN_RIDES": "x"}])
++def test_bad_parameters_stop_startup_only_when_the_rule_is_on(env):
++    from tests.test_fraud_gate import _boot
++    assert _boot({**env, "TAPGO_FRAUD_MEDIAN_RULE": "1"}).returncode != 0
++    assert _boot(env).returncode == 0

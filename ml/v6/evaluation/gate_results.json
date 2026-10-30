@@ -1,0 +1,3479 @@
+{
+ "G9_shared_builder": {
+  "pass": true,
+  "detail": {
+   "rows_checked": 7113,
+   "changed": []
+  }
+ },
+ "C0_lr_transparent": {
+  "G1": {
+   "pass": false,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.244478,
+      0.400914,
+      0.547075,
+      0.717648
+     ],
+     "flags": [
+      false,
+      false,
+      false,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.244478,
+      0.400914,
+      0.547075,
+      0.717648
+     ],
+     "flags": [
+      false,
+      false,
+      false,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.231123,
+      0.412542,
+      0.558986,
+      0.72731
+     ],
+     "flags": [
+      false,
+      false,
+      false,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.231123,
+      0.412542,
+      0.558986,
+      0.72731
+     ],
+     "flags": [
+      false,
+      false,
+      false,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.217243,
+      0.432341,
+      0.578889,
+      0.743107
+     ],
+     "flags": [
+      false,
+      false,
+      false,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.217243,
+      0.432341,
+      0.578889,
+      0.743107
+     ],
+     "flags": [
+      false,
+      false,
+      false,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": false,
+   "detail": {
+    "variable": [
+     0.53367,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.336606,
+     false,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": true,
+   "detail": {
+    "checks": {
+     "G3a": true,
+     "G3b": true,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.301291,
+     "traveller_0200": 0.232918,
+     "commuter_1300": 0.230914,
+     "traveller_1300": 0.228122
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.237432,
+      false
+     ],
+     "300": [
+      0.776422,
+      false
+     ]
+    },
+    "n1": {
+     "100": [
+      0.235135,
+      false
+     ],
+     "500": [
+      0.943034,
+      true
+     ]
+    },
+    "n5": {
+     "100": [
+      0.234743,
+      false
+     ],
+     "500": [
+      0.927631,
+      true
+     ]
+    },
+    "n19": {
+     "100": [
+      0.220177,
+      false
+     ],
+     "500": [
+      0.795867,
+      false
+     ]
+    },
+    "n50": {
+     "100": [
+      0.226968,
+      false
+     ],
+     "500": [
+      0.723501,
+      false
+     ]
+    },
+    "n150": {
+     "100": [
+      0.218247,
+      false
+     ],
+     "500": [
+      0.73116,
+      false
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 6
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C1_lr_P6": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.305013,
+      0.781337,
+      0.918695,
+      0.979671
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.305013,
+      0.781337,
+      0.918695,
+      0.979671
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.331198,
+      0.800859,
+      0.927099,
+      0.981897
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.331198,
+      0.800859,
+      0.927099,
+      0.981897
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.37759,
+      0.830658,
+      0.939436,
+      0.985109
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.37759,
+      0.830658,
+      0.939436,
+      0.985109
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.653713,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.680936,
+     false,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": true,
+     "G3b": false,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.312782,
+     "traveller_0200": 0.130045,
+     "commuter_1300": 0.327391,
+     "traveller_1300": 0.557748
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.403461,
+      false
+     ],
+     "300": [
+      0.915583,
+      true
+     ]
+    },
+    "n1": {
+     "100": [
+      0.275174,
+      false
+     ],
+     "500": [
+      0.889468,
+      false
+     ]
+    },
+    "n5": {
+     "100": [
+      0.256668,
+      false
+     ],
+     "500": [
+      0.913249,
+      true
+     ]
+    },
+    "n19": {
+     "100": [
+      0.294014,
+      false
+     ],
+     "500": [
+      0.97094,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.316524,
+      false
+     ],
+     "500": [
+      0.980663,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.321696,
+      false
+     ],
+     "500": [
+      0.982205,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 36
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C2_et_P6": {
+  "G1": {
+   "pass": false,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.04026,
+      0.419959,
+      0.255706,
+      0.201941
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": false,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.04026,
+      0.419959,
+      0.255706,
+      0.201941
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": false,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.04292,
+      0.443758,
+      0.248547,
+      0.204871
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": false,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.04292,
+      0.443758,
+      0.248547,
+      0.204871
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      false
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": false,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": false,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.026908,
+      0.382982,
+      0.252692,
+      0.23435
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": false,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.026908,
+      0.382982,
+      0.252692,
+      0.23435
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": false,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.134389,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.276829,
+     true,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": false,
+     "G3b": false,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.012569,
+     "traveller_0200": 0.025936,
+     "commuter_1300": 0.043782,
+     "traveller_1300": 0.036907
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.021564,
+      false
+     ],
+     "300": [
+      0.422899,
+      true
+     ]
+    },
+    "n1": {
+     "100": [
+      0.003878,
+      false
+     ],
+     "500": [
+      0.177945,
+      false
+     ]
+    },
+    "n5": {
+     "100": [
+      0.009084,
+      false
+     ],
+     "500": [
+      0.106991,
+      false
+     ]
+    },
+    "n19": {
+     "100": [
+      0.014143,
+      false
+     ],
+     "500": [
+      0.133981,
+      false
+     ]
+    },
+    "n50": {
+     "100": [
+      0.012344,
+      false
+     ],
+     "500": [
+      0.17128,
+      false
+     ]
+    },
+    "n150": {
+     "100": [
+      0.037237,
+      false
+     ],
+     "500": [
+      0.246964,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 36
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C3_xgb_mono_P6": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.004937,
+      0.436758,
+      0.446405,
+      0.449215
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.004937,
+      0.436758,
+      0.446405,
+      0.449215
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.003792,
+      0.442684,
+      0.446405,
+      0.449215
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.003792,
+      0.442684,
+      0.446405,
+      0.449215
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.005313,
+      0.442684,
+      0.446405,
+      0.615857
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.005313,
+      0.442684,
+      0.446405,
+      0.615857
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.051116,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.198693,
+     true,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": true,
+     "G3b": false,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.002004,
+     "traveller_0200": 0.001651,
+     "commuter_1300": 0.003678,
+     "traveller_1300": 0.006849
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.003337,
+      false
+     ],
+     "300": [
+      0.048616,
+      false
+     ]
+    },
+    "n1": {
+     "100": [
+      0.001585,
+      false
+     ],
+     "500": [
+      0.145912,
+      true
+     ]
+    },
+    "n5": {
+     "100": [
+      0.004379,
+      false
+     ],
+     "500": [
+      0.046614,
+      false
+     ]
+    },
+    "n19": {
+     "100": [
+      0.002423,
+      false
+     ],
+     "500": [
+      0.192286,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.002416,
+      false
+     ],
+     "500": [
+      0.393362,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.002336,
+      false
+     ],
+     "500": [
+      0.590573,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 36
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C4_xgb_mono_P6_fam": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.006233,
+      0.511306,
+      0.617755,
+      0.617755
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.025771,
+      0.724439,
+      0.771824,
+      0.771824
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.005754,
+      0.511306,
+      0.617755,
+      0.617755
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.019634,
+      0.724439,
+      0.771824,
+      0.771824
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.008252,
+      0.511306,
+      0.617755,
+      0.690458
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.027008,
+      0.724439,
+      0.771824,
+      0.823591
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.041054,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.278794,
+     true,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": false,
+     "G3b": false,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.002562,
+     "traveller_0200": 0.003591,
+     "commuter_1300": 0.00505,
+     "traveller_1300": 0.014557
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.005246,
+      false
+     ],
+     "300": [
+      0.046401,
+      false
+     ]
+    },
+    "n1": {
+     "100": [
+      0.000734,
+      false
+     ],
+     "500": [
+      0.123248,
+      true
+     ]
+    },
+    "n5": {
+     "100": [
+      0.002677,
+      false
+     ],
+     "500": [
+      0.049956,
+      false
+     ]
+    },
+    "n19": {
+     "100": [
+      0.003522,
+      false
+     ],
+     "500": [
+      0.242762,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.002688,
+      false
+     ],
+     "500": [
+      0.391208,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.001811,
+      false
+     ],
+     "500": [
+      0.52964,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 42
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C5_lr_P6b": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.28988,
+      0.769662,
+      0.913874,
+      0.978493
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.28988,
+      0.769662,
+      0.913874,
+      0.978493
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.315343,
+      0.789951,
+      0.922736,
+      0.980845
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.315343,
+      0.789951,
+      0.922736,
+      0.980845
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.360701,
+      0.821029,
+      0.935765,
+      0.984242
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.360701,
+      0.821029,
+      0.935765,
+      0.984242
+     ],
+     "flags": [
+      false,
+      false,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.637615,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.665683,
+     false,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": true,
+     "G3b": false,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.312807,
+     "traveller_0200": 0.128214,
+     "commuter_1300": 0.314778,
+     "traveller_1300": 0.529774
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.38026,
+      false
+     ],
+     "300": [
+      0.907281,
+      true
+     ]
+    },
+    "n1": {
+     "100": [
+      0.261856,
+      false
+     ],
+     "500": [
+      0.883411,
+      false
+     ]
+    },
+    "n5": {
+     "100": [
+      0.242493,
+      false
+     ],
+     "500": [
+      0.907799,
+      true
+     ]
+    },
+    "n19": {
+     "100": [
+      0.278185,
+      false
+     ],
+     "500": [
+      0.969106,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.301066,
+      false
+     ],
+     "500": [
+      0.979542,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.307344,
+      false
+     ],
+     "500": [
+      0.981265,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 34
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C6_xgb_mono2_P6b": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.005567,
+      0.320234,
+      0.341731,
+      0.351691
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.005567,
+      0.320234,
+      0.341731,
+      0.351691
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.004336,
+      0.320234,
+      0.341731,
+      0.351691
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.004336,
+      0.320234,
+      0.341731,
+      0.351691
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.005839,
+      0.341731,
+      0.341731,
+      0.544965
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.005839,
+      0.341731,
+      0.341731,
+      0.544965
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.032584,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.211074,
+     true,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": true,
+     "G3b": false,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.003964,
+     "traveller_0200": 0.002437,
+     "commuter_1300": 0.004336,
+     "traveller_1300": 0.010739
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.003798,
+      false
+     ],
+     "300": [
+      0.062566,
+      true
+     ]
+    },
+    "n1": {
+     "100": [
+      0.002332,
+      false
+     ],
+     "500": [
+      0.14575,
+      true
+     ]
+    },
+    "n5": {
+     "100": [
+      0.00615,
+      false
+     ],
+     "500": [
+      0.046681,
+      false
+     ]
+    },
+    "n19": {
+     "100": [
+      0.002827,
+      false
+     ],
+     "500": [
+      0.221235,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.006113,
+      false
+     ],
+     "500": [
+      0.570604,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.002354,
+      false
+     ],
+     "500": [
+      0.572645,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 34
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C7_xgb_mono2_P6b_fam": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.005564,
+      0.388062,
+      0.424512,
+      0.445374
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.033935,
+      0.544383,
+      0.56493,
+      0.58567
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.004756,
+      0.394157,
+      0.424512,
+      0.445374
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.026622,
+      0.544383,
+      0.56493,
+      0.58567
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.005714,
+      0.394157,
+      0.443963,
+      0.554344
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.032153,
+      0.544383,
+      0.584283,
+      0.622457
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.039401,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.155754,
+     true,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": true,
+     "G3b": false,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.003991,
+     "traveller_0200": 0.002454,
+     "commuter_1300": 0.004756,
+     "traveller_1300": 0.01587
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.006274,
+      false
+     ],
+     "300": [
+      0.059162,
+      false
+     ]
+    },
+    "n1": {
+     "100": [
+      0.001438,
+      false
+     ],
+     "500": [
+      0.125533,
+      true
+     ]
+    },
+    "n5": {
+     "100": [
+      0.001558,
+      false
+     ],
+     "500": [
+      0.057478,
+      false
+     ]
+    },
+    "n19": {
+     "100": [
+      0.001805,
+      false
+     ],
+     "500": [
+      0.232383,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.004707,
+      false
+     ],
+     "500": [
+      0.516137,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.003988,
+      false
+     ],
+     "500": [
+      0.487129,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 40
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C8_xgb_mono2_P6c": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.002495,
+      0.205907,
+      0.213936,
+      0.215303
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.002495,
+      0.205907,
+      0.213936,
+      0.215303
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.001901,
+      0.213936,
+      0.213936,
+      0.215303
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.001901,
+      0.213936,
+      0.213936,
+      0.215303
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.002708,
+      0.213936,
+      0.213936,
+      0.278224
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.002708,
+      0.213936,
+      0.213936,
+      0.278224
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.03316,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.10753,
+     true,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G3a": false,
+     "G3b": true,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.002069,
+     "traveller_0200": 0.004241,
+     "commuter_1300": 0.001901,
+     "traveller_1300": 0.020871
+    }
+   }
+  },
+  "G4": {
+   "pass": false,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": false,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.003649,
+      false
+     ],
+     "300": [
+      0.057996,
+      false
+     ]
+    },
+    "n1": {
+     "100": [
+      0.002526,
+      false
+     ],
+     "500": [
+      0.133207,
+      true
+     ]
+    },
+    "n5": {
+     "100": [
+      0.003634,
+      false
+     ],
+     "500": [
+      0.044046,
+      false
+     ]
+    },
+    "n19": {
+     "100": [
+      0.002275,
+      false
+     ],
+     "500": [
+      0.095324,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.003022,
+      false
+     ],
+     "500": [
+      0.326954,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.002308,
+      false
+     ],
+     "500": [
+      0.38354,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 33
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ },
+ "C9_xgb_mono2_P6c_fam": {
+  "G1": {
+   "pass": true,
+   "detail": {
+    "M60_D1": {
+     "scores": [
+      0.004309,
+      0.335826,
+      0.351295,
+      0.351295
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_NEW": {
+     "scores": [
+      0.023326,
+      0.484627,
+      0.484627,
+      0.484627
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M60_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M100_D1": {
+     "scores": [
+      0.003825,
+      0.335826,
+      0.351295,
+      0.351295
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_NEW": {
+     "scores": [
+      0.018576,
+      0.484627,
+      0.484627,
+      0.484627
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M100_G1e_signal_identical_familiar_vs_unfamiliar": true,
+    "M250_D1": {
+     "scores": [
+      0.004896,
+      0.335826,
+      0.351295,
+      0.417901
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_NEW": {
+     "scores": [
+      0.023072,
+      0.484627,
+      0.484627,
+      0.591353
+     ],
+     "flags": [
+      false,
+      true,
+      true,
+      true
+     ],
+     "levels": [
+      "none",
+      "high",
+      "high",
+      "high"
+     ],
+     "checks": {
+      "G1a_monotone": true,
+      "G1b_levels": true,
+      "G1c_flag_x3_x5": true,
+      "G1d_x1_not_flagged": true
+     }
+    },
+    "M250_G1e_signal_identical_familiar_vs_unfamiliar": true
+   }
+  },
+  "G2": {
+   "pass": true,
+   "detail": {
+    "variable": [
+     0.041801,
+     false,
+     "none"
+    ],
+    "stable": [
+     0.100118,
+     true,
+     "elevated"
+    ]
+   }
+  },
+  "G3": {
+   "pass": true,
+   "detail": {
+    "checks": {
+     "G3a": true,
+     "G3b": true,
+     "G3c": true,
+     "G3d": true,
+     "G3e": true,
+     "G3f": true
+    },
+    "boundaries": {
+     "05:59_ist": true,
+     "05:59_utc": true,
+     "06:00_ist": true,
+     "06:00_utc": true,
+     "21:59_ist": true,
+     "21:59_utc": true,
+     "22:00_ist": true,
+     "22:00_utc": true
+    },
+    "scores": {
+     "commuter_0200": 0.003924,
+     "traveller_0200": 0.002888,
+     "commuter_1300": 0.003825,
+     "traveller_1300": 0.018086
+    }
+   }
+  },
+  "G4": {
+   "pass": true,
+   "detail": {
+    "checks": {
+     "G4a": true,
+     "G4b": true,
+     "G4c": true
+    },
+    "n0": {
+     "100": [
+      0.006197,
+      false
+     ],
+     "300": [
+      0.060576,
+      false
+     ]
+    },
+    "n1": {
+     "100": [
+      0.0015,
+      false
+     ],
+     "500": [
+      0.159356,
+      true
+     ]
+    },
+    "n5": {
+     "100": [
+      0.001851,
+      false
+     ],
+     "500": [
+      0.080473,
+      true
+     ]
+    },
+    "n19": {
+     "100": [
+      0.002953,
+      false
+     ],
+     "500": [
+      0.283517,
+      true
+     ]
+    },
+    "n50": {
+     "100": [
+      0.004239,
+      false
+     ],
+     "500": [
+      0.471612,
+      true
+     ]
+    },
+    "n150": {
+     "100": [
+      0.003026,
+      false
+     ],
+     "500": [
+      0.355906,
+      true
+     ]
+    },
+    "stages": {
+     "0": "none",
+     "1": "insufficient",
+     "19": "insufficient",
+     "20": "developing",
+     "99": "developing",
+     "100": "personal"
+    }
+   }
+  },
+  "G5": {
+   "pass": true,
+   "detail": {
+    "G5a_599": true,
+    "G5a_600": true,
+    "G5a_601": true,
+    "G5b": true,
+    "G5c": true,
+    "G5d": true,
+    "G5e_multileg_rule_triggers_by_design": true,
+    "G5f": true
+   }
+  },
+  "G6": {
+   "pass": true,
+   "detail": {
+    "statuses": [
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input",
+     "invalid_input"
+    ]
+   }
+  },
+  "G7": {
+   "pass": true,
+   "detail": {
+    "feature_names_clean": true,
+    "transaction_location_refused": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "history_location_refused": true
+   }
+  },
+  "G8": {
+   "pass": true,
+   "detail": {
+    "score_params": [
+     "transaction",
+     "passenger_history"
+    ],
+    "n_features": 39
+   }
+  },
+  "G10": {
+   "pass": true,
+   "detail": {
+    "rows": 25,
+    "max_abs_diff": 0.0
+   }
+  }
+ }
+}

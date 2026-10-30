@@ -1,0 +1,82 @@
+{
+ "D6_dev_open": {
+  "fraud_share_by_driver_type": {
+   "local": 0.7869,
+   "dishonest": 0.2108,
+   "hub": 0.0023
+  },
+  "legit_share_by_driver_type": {
+   "local": 0.8812,
+   "hub": 0.0682,
+   "dishonest": 0.0506
+  },
+  "familiar_share": {
+   "fraud": 0.4304,
+   "legit": 0.723
+  },
+  "fraud_rate_ge2x_familiar": 0.0494,
+  "fraud_rate_ge2x_unfamiliar": 0.0819,
+  "n_ge2x_familiar": 5935,
+  "n_ge2x_unfamiliar": 4237,
+  "fraud_by_scenario": {
+   "card_testing": 424,
+   "driver_overcharge": 368,
+   "velocity_spree": 321,
+   "gradual_compromise": 261,
+   "unfamiliar_driver_takeover": 187,
+   "off_pattern_time": 173,
+   "passenger_amount_anomaly": 147,
+   "indistinguishable": 118,
+   "quiet_compromised": 108,
+   "first_ride_fraud": 70
+  },
+  "prevalence": 0.0126,
+  "shortcut_gate": {
+   "worst_type": "dishonest",
+   "fraud_share": 0.2108,
+   "legit_share": 0.0506,
+   "violates_(>40% fraud and <10% legit)": false
+  }
+ },
+ "D4_dev_open_reference": {
+  "fraud_share_by_driver_type": {
+   "ring": 0.459,
+   "local": 0.3559,
+   "dishonest": 0.1736,
+   "hub": 0.0115
+  },
+  "legit_share_by_driver_type": {
+   "local": 0.8553,
+   "hub": 0.0675,
+   "dishonest": 0.0413,
+   "ring": 0.0358
+  },
+  "familiar_share": {
+   "fraud": 0.2822,
+   "legit": 0.7197
+  },
+  "fraud_rate_ge2x_familiar": 0.0286,
+  "fraud_rate_ge2x_unfamiliar": 0.109,
+  "n_ge2x_familiar": 5845,
+  "n_ge2x_unfamiliar": 4534,
+  "fraud_by_scenario": {
+   "card_testing": 376,
+   "velocity_spree": 355,
+   "driver_overcharge": 343,
+   "gradual_compromise": 314,
+   "passenger_amount_anomaly": 181,
+   "unfamiliar_driver_takeover": 170,
+   "off_pattern_time": 156,
+   "quiet_compromised": 108,
+   "indistinguishable": 87,
+   "first_ride_fraud": 82
+  },
+  "prevalence": 0.0126,
+  "shortcut_gate": {
+   "worst_type": "ring",
+   "fraud_share": 0.459,
+   "legit_share": 0.0358,
+   "violates_(>40% fraud and <10% legit)": true
+  }
+ }
+}

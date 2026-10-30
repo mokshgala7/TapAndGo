@@ -1,0 +1,228 @@
+{
+  "post_freeze_data_generated": false,
+  "sealed_read": false,
+  "selection_log": {
+    "rule": "V6_EXPERIMENT_PREREGISTRATION.md \u00a77",
+    "stage_A": [
+      {
+        "candidate": "C0_lr_transparent",
+        "eligible": false,
+        "failed_gates": "G1;G2;G4"
+      },
+      {
+        "candidate": "C1_lr_P6",
+        "eligible": false,
+        "failed_gates": "G3;G4"
+      },
+      {
+        "candidate": "C2_et_P6",
+        "eligible": false,
+        "failed_gates": "G1;G3;G4"
+      },
+      {
+        "candidate": "C3_xgb_mono_P6",
+        "eligible": false,
+        "failed_gates": "G3;G4"
+      },
+      {
+        "candidate": "C4_xgb_mono_P6_fam",
+        "eligible": false,
+        "failed_gates": "G3;G4"
+      },
+      {
+        "candidate": "C5_lr_P6b",
+        "eligible": false,
+        "failed_gates": "G3;G4"
+      },
+      {
+        "candidate": "C6_xgb_mono2_P6b",
+        "eligible": false,
+        "failed_gates": "G3;G4"
+      },
+      {
+        "candidate": "C7_xgb_mono2_P6b_fam",
+        "eligible": false,
+        "failed_gates": "G3;G4"
+      },
+      {
+        "candidate": "C8_xgb_mono2_P6c",
+        "eligible": false,
+        "failed_gates": "G3;G4"
+      },
+      {
+        "candidate": "C9_xgb_mono2_P6c_fam",
+        "eligible": true,
+        "failed_gates": ""
+      }
+    ],
+    "stage_B": {
+      "best_val_ap": 0.3927846670004706,
+      "shortlist": [
+        {
+          "candidate": "C9_xgb_mono2_P6c_fam",
+          "val_pr_auc": 0.3927846670004706,
+          "valshift_pr_auc": 0.4488420449820656
+        }
+      ],
+      "after_valshift_veto": [
+        "C9_xgb_mono2_P6c_fam"
+      ],
+      "ranking": [
+        {
+          "candidate": "C9_xgb_mono2_P6c_fam",
+          "val_recall_at_fpr_0.02": 0.4281949934123847,
+          "n_features": 39,
+          "latency_us": 96.3
+        }
+      ],
+      "chosen": "C9_xgb_mono2_P6c_fam"
+    },
+    "rule_policy": {
+      "costs_on_validation": {
+        "rapid_repeat_10min": {
+          "rule_alone": {
+            "tp": 97,
+            "fp": 1483,
+            "precision": 0.06139240506329114,
+            "recall": 0.12779973649538867,
+            "fpr": 0.02567831974096584
+          },
+          "extra_fraud_caught": 9,
+          "extra_legit_challenged": 1429,
+          "legit_challenges_per_extra_fraud": 158.77777777777777,
+          "model_or_rule": {
+            "tp": 334,
+            "fp": 2584,
+            "precision": 0.11446196024674435,
+            "recall": 0.4400527009222661,
+            "fpr": 0.044742264471109724
+          },
+          "within_cost_limit": false
+        },
+        "amount_anomalous": {
+          "rule_alone": {
+            "tp": 129,
+            "fp": 1789,
+            "precision": 0.06725755995828989,
+            "recall": 0.16996047430830039,
+            "fpr": 0.030976745796755148
+          },
+          "extra_fraud_caught": 48,
+          "extra_legit_challenged": 1296,
+          "legit_challenges_per_extra_fraud": 27.0,
+          "model_or_rule": {
+            "tp": 373,
+            "fp": 2451,
+            "precision": 0.13208215297450424,
+            "recall": 0.4914361001317523,
+            "fpr": 0.042439353799802605
+          },
+          "within_cost_limit": false
+        },
+        "night_behaviour_anomalous": {
+          "rule_alone": {
+            "tp": 144,
+            "fp": 3069,
+            "precision": 0.04481792717086835,
+            "recall": 0.18972332015810275,
+            "fpr": 0.05314009661835749
+          },
+          "extra_fraud_caught": 48,
+          "extra_legit_challenged": 2830,
+          "legit_challenges_per_extra_fraud": 58.958333333333336,
+          "model_or_rule": {
+            "tp": 373,
+            "fp": 3985,
+            "precision": 0.08558972005507114,
+            "recall": 0.4914361001317523,
+            "fpr": 0.06900074455006666
+          },
+          "within_cost_limit": false
+        }
+      },
+      "step_up_rules": [
+        "rapid_repeat_10min"
+      ],
+      "note": "10-minute rule is in the policy by design (V1); the others only if cost <= 20 legit per extra fraud"
+    }
+  },
+  "selected": "C9_xgb_mono2_P6c_fam",
+  "threshold": 0.0633183941245079,
+  "bundle_sha256": "154e0afd6dc978467d2cbdc000de6a50473b4f92cda383bf641fb564dd261680",
+  "validation_metrics": {
+    "n": 58512,
+    "fraud_cases": 759,
+    "legit_cases": 57753,
+    "prevalence": 0.012971698113207548,
+    "threshold": 0.0633183941245079,
+    "tp": 325,
+    "fp": 1155,
+    "tn": 56598,
+    "fn": 434,
+    "flagged": 1480,
+    "flagged_pct": 0.02529395679518731,
+    "accuracy": 0.9728431774678699,
+    "precision": 0.2195945945945946,
+    "recall": 0.4281949934123847,
+    "tpr": 0.4281949934123847,
+    "f1": 0.29030817329164804,
+    "fpr": 0.01999896109293024,
+    "specificity": 0.9800010389070698,
+    "roc_auc": 0.8823270067451623,
+    "pr_auc": 0.3927846670004706,
+    "brier": 0.00929191510080735
+  },
+  "validation_recall_at_fpr": {
+    "0.005": {
+      "max_fpr": 0.005,
+      "threshold": 0.12980256974697113,
+      "recall": 0.3412384716732543,
+      "precision": 0.473491773308958,
+      "fpr": 0.004986753934860527,
+      "tp": 259,
+      "fp": 288,
+      "flagged": 547
+    },
+    "0.01": {
+      "max_fpr": 0.01,
+      "threshold": 0.09102282300591469,
+      "recall": 0.3847167325428195,
+      "precision": 0.33601841196777904,
+      "fpr": 0.00999082298755043,
+      "tp": 292,
+      "fp": 577,
+      "flagged": 869
+    },
+    "0.02": {
+      "max_fpr": 0.02,
+      "threshold": 0.0633183941245079,
+      "recall": 0.4281949934123847,
+      "precision": 0.2195945945945946,
+      "fpr": 0.01999896109293024,
+      "tp": 325,
+      "fp": 1155,
+      "flagged": 1480
+    },
+    "0.05": {
+      "max_fpr": 0.05,
+      "threshold": 0.03836863115429878,
+      "recall": 0.5480895915678524,
+      "precision": 0.12594610959733576,
+      "fpr": 0.049988745173410905,
+      "tp": 416,
+      "fp": 2887,
+      "flagged": 3303
+    },
+    "0.1": {
+      "max_fpr": 0.1,
+      "threshold": 0.021417097188532352,
+      "recall": 0.691699604743083,
+      "precision": 0.08333333333333333,
+      "fpr": 0.09999480546465118,
+      "tp": 525,
+      "fp": 5775,
+      "flagged": 6300
+    }
+  },
+  "frozen_at_utc": "2026-10-26T14:32:04+00:00"
+}

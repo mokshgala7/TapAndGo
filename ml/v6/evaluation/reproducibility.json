@@ -1,0 +1,7 @@
+{
+ "regenerate_D6_dr1_identical": true,
+ "regenerate_D6_fresh_identical": true,
+ "matrix_max_abs_diff": 0.0,
+ "refit_bit_identical_validation_scores": true,
+ "refit_max_abs_diff": 0.0
+}
