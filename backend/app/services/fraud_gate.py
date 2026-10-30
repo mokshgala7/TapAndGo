@@ -16,6 +16,8 @@ It combines two independent checks:
 Mode (env TAPGO_FRAUD_MODE):
   off      no check at all; every payment proceeds exactly as before the gate existed (decision still recorded).
   shadow   DEFAULT. Both checks run and are recorded/logged; every payment proceeds unchanged.
+  The 10-minute rule is separate: it asks for the OTP for everyone in EVERY mode (even shadow and off) unless
+  TAPGO_TEN_MINUTE_RULE=off. The modes below govern the ML score.
   enforce  otp_required when the model flags, the 10-minute rule fires, or the model produced no score
            (unavailable, invalid input, error). A failure is never treated as low risk. ML switched off on purpose
            with TAPGO_RISK_DISABLED=1 is "disabled", not a failure: the 10-minute rule still applies.
@@ -170,6 +172,12 @@ def _ensure_handler() -> None:
         logger.propagate = False
 
 
+def ten_minute_rule_enforced() -> bool:
+    """The 10-minute rule asks for an email OTP for EVERY passenger on every channel, whatever TAPGO_FRAUD_MODE says
+    (the ML score still follows the mode). Only TAPGO_TEN_MINUTE_RULE=off|0|false|no switches it off."""
+    return os.getenv("TAPGO_TEN_MINUTE_RULE", "on").strip().lower() not in ("off", "0", "false", "no")
+
+
 def ten_minute_rule(db, passenger_id: int, now: datetime):
     """(fired, elapsed_seconds or None) against the previous COMPLETED ride payment. No ML involved."""
     last = (
@@ -205,8 +213,8 @@ def evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_k
         except FraudConfigError:
             mode, by_allowlist = "enforce", False               # unreadable configuration: fail closed
         logger.error(json.dumps({"status": "gate_error", "error": type(exc).__name__, "mode": mode}))
-        enforced = mode == "enforce"
-        return {"action": "otp_required" if enforced else "proceed", "would_require_otp": mode != "off", "mode": mode,
+        enforced = mode == "enforce" or ten_minute_rule_enforced()      # the mandatory rule fails closed too
+        return {"action": "otp_required" if enforced else "proceed", "would_require_otp": mode != "off" or enforced, "mode": mode,
                 "enforced_by_allowlist": by_allowlist, "reasons": ["ml_failure:gate_error"], "risk_score": None,
                 "model_flag": None, "rule_10min": False, "elapsed_seconds": None, "ml_status": "gate_error",
                 "model_version": None, "threshold": None, "assessment_id": None}
@@ -253,10 +261,11 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
     if ml_status not in ("scored", "disabled", "off"):
         reasons.append(f"ml_failure:{ml_status}")
 
-    action = "otp_required" if (mode == "enforce" and reasons) else "proceed"
+    rule_forces_otp = rule_fired and ten_minute_rule_enforced()
+    action = "otp_required" if ((mode == "enforce" and reasons) or rule_forces_otp) else "proceed"
     decision = {
         "action": action,
-        "would_require_otp": bool(reasons) and mode != "off",
+        "would_require_otp": bool(reasons) and (mode != "off" or rule_forces_otp),
         "mode": mode,
         "enforced_by_allowlist": by_allowlist,
         "reasons": reasons,

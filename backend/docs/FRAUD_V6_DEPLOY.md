@@ -152,3 +152,11 @@ screen and must be adapted to the background art.
 * Scores are not monotone in the fare for low scores, and fares far *below* the usual can flag in rapid sequences;
   the flag itself is monotone above Rs30 in the tested settings (one exception class: user 70 in rapid sequences).
 * Not verified in production, and not tested on real hardware.
+
+## Mandatory 10-minute rule (all passengers, all channels)
+
+A passenger whose previous ride payment completed 600 seconds ago or less must enter the emailed OTP for the next
+one: card/phone tap, QR confirm and wallet pay alike, in every `TAPGO_FRAUD_MODE` (including `shadow` and `off`) and
+without any allowlist. The ML score still follows the mode. If the gate itself fails unexpectedly the payment waits
+for an OTP (fails closed). Set `TAPGO_TEN_MINUTE_RULE=off` to switch the rule off; unset means on. Set a private
+`PAYMENT_OTP_SECRET` (otherwise the codes are keyed with `SECRET_KEY`).

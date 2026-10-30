@@ -15,6 +15,9 @@ import os
 os.environ["TAPGO_TESTING"] = "1"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["REVIEW_DEMO_MODE"] = "false"
+# The mandatory 10-minute OTP rule is exercised in tests/test_ten_minute_rule.py; the older payment tests make
+# several payments in a row and switch it on explicitly where they need it.
+os.environ["TAPGO_TEN_MINUTE_RULE"] = "off"
 os.environ.pop("ENVIRONMENT", None)
 os.environ.pop("ENV", None)
 
