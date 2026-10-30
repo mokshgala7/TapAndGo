@@ -6,6 +6,19 @@
 Source of every figure: `ml/v6/evaluation/final_metrics.json` (full detail) and `ml/reports/evaluation_metrics.json` (this
 summary, produced by `ml/reports/make_report_assets.py`). Nothing is re-rounded by hand.
 
+## Which evaluation set is which
+
+| Set | Role | Rides (fraud) | Threshold 0.0633: chosen on it, or sealed? | Precision | Recall | False-positive rate | Legitimate night rides that get an OTP | Source |
+|---|---|---|---|---|---|---|---|---|
+| **D6 validation** | selection data for V6 | 58,512 (759) | **used for choosing** the model and the threshold (rule: highest recall with FPR <= 2%) | 21.96% | 42.82% | 2.00% | not reported | `ml/v6/evaluation/final_metrics.json` (`validation`) |
+| **T3 `D6_fresh`** (seed 64001) | **the final held-out test of V6** | 238,790 (3,040) | **sealed**: generated after V6 was frozen, scored once, threshold fixed beforehand | 22.55% | 49.11% | 2.17% | **4.32%** (daytime 1.70%) | `ml/v6/evaluation/final_metrics.json` (`T3_fresh`) |
+| **`F_fresh` T3** (seed 84001) | an additional check of the deployed V6 file, made during the deployment test | 231,940 (3,163) | not used to choose V6 (V6's selection used only `D6_*` data; `F_fresh` was generated for the earlier "final" experiment, after that experiment's freeze, by that experiment's older generator) | 21.22% | 48.88% | 2.51% | **not found in the files, so not stated here** | `TapGo-ML/deployment/validation/DEPLOYED_MODEL_TEST.md` and `deployed_model_test.json` (`B_heldout_T3_batch`), in the author's ML folder; not copied into this repository |
+
+All figures in this table: synthetic/demo-derived, not real-world performance. The 231,940-ride set is a **different** synthetic world from the 238,790-ride set (different seed and generator version), so
+their figures are not directly comparable, and **neither is a measurement on real passengers**. The 238,790-ride set is the one the V6 reports (`ml/v6/reports/FINAL_REPORT.md`) use for the final result,
+and the figures elsewhere in this folder come from it. For `F_fresh` the source also lists 7,285 rides flagged (3.14%), true/false positives 1,546 / 5,739, false/true negatives 1,617 / 223,038, ROC-AUC 0.890, PR-AUC 0.426.
+(A third, smaller check in the same source, a brand-new universe of 72,724 rides, seed 97001, scored through the backend's own code: precision 21.6%, recall 47.5%, false-positive rate 2.35%; synthetic/demo-derived, not real-world performance.)
+
 ## Model
 
 * XGBoost with monotone constraints, **39 features**, selected candidate `C9_xgb_mono2_P6c_fam`; model version `passenger_fraud_v6.1.0.0`.

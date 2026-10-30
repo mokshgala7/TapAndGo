@@ -24,6 +24,16 @@ was trained and tested on generated data. The details and code are in `ml/`.
 * **Result on the fresh test world (synthetic):** precision 22.55%, recall 49.11%, F1 0.309, PR-AUC 0.440, false-positive rate 2.17%. About 2.8% of all rides are flagged, and **4.32% of legitimate night rides**
   (1.70% by day) would be asked for an OTP. Full tables, intervals, the V4/V5 comparison and charts: `ml/reports/evaluation_summary.md`.
 
+**Which test set the figures come from** (all synthetic/demo-derived, not real-world performance):
+
+| Set | Role | Rides | Chosen on it, or sealed? | Precision | Recall | False-positive rate | Night legitimate OTP rate |
+|---|---|---|---|---|---|---|---|
+| D6 validation | selection data | 58,512 | used to choose the model and the threshold | 21.96% | 42.82% | 2.00% | not reported |
+| T3 `D6_fresh` (final test) | held-out, sealed until V6 was frozen | 238,790 | sealed | 22.55% | 49.11% | 2.17% | 4.32% |
+| `F_fresh` T3 (extra deployment check) | a different synthetic world made for an earlier experiment | 231,940 | not used to choose V6 | 21.22% | 48.88% | 2.51% | not found in the files |
+
+The figures quoted in the previous paragraph are the T3 `D6_fresh` row. The two large sets are different generated worlds, so do not mix their numbers; see `ml/reports/evaluation_summary.md` for sources.
+
 ## 3. How the backend uses it
 
 Every ride payment (NFC tap, QR, wallet pay) goes through one gate, `backend/app/services/fraud_gate.py`. There are two groups of passengers.
