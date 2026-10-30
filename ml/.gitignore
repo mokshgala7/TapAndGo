@@ -1,0 +1,18 @@
+# Keep the repository small: large data and model-training artefacts never go into git.
+data/full/
+data/synthetic/
+*.parquet
+*.pkl
+*.npy
+*.npz
+*.joblib
+*.h5
+*.csv.gz
+cache/
+artifacts/cache/
+artifacts/candidate_models/
+# the only CSV allowed under ml/data/ is the small sample (it is tracked explicitly)
+!data/sample_transactions.csv
+.venv/
+venv/
+__pycache__/
