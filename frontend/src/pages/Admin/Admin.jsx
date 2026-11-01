@@ -424,7 +424,13 @@ function NFCCardsAdmin({ adminId }) {
 
   const lifecycle = (card, action) => {
     if (action === 'mark_lost' && !window.confirm(`Mark ${card.card_reference} as lost? This cannot be undone.`)) return
-    send(`/api/nfc/admin/${card.id}/action`, 'POST', { action, reason: action === 'block' ? 'Blocked by admin' : undefined }, `Card ${card.card_reference}: ${action.replace('_', ' ')} done.`)
+    let reason
+    if (action === 'block') {
+      const typed = window.prompt(`Reason for blocking ${card.card_reference} (leave empty for "Blocked by admin"):`, '')
+      if (typed === null) return
+      reason = typed.trim() || 'Blocked by admin'
+    }
+    send(`/api/nfc/admin/${card.id}/action`, 'POST', { action, reason }, `Card ${card.card_reference}: ${action.replace('_', ' ')} done.`)
   }
 
   return (

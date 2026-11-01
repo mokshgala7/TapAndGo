@@ -708,7 +708,15 @@ def activity_logs(page: int = 1, page_size: int = 30, admin: Admin = Depends(cur
     query = db.query(ActivityLog)
     total = query.count()
     rows = query.order_by(ActivityLog.created_at.desc()).offset((max(page, 1) - 1) * min(page_size, 100)).limit(min(page_size, 100)).all()
-    return {"items": [{"id": row.id, "action": row.action, "entity_type": row.entity_type, "entity_id": row.entity_id, "details": row.details, "created_at": row.created_at.isoformat() if row.created_at else None} for row in rows], "total": total, "page": page, "page_size": min(page_size, 100)}
+    admin_ids = {row.admin_id for row in rows if row.admin_id}
+    admins = {a.id: a for a in db.query(Admin).filter(Admin.id.in_(admin_ids)).all()} if admin_ids else {}
+    return {"items": [{
+        "id": row.id,
+        "admin_name": admins[row.admin_id].name if row.admin_id in admins else None,
+        "admin_email": admins[row.admin_id].email if row.admin_id in admins else None,
+        "action": row.action, "entity_type": row.entity_type, "entity_id": row.entity_id, "details": row.details,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    } for row in rows], "total": total, "page": page, "page_size": min(page_size, 100)}
 
 
 @router.get("/settings")

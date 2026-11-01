@@ -426,7 +426,7 @@ def admin_card_action(
 
     if action == "block":
         card.status = "blocked"
-        card.blocked_reason = data.reason.strip() if data.reason else "Blocked by admin"
+        card.blocked_reason = (data.reason or "").strip() or "Blocked by admin"
         card.block_requested_at = datetime.utcnow()
 
     elif action == "unblock":
