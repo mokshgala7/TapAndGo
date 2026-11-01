@@ -30,6 +30,14 @@ class UserRegisterForm(BaseModel):
     vehicle_model: Optional[str] = None
     driving_licence_number: Optional[str] = None
 
+    @field_validator("account_type")
+    def validate_account_type(cls, v: str) -> str:
+        # Public sign-up may only create passengers and drivers; "admin" (or anything else) is never accepted.
+        v_clean = (v or "").strip().lower()
+        if v_clean not in ("passenger", "driver"):
+            raise ValueError("Account type must be 'passenger' or 'driver'.")
+        return v_clean
+
     @field_validator("password")
     def validate_password_length(cls, v: str) -> str:
         # Minimum shared by the website and the mobile app (which also ask for letters and

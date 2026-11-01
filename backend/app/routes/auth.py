@@ -624,6 +624,10 @@ async def register(
     Accepts multipart/form-data with user info and uploaded documents.
     OTP is mandatory — the email must be verified before account creation.
     """
+    # 0. Public registration may only create passengers and drivers (checked again below, before User()).
+    if (str(account_type).strip().lower() if account_type else "passenger") not in ("passenger", "driver"):
+        raise HTTPException(status_code=422, detail="Account type must be 'passenger' or 'driver'.")
+
     # 1. Validate form data via Pydantic schema
     def _clean_str(v):
         return v if isinstance(v, str) else None
@@ -732,6 +736,11 @@ async def register(
     hashed_pwd = hash_password(validated_data.password)
 
     # 7. Create and save user
+    if validated_data.account_type not in ("passenger", "driver"):
+        db.rollback()  # un-consumes the OTP
+        for path in uploaded_paths:
+            delete_document(path)
+        raise HTTPException(status_code=422, detail="Account type must be 'passenger' or 'driver'.")
     try:
         new_user = User(
             account_type=validated_data.account_type,
