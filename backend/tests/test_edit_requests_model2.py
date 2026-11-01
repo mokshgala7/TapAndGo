@@ -132,7 +132,7 @@ def test_phone_permission_lifecycle(setup_model2_db):
     items = admin_res.json()["items"]
     phone_req = next((it for it in items if it["field_name"] == "phone" and it["status"] == "pending"), None)
     assert phone_req is not None
-    assert "new_value" not in phone_req
+    assert phone_req["new_value"] is None   # Model 2 stores no premature value (the key itself is now returned)
 
     # 5. Admin approves the request
     approve_res = client.post(

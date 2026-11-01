@@ -58,6 +58,7 @@ class WalletAction(BaseModel):
 
 class EditReview(BaseModel):
     action: str = Field(pattern="^(approve|reject)$")
+    reason: Optional[str] = Field(default=None, max_length=500)   # optional rejection reason
 
 
 class FraudReview(BaseModel):
@@ -479,16 +480,32 @@ def edit_requests(status: Optional[str] = None, page: int = 1, page_size: int = 
         "documents": "Document Edit",
     }
 
+    def current_value(request, user):
+        """What the user has on file now for the field (the 'before' side when previous_value was not captured)."""
+        if request.field_name == "phone":
+            return user.phone
+        if request.field_name == "bank":
+            return json.dumps({
+                "bank_account_holder": user.bank_account_holder, "bank_account_number": user.bank_account_number,
+                "bank_ifsc": user.bank_ifsc, "bank_upi_id": user.bank_upi_id,
+            })
+        return None
+
     return {
         "items": [
             {
                 "id": request.id,
                 "user_id": user.id,
                 "user_name": user.name,
+                "user_email": user.email,
                 "account_type": user.account_type,
                 "request_type": type_titles.get(request.field_name, request.field_name.replace("_", " ").title()),
                 "field_name": request.field_name,
+                "previous_value": request.previous_value,
+                "new_value": request.new_value,
+                "current_value": current_value(request, user),
                 "reason": request.reason or f"Request for {request.field_name} modification permission",
+                "admin_note": request.admin_note,
                 "status": request.status,
                 "created_at": request.created_at.isoformat() if request.created_at else None,
                 "reviewed_at": request.reviewed_at.isoformat() if request.reviewed_at else None
@@ -516,7 +533,8 @@ def review_edit_request(request_id: int, payload: EditReview, admin: Admin = Dep
     claimed = db.query(EditRequest).filter(
         EditRequest.id == request_id, EditRequest.status == "pending"
     ).update(
-        {"status": new_status, "reviewed_by": admin.id, "reviewed_at": datetime.utcnow()},
+        {"status": new_status, "reviewed_by": admin.id, "reviewed_at": datetime.utcnow(),
+         **({"admin_note": (payload.reason or "").strip() or None} if payload.action == "reject" else {})},
         synchronize_session=False,
     )
     if claimed != 1:

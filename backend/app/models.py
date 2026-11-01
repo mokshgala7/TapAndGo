@@ -221,6 +221,8 @@ class EditRequest(Base):
     status = Column(String(20), nullable=False, default="pending", index=True)
     reviewed_by = Column(Integer, ForeignKey("admins.id"), nullable=True)
     reviewed_at = Column(DateTime, nullable=True)
+    # Optional reason the administrator gave when rejecting (shown in the admin panel).
+    admin_note = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 

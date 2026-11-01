@@ -340,6 +340,20 @@ def run_database_migrations(eng):
         except Exception as fa_ex:
             logger.warning(f"[Warning] fraud_assessments column check: {fa_ex}")
 
+        # 5c. Admin hardening: additive columns (create_all never adds a column to an existing table) and the
+        #     idempotent repair of the obsolete edit-request status "rejectd". Nothing is dropped or renamed.
+        try:
+            insp = inspect(eng)
+            tables_now = set(insp.get_table_names())
+            if "edit_requests" in tables_now:
+                if dialect == "postgresql":
+                    _exec_safe(eng, "ALTER TABLE edit_requests ADD COLUMN IF NOT EXISTS admin_note TEXT NULL", "edit_requests.admin_note")
+                elif "admin_note" not in {c["name"] for c in insp.get_columns("edit_requests")}:
+                    _exec_safe(eng, "ALTER TABLE edit_requests ADD COLUMN admin_note TEXT NULL", "edit_requests.admin_note")
+                _exec_safe(eng, "UPDATE edit_requests SET status = 'rejected' WHERE status = 'rejectd'", "repair edit_requests.rejectd")
+        except Exception as ah_ex:
+            logger.warning(f"[Warning] admin hardening column check: {ah_ex}")
+
         # 5b. UNIQUE provider_transaction_id (guarded; never deletes data)
         ensure_unique_provider_transaction_index(eng)
 
