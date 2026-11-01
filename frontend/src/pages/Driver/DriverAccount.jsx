@@ -4,6 +4,7 @@ import { useDriverData } from '../../context/DriverContext.jsx'
 import DocumentViewerModal from '../../components/Common/DocumentViewerModal.jsx'
 import DocumentUploadModal from '../../components/Common/DocumentUploadModal.jsx'
 import { inr } from './format.js'
+import MyTickets from '../../components/Support/MyTickets.jsx'
 
 const Icon = ({ children, className = '' }) => (
   <span className={`material-symbols-outlined ${className}`} aria-hidden="true">
@@ -806,6 +807,8 @@ function DriverAccount({ flash, dark, setDark, notifications, setNotifications, 
           editable={false}
         />
       </div>
+
+      <MyTickets user={user} compose />
 
       <h2>Settings</h2>
       <div className="setting">

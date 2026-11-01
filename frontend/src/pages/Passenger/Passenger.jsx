@@ -18,6 +18,7 @@ import { usePaged } from '../../utils/usePaged.js'
 import { extractQrToken, setPendingQrToken } from '../../utils/qrLink.js'
 import './Passenger.css'
 
+import MyTickets from '../../components/Support/MyTickets.jsx'
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.thetapandgo.in'
 function getToken() { try { return sessionStorage.getItem('tapgo_token') || '' } catch { return '' } }
 
@@ -422,6 +423,7 @@ function Passenger() {
   const [showNFCHistoryModal, setShowNFCHistoryModal] = useState(false)
   // New: Support Ticket and NFC Security Modal
   const [showSupportModal, setShowSupportModal] = useState(false)
+  const [ticketsRefresh, setTicketsRefresh] = useState(0)
   const [showNFCSecurityModal, setShowNFCSecurityModal] = useState(false)
   const [previewDoc, setPreviewDoc] = useState(null)
   const [showBankModal, setShowBankModal] = useState(false)
@@ -862,6 +864,8 @@ function Passenger() {
           </div>
         </button>
       </div>
+
+      <MyTickets user={user} refreshKey={ticketsRefresh} />
 
       <h2>Transaction History</h2>
       {transactions.length > 0 ? (
@@ -1816,7 +1820,7 @@ function Passenger() {
       )}
 
       {showSupportModal && (
-        <SupportTicketModal user={user} onClose={() => setShowSupportModal(false)} />
+        <SupportTicketModal user={user} onClose={() => { setShowSupportModal(false); setTicketsRefresh((n) => n + 1) }} />
       )}
 
       {showNFCSecurityModal && (
