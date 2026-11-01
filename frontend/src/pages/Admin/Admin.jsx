@@ -2,6 +2,7 @@ import { Component, useEffect, useState } from 'react'
 import { Link, useNavigate } from '../../routes/navigation.jsx'
 import { adminRequest, adminAuthHeaders, API_BASE, fileUrl } from './api.js'
 import DatabaseViewer from './database/DatabaseViewer.jsx'
+import FraudCentre from './FraudCentre.jsx'
 import './admin.css'
 
 class AdminErrorBoundary extends Component {
@@ -689,6 +690,7 @@ function AdminShell({ admin, onLogout }) {
     if (page === 'settings') return <Settings {...props} />
     if (page === 'withdrawals') return <WithdrawalRequestsAdmin {...props} />
     if (page === 'support') return <SupportTicketsAdmin {...props} />
+    if (page === 'fraud') return <FraudCentre {...props} />
     return <SimpleResource {...props} kind={page} />
   }
   return (

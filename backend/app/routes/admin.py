@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models import (
-    ActivityLog, Admin, AdminSession, EditRequest, FraudAlert, ProjectSetting, SupportTicket,
+    ActivityLog, Admin, AdminSession, EditRequest, FraudAlert, FraudAssessment, ProjectSetting, SupportTicket,
     Transaction, User, UserDocument, Wallet, WithdrawalRequest,
 )
 from app.utils.security import hash_password, verify_password
@@ -298,6 +298,8 @@ def dashboard(admin: Admin = Depends(current_admin), db: Session = Depends(get_d
     revenue = db.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
         Transaction.status == "completed"
     ).scalar() or 0
+    from app.services.fraud_alert_sync import sync_flagged_assessments
+    sync_flagged_assessments(db)   # keeps the "Fraud Alerts" tile in step with the Fraud Centre; never raises
     return {
         "total_drivers": count(User.account_type == "driver"),
         "active_drivers": count(User.account_type == "driver", User.status == "active"),
@@ -558,12 +560,51 @@ def review_edit_request(request_id: int, payload: EditReview, admin: Admin = Dep
     return {"success": True, "status": request.status}
 
 
+# Stored alert statuses behind each filter value. The review endpoint stores the action name (safe / block / freeze).
+FRAUD_STATUS_FILTERS = {
+    "open": ["open", "flagged"], "safe": ["safe"], "blocked": ["block", "blocked"], "reviewed": ["freeze", "reviewed"],
+}
+
+
 @router.get("/fraud-alerts")
-def fraud_alerts(page: int = 1, page_size: int = 20, admin: Admin = Depends(current_admin), db: Session = Depends(get_db)):
+def fraud_alerts(
+    status: Optional[str] = Query(default=None, pattern="^(open|flagged|reviewed|safe|blocked|all)$"),
+    page: int = 1, page_size: int = 20, admin: Admin = Depends(current_admin), db: Session = Depends(get_db),
+):
+    """Flagged alerts (open) by default; `status` selects open / reviewed / safe / blocked, or `all`."""
+    from app.services.fraud_alert_sync import assessment_id_of, sync_flagged_assessments
+    sync_flagged_assessments(db)
     query = db.query(FraudAlert)
+    wanted = (status or "open").lower()
+    if wanted == "flagged":
+        wanted = "open"
+    if wanted != "all":
+        query = query.filter(FraudAlert.status.in_(FRAUD_STATUS_FILTERS[wanted]))
     total = query.count()
-    rows = query.order_by(FraudAlert.created_at.desc()).offset((max(page, 1) - 1) * min(page_size, 100)).limit(min(page_size, 100)).all()
-    return {"items": [{"id": alert.id, "user_id": alert.user_id, "transaction_id": alert.transaction_id, "risk_score": alert.risk_score, "reason": alert.reason, "status": alert.status, "created_at": alert.created_at.isoformat() if alert.created_at else None} for alert in rows], "total": total, "page": page, "page_size": min(page_size, 100)}
+    size = min(page_size, 100)
+    rows = query.order_by(FraudAlert.created_at.desc()).offset((max(page, 1) - 1) * size).limit(size).all()
+
+    user_ids = {alert.user_id for alert in rows if alert.user_id}
+    people = {u.id: u.name for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    assessment_ids = {assessment_id_of(alert) for alert in rows} - {None}
+    assessed = {a.id: a for a in db.query(FraudAssessment).filter(FraudAssessment.id.in_(assessment_ids)).all()} if assessment_ids else {}
+    txn_ids = {alert.transaction_id for alert in rows if alert.transaction_id}
+    txns = {t.id: t for t in db.query(Transaction).filter(Transaction.id.in_(txn_ids)).all()} if txn_ids else {}
+
+    def amount_of(alert):
+        assessment = assessed.get(assessment_id_of(alert))
+        if assessment is not None:
+            return float(assessment.amount)
+        txn = txns.get(alert.transaction_id)
+        return float(txn.amount) if txn is not None else None
+
+    return {"items": [{
+        "id": alert.id, "user_id": alert.user_id, "user_name": people.get(alert.user_id),
+        "transaction_id": alert.transaction_id, "amount": amount_of(alert),
+        "risk_score": alert.risk_score, "reason": alert.reason, "status": alert.status,
+        "created_at": alert.created_at.isoformat() if alert.created_at else None,
+        "reviewed_at": alert.reviewed_at.isoformat() if alert.reviewed_at else None,
+    } for alert in rows], "total": total, "page": page, "page_size": size}
 
 
 @router.post("/fraud-alerts/{alert_id}/review")
