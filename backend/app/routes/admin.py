@@ -23,6 +23,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.services import admin_login_security as login_security
 from app.database import get_db
 from app.models import (
     ActivityLog, Admin, AdminSession, EditRequest, FraudAlert, FraudAssessment, ProjectSetting, SupportTicket,
@@ -37,6 +38,7 @@ router = APIRouter(prefix="/api/admin", tags=["Administration"])
 class AdminLogin(BaseModel):
     email: str
     password: str
+    otp: Optional[str] = None   # only used when ADMIN_2FA_ENABLED is on
 
 
 class UserUpdate(BaseModel):
@@ -218,7 +220,12 @@ def login(payload: AdminLogin, request: Request, db: Session = Depends(get_db)):
     input_email = payload.email.strip().lower()
     input_password = payload.password
     key = _throttle_key(request, input_email)
-    if _throttled(key):
+    ip = request.client.host if request is not None and request.client else None
+    # Failures are persisted in the database; if it cannot be used, the in-memory throttle below takes over.
+    throttled = login_security.is_throttled(db, key, ip)
+    if throttled is None:
+        throttled = _throttled(key)
+    if throttled:
         raise HTTPException(status_code=429, detail="Too many failed attempts. Try again later.")
 
     admin = db.query(Admin).filter(func.lower(Admin.email) == input_email).first()
@@ -248,10 +255,28 @@ def login(payload: AdminLogin, request: Request, db: Session = Depends(get_db)):
                 valid = True
 
     if not valid or not admin:
-        _record_failure(key)
+        if not login_security.record_failure(db, key, ip):
+            _record_failure(key)
         raise HTTPException(status_code=401, detail="Invalid administrator credentials.")
 
+    # Optional second factor (ADMIN_2FA_ENABLED, default off: this block is skipped and login is unchanged).
+    if login_security.two_factor_enabled():
+        if not (payload.otp or "").strip():
+            if login_security.send_code(db, admin) == "failed":
+                raise HTTPException(status_code=503, detail="Could not send the sign-in code. Try again shortly.")
+            return {"success": False, "otp_required": True,
+                    "message": "A 6-digit sign-in code was sent to your email. It expires in 5 minutes."}
+        outcome = login_security.check_code(db, admin, payload.otp)
+        if outcome != "ok":
+            if not login_security.record_failure(db, key, ip):
+                _record_failure(key)
+            raise HTTPException(status_code=401, detail={
+                "wrong": "Invalid sign-in code.",
+                "locked": "Too many incorrect codes. Sign in again to get a new code.",
+            }.get(outcome, "That sign-in code has expired. Sign in again to get a new code."))
+
     _clear_failures(key)
+    login_security.clear_failures(db, key)
     raw_token = secrets.token_urlsafe(32)
     db.add(AdminSession(
         admin_id=admin.id,

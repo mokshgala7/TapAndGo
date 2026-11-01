@@ -62,34 +62,59 @@ function Empty({ text = 'No live records yet.' }) { return <div className="empty
 function AdminLogin({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
+  const [otpRequired, setOtpRequired] = useState(false)
+  const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const [working, setWorking] = useState(false)
   const submit = async (event) => {
     event.preventDefault(); setError(''); setWorking(true)
-    try { onLogin(await adminRequest('/login', null, { method: 'POST', body: JSON.stringify({ email: email.trim(), password }) })) }
+    try {
+      const result = await adminRequest('/login', null, { method: 'POST', body: JSON.stringify({ email: email.trim(), password, ...(otpRequired ? { otp: otp.trim() } : {}) }) })
+      // The server asks for an emailed code only when administrator 2FA is switched on.
+      if (result?.otp_required) { setOtpRequired(true); setOtp(''); setNotice(result.message || 'Enter the 6-digit code we emailed you.'); return }
+      onLogin(result)
+    }
     catch (loginError) { setError(loginError.message) }
     finally { setWorking(false) }
   }
+  const startOver = () => { setOtpRequired(false); setOtp(''); setNotice(''); setError('') }
   return (
     <main className="admin-login">
       <section className="admin-login-card">
         <div className="admin-mark">T&G</div>
         <span className="eyebrow">Tap&Go control centre</span>
         <h1>Administrator sign in</h1>
-        <p>Sign in to access the administrator control centre.</p>
+        <p>{otpRequired ? 'Enter the code we emailed you to finish signing in.' : 'Sign in to access the administrator control centre.'}</p>
         <form onSubmit={submit}>
-          <label>
-            Email
-            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
-          </label>
-          <label>
-            Password
-            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" required />
-          </label>
+          {!otpRequired && <>
+            <label>
+              Email
+              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" required />
+            </label>
+            <label>
+              Password
+              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" required />
+            </label>
+          </>}
+          {otpRequired && <>
+            {notice && <p style={{ fontSize: 13, color: 'var(--admin-muted)' }}>{notice}</p>}
+            <label>
+              Sign-in code
+              <input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))} placeholder="6-digit code" required autoFocus />
+            </label>
+          </>}
           {error && <p className="admin-error">{error}</p>}
           <button className="primary-button" disabled={working}>
-            {working ? 'Signing in…' : 'Sign in securely'}
+            {working ? 'Signing in…' : otpRequired ? 'Verify and sign in' : 'Sign in securely'}
           </button>
+          {otpRequired && (
+            <div style={{ marginTop: '12px', textAlign: 'center' }}>
+              <button type="button" onClick={startOver} style={{ background: 'none', border: 0, color: 'var(--admin-muted)', textDecoration: 'underline', fontSize: '13px', cursor: 'pointer' }}>
+                Start over
+              </button>
+            </div>
+          )}
           <div style={{ marginTop: '16px', textAlign: 'center' }}>
             <Link to="/login" style={{ color: 'var(--admin-muted)', textDecoration: 'underline', fontSize: '13px' }}>
               ← Return to User Login

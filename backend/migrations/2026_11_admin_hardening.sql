@@ -29,3 +29,14 @@ CREATE TABLE IF NOT EXISTS pos_devices (
 CREATE INDEX IF NOT EXISTS ix_pos_devices_device_id ON pos_devices(device_id);
 CREATE INDEX IF NOT EXISTS ix_pos_devices_driver_id ON pos_devices(driver_id);
 CREATE INDEX IF NOT EXISTS ix_pos_devices_status ON pos_devices(status);
+
+-- Phase 8: persistent administrator login throttle. (Also created at start-up by Base.metadata.create_all when missing.)
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(255) NOT NULL,
+    ip VARCHAR(64) NULL,
+    attempted_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS ix_login_attempts_key ON login_attempts(key);
+CREATE INDEX IF NOT EXISTS ix_login_attempts_ip ON login_attempts(ip);
+CREATE INDEX IF NOT EXISTS ix_login_attempts_attempted_at ON login_attempts(attempted_at);

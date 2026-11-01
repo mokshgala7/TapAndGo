@@ -450,3 +450,14 @@ class PosDevice(Base):
     battery_pct = Column(Integer, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+
+
+class LoginAttempt(Base):
+    """One FAILED administrator sign-in, kept in the database so the lock-out survives restarts and is shared by
+    every server process. `key` is "email|ip"; rows older than a day are pruned as new failures are recorded."""
+    __tablename__ = "login_attempts"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    key = Column(String(255), nullable=False, index=True)
+    ip = Column(String(64), nullable=True, index=True)
+    attempted_at = Column(DateTime, server_default=func.now(), nullable=False, index=True)
