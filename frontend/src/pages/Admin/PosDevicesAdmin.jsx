@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { adminRequest } from './api.js'
-import { Badge, Empty, LoadState } from './adminUi.jsx'
+import { Empty, LoadState } from './adminUi.jsx'
 import { date, number } from './adminFormat.js'
 
 export default function PosDevicesAdmin({ adminId }) {
@@ -97,7 +97,7 @@ export default function PosDevicesAdmin({ adminId }) {
                 {rows.length ? rows.map((device) => (
                   <tr key={device.id}>
                     <td><strong>{device.device_id}</strong>{device.label && <small style={{ display: 'block' }}>{device.label}</small>}</td>
-                    <td><Badge value={device.status === 'disabled' ? 'suspended' : 'active'} /> <small>{device.status}</small></td>
+                    <td><span className={`status status-${device.status === 'disabled' ? 'suspended' : 'active'}`}>{device.status}</span></td>
                     <td>{device.driver_name ? <>{device.driver_name}<small style={{ display: 'block' }}>#{device.driver_id}</small></> : '—'}</td>
                     <td>{device.vehicle_ref || '—'}</td>
                     <td>{device.last_seen_at ? date(device.last_seen_at) : 'Never'}</td>
