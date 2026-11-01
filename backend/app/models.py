@@ -432,3 +432,21 @@ class WithdrawalRequest(Base):
     created_at = Column(DateTime, server_default=func.now(), index=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+
+
+class PosDevice(Base):
+    """A registered POS terminal. Admin-managed; the firmware may optionally identify itself with the
+    X-Device-Id header (see app/services/pos_device_gate.py)."""
+    __tablename__ = "pos_devices"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    device_id = Column(String(64), nullable=False, unique=True, index=True)
+    label = Column(String(100), nullable=True)
+    driver_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    vehicle_ref = Column(String(100), nullable=True)
+    status = Column(String(20), nullable=False, default="active", index=True)   # active, disabled
+    last_seen_at = Column(DateTime, nullable=True)
+    firmware_version = Column(String(40), nullable=True)
+    battery_pct = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())

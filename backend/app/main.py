@@ -9,7 +9,8 @@ from sqlalchemy import inspect, text
 
 from app.config import settings
 from app.database import engine, Base
-from app.routes import payment_test, nfc_phone
+from app.routes import payment_test, nfc_phone, pos_devices
+from app.services.pos_device_gate import PosDeviceMiddleware
 from app.routes import admin, auth, wallet, payment, card_order, support, nfc_security, nfc_pay, qr as qr_routes
 
 logger = logging.getLogger("tapgo")
@@ -643,6 +644,10 @@ app.add_middleware(
 )
 
 
+# Optional POS device identification (no-op unless a request carries X-Device-Id; see app/services/pos_device_gate.py)
+app.add_middleware(PosDeviceMiddleware)
+
+
 # Global Exception Handler for safe debugging & clean JSON responses
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -668,6 +673,7 @@ if settings.REVIEW_DEMO_MODE:
 # Include Routers
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(pos_devices.router)
 app.include_router(wallet.router)
 app.include_router(payment.router)
 app.include_router(payment.debug_router)

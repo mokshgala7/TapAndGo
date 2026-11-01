@@ -5,6 +5,7 @@ import DatabaseViewer from './database/DatabaseViewer.jsx'
 import FraudCentre from './FraudCentre.jsx'
 import EditRequestsAdmin from './EditRequestsAdmin.jsx'
 import TransactionsAdmin from './TransactionsAdmin.jsx'
+import PosDevicesAdmin from './PosDevicesAdmin.jsx'
 import './admin.css'
 
 class AdminErrorBoundary extends Component {
@@ -40,7 +41,7 @@ class AdminErrorBoundary extends Component {
 
 const navigation = [
   ['dashboard', 'Overview', '▦'], ['drivers', 'Driver Management', '♙'], ['passengers', 'Passenger Management', '♟'],
-  ['nfc-orders', 'NFC Card Orders', '💳'], ['nfc-cards', 'NFC Cards', '◈'], ['documents', 'Driver Documents', '▤'], ['requests', 'Edit Requests', '✓'],
+  ['nfc-orders', 'NFC Card Orders', '💳'], ['nfc-cards', 'NFC Cards', '◈'], ['pos-devices', 'POS Devices', '▣'], ['documents', 'Driver Documents', '▤'], ['requests', 'Edit Requests', '✓'],
   ['transactions', 'Transactions', '⇄'], ['wallets', 'Wallets', '◉'], ['fraud', 'Fraud Centre', '⚑'],
   ['withdrawals', 'Withdrawal Requests', '💸'], ['support', 'Support Tickets', '🎫'],
   ['logs', 'Activity Logs', '◷'], ['settings', 'Settings', '⚙'], ['database', 'Database Viewer', '▤'],
@@ -707,6 +708,7 @@ function AdminShell({ admin, onLogout }) {
     if (page === 'fraud') return <FraudCentre {...props} />
     if (page === 'requests') return <EditRequestsAdmin {...props} />
     if (page === 'transactions') return <TransactionsAdmin {...props} />
+    if (page === 'pos-devices') return <PosDevicesAdmin {...props} />
     return <SimpleResource {...props} kind={page} />
   }
   return (
