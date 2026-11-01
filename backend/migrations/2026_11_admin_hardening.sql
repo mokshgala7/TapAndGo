@@ -8,3 +8,6 @@ ALTER TABLE edit_requests ADD COLUMN IF NOT EXISTS admin_note TEXT NULL;
 
 -- Phase 3: repair rows written by the old admin review bug ("reject" + "d" = "rejectd"). Idempotent.
 UPDATE edit_requests SET status = 'rejected' WHERE status = 'rejectd';
+
+-- Phase 4: payout reference (UTR) recorded when an administrator marks a withdrawal as paid.
+ALTER TABLE withdrawal_requests ADD COLUMN IF NOT EXISTS payout_reference VARCHAR(64) NULL;

@@ -499,9 +499,14 @@ function WithdrawalRequestsAdmin({ adminId }) {
     const confirmMsg = action === 'reject' ? 'Reject this withdrawal and restore the user\'s balance?' : action === 'pay' ? 'Mark this withdrawal as paid out?' : 'Approve this withdrawal?'
     if (!window.confirm(confirmMsg)) return
     const note = action === 'reject' ? window.prompt('Optional rejection reason (leave blank to skip):') : null
+    let payoutReference = null
+    if (action === 'pay') {
+      payoutReference = (window.prompt('Enter the bank / UPI transaction reference (UTR) for this payout:') || '').trim()
+      if (!/^[A-Za-z0-9-]{1,64}$/.test(payoutReference)) { setError('A payout reference (UTR) of up to 64 letters, digits or hyphens is required to mark a withdrawal as paid.'); return }
+    }
     try {
-      setActionMsg('')
-      const body = action === 'reject' ? JSON.stringify({ admin_note: note || null }) : undefined
+      setActionMsg(''); setError('')
+      const body = action === 'reject' ? JSON.stringify({ admin_note: note || null }) : action === 'pay' ? JSON.stringify({ payout_reference: payoutReference }) : undefined
       await adminRequest(`/withdrawal-requests/${id}/${action}`, adminId, { method: 'PATCH', body })
       setActionMsg(`Withdrawal #${id} ${action}d successfully.`)
       load()
@@ -529,16 +534,23 @@ function WithdrawalRequestsAdmin({ adminId }) {
         {loading ? <Empty text="Loading withdrawal requests…" /> : (
           <div className="table-wrap">
             <table>
-              <thead><tr><th>ID</th><th>User ID</th><th>Reference</th><th>Amount</th><th>Destination</th><th>Status</th><th>Note</th><th>Submitted</th><th>Actions</th></tr></thead>
+              <thead><tr><th>ID</th><th>User</th><th>Reference</th><th>Amount</th><th>Pay to</th><th>Status</th><th>Payout ref (UTR)</th><th>Note</th><th>Submitted</th><th>Actions</th></tr></thead>
               <tbody>
                 {result.items?.length ? result.items.map((w) => (
                   <tr key={w.id}>
                     <td>{w.id}</td>
-                    <td>{w.user_id}</td>
+                    <td>{w.user_name || '—'}<br /><small>#{w.user_id}</small></td>
                     <td><code style={{ fontSize: 11 }}>{w.reference}</code></td>
                     <td><strong>{money(w.amount)}</strong></td>
-                    <td style={{ fontSize: 12 }}>{w.destination_desc}</td>
+                    <td style={{ fontSize: 12, minWidth: 190 }}>
+                      {w.payout?.account_number && <div><b>A/c</b> {w.payout.account_number}<br /><b>IFSC</b> {w.payout.ifsc || '—'}<br /><b>Holder</b> {w.payout.account_holder || '—'}</div>}
+                      {w.payout?.upi_id && <div><b>UPI</b> {w.payout.upi_id}</div>}
+                      {!w.payout?.account_number && !w.payout?.upi_id && <span>{w.destination_desc}</span>}
+                      <small style={{ display: 'block', color: '#6b6458' }}>Requested: {w.destination_desc}</small>
+                      {w.payout?.details_changed && <small style={{ display: 'block', color: '#c8372d', fontWeight: 700 }}>⚠ Bank details changed since request. Confirm before paying.</small>}
+                    </td>
                     <td><span style={{ padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: (STATUS_COLORS[w.status] || '#a39b8e') + '22', color: STATUS_COLORS[w.status] || '#a39b8e' }}>{w.status}</span></td>
+                    <td style={{ fontSize: 12 }}>{w.payout_reference ? <code>{w.payout_reference}</code> : '—'}</td>
                     <td style={{ fontSize: 12, color: '#6b6458' }}>{w.admin_note || '—'}</td>
                     <td>{date(w.created_at)}</td>
                     <td className="actions">
@@ -547,7 +559,7 @@ function WithdrawalRequestsAdmin({ adminId }) {
                       {(w.status === 'paid' || w.status === 'rejected') && <span style={{ color: '#a39b8e', fontSize: 12 }}>{w.status === 'paid' ? '✓ Paid' : '✗ Rejected'}</span>}
                     </td>
                   </tr>
-                )) : <tr><td colSpan="9"><Empty text="No withdrawal requests found." /></td></tr>}
+                )) : <tr><td colSpan="10"><Empty text="No withdrawal requests found." /></td></tr>}
               </tbody>
             </table>
           </div>

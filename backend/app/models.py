@@ -426,6 +426,8 @@ class WithdrawalRequest(Base):
     admin_note = Column(Text, nullable=True)
     reviewed_at = Column(DateTime, nullable=True)
     paid_at = Column(DateTime, nullable=True)
+    # Bank/UPI transaction reference (UTR) the administrator recorded when marking the payout as paid.
+    payout_reference = Column(String(64), nullable=True)
     idempotency_key = Column(String(128), nullable=True, unique=True, index=True)
     created_at = Column(DateTime, server_default=func.now(), index=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

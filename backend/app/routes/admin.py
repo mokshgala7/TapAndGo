@@ -11,6 +11,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 import secrets
 import threading
 import time
@@ -682,6 +683,13 @@ class WithdrawalRejectRequest(BaseModel):
     admin_note: Optional[str] = None
 
 
+class WithdrawalPayRequest(BaseModel):
+    payout_reference: Optional[str] = None
+
+
+PAYOUT_REFERENCE_RE = re.compile(r"^[A-Za-z0-9-]{1,64}$")
+
+
 def wr_to_dict(wr: WithdrawalRequest) -> dict:
     return {
         "id": wr.id,
@@ -693,10 +701,40 @@ def wr_to_dict(wr: WithdrawalRequest) -> dict:
         "reference": wr.reference,
         "status": wr.status,
         "admin_note": wr.admin_note,
+        "payout_reference": wr.payout_reference,
         "reviewed_at": wr.reviewed_at.isoformat() if wr.reviewed_at else None,
         "paid_at": wr.paid_at.isoformat() if wr.paid_at else None,
         "created_at": wr.created_at.isoformat() if wr.created_at else None,
     }
+
+
+def payout_details(wr: WithdrawalRequest, user: Optional[User]) -> dict:
+    """What the administrator needs to pay manually, from the user's CURRENT bank details (admin-only endpoints).
+
+    `details_changed` is true when the destination captured at request time (destination_desc: either
+    "Bank Account (XXXX XXXX 1234)" or "UPI ID (name@upi)") no longer matches what the user has on file."""
+    if user is None:
+        return {"user_name": None, "account_holder": None, "account_number": None, "ifsc": None, "upi_id": None,
+                "details_changed": True, "warning": "User record not found."}
+    account = (user.bank_account_number or "").strip()
+    upi = (user.bank_upi_id or "").strip()
+    desc = wr.destination_desc or ""
+    changed = False
+    if desc.startswith("Bank Account"):
+        match = re.search(r"(\d{4})\)\s*$", desc)
+        changed = not (match and account and account[-4:] == match.group(1))
+    elif desc.startswith("UPI ID"):
+        match = re.match(r"^UPI ID \((.*)\)\s*$", desc)
+        changed = not (match and upi and upi == match.group(1).strip())
+    return {
+        "user_name": user.name, "account_holder": user.bank_account_holder, "account_number": account or None,
+        "ifsc": user.bank_ifsc, "upi_id": upi or None, "details_changed": changed,
+        "warning": "Bank details changed since request - confirm the destination before paying." if changed else None,
+    }
+
+
+def wr_to_admin_dict(wr: WithdrawalRequest, user: Optional[User]) -> dict:
+    return {**wr_to_dict(wr), "user_name": user.name if user else None, "payout": payout_details(wr, user)}
 
 
 @router.get("/withdrawal-requests")
@@ -715,12 +753,22 @@ def list_withdrawal_requests(
     items = query.order_by(WithdrawalRequest.created_at.desc()).offset(
         (max(page, 1) - 1) * min(page_size, 100)
     ).limit(min(page_size, 100)).all()
+    user_ids = {w.user_id for w in items}
+    people = {u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
     return {
-        "items": [wr_to_dict(w) for w in items],
+        "items": [wr_to_admin_dict(w, people.get(w.user_id)) for w in items],
         "total": total,
         "page": page,
         "page_size": min(page_size, 100),
     }
+
+
+@router.get("/withdrawal-requests/{request_id}")
+def withdrawal_request_detail(request_id: int, admin: Admin = Depends(current_admin), db: Session = Depends(get_db)):
+    wr = db.get(WithdrawalRequest, request_id)
+    if not wr:
+        raise HTTPException(status_code=404, detail="Withdrawal request not found.")
+    return wr_to_admin_dict(wr, db.get(User, wr.user_id))
 
 
 def _claim_transition(db: Session, request_id: int, from_status: str, to_status: str, admin: Admin, **extra) -> bool:
@@ -782,19 +830,26 @@ def approve_withdrawal(
 @router.patch("/withdrawal-requests/{request_id}/pay")
 def mark_withdrawal_paid(
     request_id: int,
+    payload: Optional[WithdrawalPayRequest] = None,
     admin: Admin = Depends(current_admin),
     db: Session = Depends(get_db),
 ):
     """
     Mark an approved withdrawal as paid out (approved -> paid only).
     No balance change - the balance was reserved at submission.
+    An optional body {"payout_reference": "<UTR>"} records the bank/UPI reference (1-64 letters, digits, hyphens).
     Idempotent: if already paid, returns the current state.
     """
     wr = db.get(WithdrawalRequest, request_id)
     if not wr:
         raise HTTPException(status_code=404, detail="Withdrawal request not found.")
 
-    if not _claim_transition(db, request_id, "approved", "paid", admin, paid_at=datetime.utcnow()):
+    reference = ((payload.payout_reference if payload else None) or "").strip()
+    if reference and not PAYOUT_REFERENCE_RE.match(reference):
+        raise HTTPException(status_code=422, detail="Payout reference must be 1-64 letters, digits or hyphens.")
+    extra = {"payout_reference": reference} if reference else {}
+
+    if not _claim_transition(db, request_id, "approved", "paid", admin, paid_at=datetime.utcnow(), **extra):
         db.rollback()
         db.refresh(wr)
         if wr.status == "paid":

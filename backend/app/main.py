@@ -351,6 +351,11 @@ def run_database_migrations(eng):
                 elif "admin_note" not in {c["name"] for c in insp.get_columns("edit_requests")}:
                     _exec_safe(eng, "ALTER TABLE edit_requests ADD COLUMN admin_note TEXT NULL", "edit_requests.admin_note")
                 _exec_safe(eng, "UPDATE edit_requests SET status = 'rejected' WHERE status = 'rejectd'", "repair edit_requests.rejectd")
+            if "withdrawal_requests" in tables_now:
+                if dialect == "postgresql":
+                    _exec_safe(eng, "ALTER TABLE withdrawal_requests ADD COLUMN IF NOT EXISTS payout_reference VARCHAR(64) NULL", "withdrawal_requests.payout_reference")
+                elif "payout_reference" not in {c["name"] for c in insp.get_columns("withdrawal_requests")}:
+                    _exec_safe(eng, "ALTER TABLE withdrawal_requests ADD COLUMN payout_reference VARCHAR(64) NULL", "withdrawal_requests.payout_reference")
         except Exception as ah_ex:
             logger.warning(f"[Warning] admin hardening column check: {ah_ex}")
 
