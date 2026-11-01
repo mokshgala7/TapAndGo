@@ -4,6 +4,7 @@ import { adminRequest, adminAuthHeaders, API_BASE, fileUrl } from './api.js'
 import DatabaseViewer from './database/DatabaseViewer.jsx'
 import FraudCentre from './FraudCentre.jsx'
 import EditRequestsAdmin from './EditRequestsAdmin.jsx'
+import TransactionsAdmin from './TransactionsAdmin.jsx'
 import './admin.css'
 
 class AdminErrorBoundary extends Component {
@@ -705,6 +706,7 @@ function AdminShell({ admin, onLogout }) {
     if (page === 'support') return <SupportTicketsAdmin {...props} />
     if (page === 'fraud') return <FraudCentre {...props} />
     if (page === 'requests') return <EditRequestsAdmin {...props} />
+    if (page === 'transactions') return <TransactionsAdmin {...props} />
     return <SimpleResource {...props} kind={page} />
   }
   return (

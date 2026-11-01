@@ -4,7 +4,7 @@ The routes deliberately sit beside the existing authentication API so the
 Passenger and Driver flows remain unchanged.  All list endpoints use MySQL
 records; no seed or client-side demo data is returned.
 """
-from datetime import datetime, timedelta
+from datetime import date as date_type, datetime, timedelta
 from decimal import Decimal
 from io import StringIO
 import csv
@@ -395,22 +395,28 @@ def user_action(user_id: int, payload: ActionRequest, admin: Admin = Depends(cur
 
 def transaction_rows(rows, db: Session):
     user_ids = {value for row in rows for value in (row.passenger_id, row.driver_id) if value}
-    people = {person.id: person.name for person in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    people = {person.id: person for person in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    named = lambda uid: people[uid].name if uid in people else None
+    vehicle = lambda uid, field: getattr(people[uid], field) if uid in people else None
     return [{
-        "id": row.id, "reference": row.reference, "passenger": people.get(row.passenger_id),
-        "driver": people.get(row.driver_id), "amount": float(row.amount), "payment_method": row.payment_method,
+        "id": row.id, "reference": row.reference, "passenger": named(row.passenger_id),
+        "driver": named(row.driver_id), "amount": float(row.amount), "payment_method": row.payment_method,
         "status": row.status, "otp_verified": row.otp_verified, "fraud_status": row.fraud_status,
         "failure_code": row.failure_code,
         "failure_reason": (row.description or "").replace("NFC payment failed: ", "", 1) if row.status == "failed" else None,
+        "transaction_type": row.transaction_type,
+        "balance_after": float(row.balance_after) if row.balance_after is not None else None,
+        "vehicle_type": vehicle(row.driver_id, "vehicle_type"),
+        "vehicle_registration": vehicle(row.driver_id, "vehicle_registration"),
         "created_at": row.created_at.isoformat() if row.created_at else None,
     } for row in rows]
 
 
-@router.get("/transactions")
-def transactions(
-    search: str = "", status: Optional[str] = None, payment_method: Optional[str] = None,
-    page: int = 1, page_size: int = 20, admin: Admin = Depends(current_admin), db: Session = Depends(get_db),
+def _filtered_transactions(
+    db: Session, search: str, status: Optional[str], payment_method: Optional[str],
+    from_date: Optional[date_type], to_date: Optional[date_type], passenger_id: Optional[int], driver_id: Optional[int],
 ):
+    """The transaction query shared by the list and the CSV export. With no filters it is every transaction."""
     query = db.query(Transaction)
     if search.strip():
         query = query.filter(Transaction.reference.ilike(f"%{search.strip()}%"))
@@ -418,18 +424,46 @@ def transactions(
         query = query.filter(Transaction.status == status)
     if payment_method:
         query = query.filter(Transaction.payment_method == payment_method)
+    if from_date:
+        query = query.filter(Transaction.created_at >= datetime.combine(from_date, datetime.min.time()))
+    if to_date:   # inclusive: the whole of to_date
+        query = query.filter(Transaction.created_at < datetime.combine(to_date + timedelta(days=1), datetime.min.time()))
+    if passenger_id:
+        query = query.filter(Transaction.passenger_id == passenger_id)
+    if driver_id:
+        query = query.filter(Transaction.driver_id == driver_id)
+    return query
+
+
+@router.get("/transactions")
+def transactions(
+    search: str = "", status: Optional[str] = None, payment_method: Optional[str] = None,
+    from_date: Optional[date_type] = None, to_date: Optional[date_type] = None,
+    passenger_id: Optional[int] = None, driver_id: Optional[int] = None,
+    page: int = 1, page_size: int = 20, admin: Admin = Depends(current_admin), db: Session = Depends(get_db),
+):
+    query = _filtered_transactions(db, search, status, payment_method, from_date, to_date, passenger_id, driver_id)
     total = query.count()
     rows = query.order_by(Transaction.created_at.desc()).offset((max(page, 1) - 1) * min(page_size, 100)).limit(min(page_size, 100)).all()
     return {"items": transaction_rows(rows, db), "total": total, "page": page, "page_size": min(page_size, 100)}
 
 
 @router.get("/transactions/export")
-def export_transactions(admin: Admin = Depends(current_admin), db: Session = Depends(get_db)):
+def export_transactions(
+    search: str = "", status: Optional[str] = None, payment_method: Optional[str] = None,
+    from_date: Optional[date_type] = None, to_date: Optional[date_type] = None,
+    passenger_id: Optional[int] = None, driver_id: Optional[int] = None,
+    admin: Admin = Depends(current_admin), db: Session = Depends(get_db),
+):
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Transaction ID", "Passenger", "Driver", "Amount", "Method", "Status", "Date", "Failure Reason"])
-    for row in transaction_rows(db.query(Transaction).order_by(Transaction.created_at.desc()).all(), db):
-        writer.writerow([row["reference"], row["passenger"] or "", row["driver"] or "", row["amount"], row["payment_method"], row["status"], row["created_at"], row["failure_reason"] or ""])
+    writer.writerow(["Transaction ID", "Passenger", "Driver", "Amount", "Method", "Status", "Date",
+                     "Type", "Balance After", "Vehicle Type", "Vehicle Registration", "Failure Reason"])
+    query = _filtered_transactions(db, search, status, payment_method, from_date, to_date, passenger_id, driver_id)
+    for row in transaction_rows(query.order_by(Transaction.created_at.desc()).all(), db):
+        writer.writerow([row["reference"], row["passenger"] or "", row["driver"] or "", row["amount"], row["payment_method"], row["status"], row["created_at"],
+                         row["transaction_type"] or "", "" if row["balance_after"] is None else row["balance_after"],
+                         row["vehicle_type"] or "", row["vehicle_registration"] or "", row["failure_reason"] or ""])
     return Response(output.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=tapgo-transactions.csv"})
 
 
