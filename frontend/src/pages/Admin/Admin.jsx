@@ -2,7 +2,6 @@ import { Component, useEffect, useState } from 'react'
 import { Link, useNavigate } from '../../routes/navigation.jsx'
 import { adminRequest, adminAuthHeaders, API_BASE, fileUrl } from './api.js'
 import DatabaseViewer from './database/DatabaseViewer.jsx'
-import FraudCentre from './FraudCentre.jsx'
 import EditRequestsAdmin from './EditRequestsAdmin.jsx'
 import TransactionsAdmin from './TransactionsAdmin.jsx'
 import PosDevicesAdmin from './PosDevicesAdmin.jsx'
@@ -42,13 +41,13 @@ class AdminErrorBoundary extends Component {
 const navigation = [
   ['dashboard', 'Overview', '▦'], ['drivers', 'Driver Management', '♙'], ['passengers', 'Passenger Management', '♟'],
   ['nfc-orders', 'NFC Card Orders', '💳'], ['nfc-cards', 'NFC Cards', '◈'], ['pos-devices', 'POS Devices', '▣'], ['documents', 'Driver Documents', '▤'], ['requests', 'Edit Requests', '✓'],
-  ['transactions', 'Transactions', '⇄'], ['wallets', 'Wallets', '◉'], ['fraud', 'Fraud Centre', '⚑'],
+  ['transactions', 'Transactions', '⇄'], ['wallets', 'Wallets', '◉'],
   ['withdrawals', 'Withdrawal Requests', '💸'], ['support', 'Support Tickets', '🎫'],
   ['logs', 'Activity Logs', '◷'], ['settings', 'Settings', '⚙'], ['database', 'Database Viewer', '▤'],
 ]
 const resourceConfig = {
   documents: ['Driver Documents', '/documents'], requests: ['Edit Requests', '/edit-requests'], transactions: ['Transactions', '/transactions'],
-  wallets: ['Wallet Management', '/wallets'], fraud: ['Fraud Management', '/fraud-alerts'], logs: ['Activity Logs', '/activity-logs'],
+  wallets: ['Wallet Management', '/wallets'], logs: ['Activity Logs', '/activity-logs'],
 }
 
 const number = (value) => new Intl.NumberFormat('en-IN').format(value || 0)
@@ -132,7 +131,7 @@ function Dashboard({ adminId }) {
   const cards = stats && [
     ['Total Drivers', stats.total_drivers, 'Driver accounts'], ['Active Drivers', stats.active_drivers, `${stats.pending_drivers} pending approval`], ['Suspended Drivers', stats.suspended_drivers, 'Restricted accounts'],
     ['Total Passengers', stats.total_passengers, `${stats.active_passengers} active`], ['Transactions', stats.total_transactions, `${stats.today_transactions} today · ${stats.failed_today || 0} failed today`], ['Wallet Balance', money(stats.wallet_balance), 'Across live wallets'],
-    ['Revenue', money(stats.revenue), 'Completed transactions'], ['Fraud Alerts', stats.fraud_alerts, 'Awaiting review'], ['Edit Requests', stats.pending_edit_requests, 'Awaiting action'],
+    ['Revenue', money(stats.revenue), 'Completed transactions'], ['Edit Requests', stats.pending_edit_requests, 'Awaiting action'],
   ]
   return <section className="admin-section"><div className="section-heading"><div><span className="eyebrow">Operations at a glance</span><h2>Dashboard Overview</h2><p>Live counts from the Tap&Go backend database.</p></div></div><LoadState error={error}>{!stats ? <Empty text="Loading live operations…" /> : <div className="metric-grid">{cards.map(([label, value, hint]) => <article className="metric-card" key={label}><div className="metric-icon">◈</div><p>{label}</p><strong>{typeof value === 'number' ? number(value) : value}</strong><small>{hint}</small></article>)}</div>}</LoadState></section>
 }
@@ -721,7 +720,10 @@ function SupportTicketsAdmin({ adminId }) {
 }
 
 function AdminShell({ admin, onLogout }) {
-  const [page, setPageState] = useState(() => sessionStorage.getItem('admin_page') || 'dashboard')
+  const [page, setPageState] = useState(() => {
+    const stored = sessionStorage.getItem('admin_page')
+    return navigation.some(([id]) => id === stored) ? stored : 'dashboard'
+  })
   const setPage = (newPage) => {
     setPageState(newPage)
     try { sessionStorage.setItem('admin_page', newPage) } catch {}
@@ -736,7 +738,6 @@ function AdminShell({ admin, onLogout }) {
     if (page === 'settings') return <Settings {...props} />
     if (page === 'withdrawals') return <WithdrawalRequestsAdmin {...props} />
     if (page === 'support') return <SupportTicketsAdmin {...props} />
-    if (page === 'fraud') return <FraudCentre {...props} />
     if (page === 'requests') return <EditRequestsAdmin {...props} />
     if (page === 'transactions') return <TransactionsAdmin {...props} />
     if (page === 'pos-devices') return <PosDevicesAdmin {...props} />
