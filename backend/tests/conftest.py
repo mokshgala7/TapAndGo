@@ -18,6 +18,9 @@ os.environ["REVIEW_DEMO_MODE"] = "false"
 # The mandatory 10-minute OTP rule is exercised in tests/test_ten_minute_rule.py; the older payment tests make
 # several payments in a row and switch it on explicitly where they need it.
 os.environ["TAPGO_TEN_MINUTE_RULE"] = "off"
+# The per-user amount limits (default 4:60,69:170,70:270) name real passenger ids, and the test database hands out
+# small ids 1, 2, 3, 4 ...; point them at an id no test uses. tests/test_user_amount_override.py removes this.
+os.environ["FRAUD_USER_AMOUNT_LIMITS"] = "999999:1"
 os.environ.pop("ENVIRONMENT", None)
 os.environ.pop("ENV", None)
 

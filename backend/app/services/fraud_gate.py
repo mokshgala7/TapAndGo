@@ -38,10 +38,12 @@ allowlist go to that one address instead of the passenger's own (never withdrawa
 (with a warning) in mode off and in mode enforce; it must be one valid address or the app refuses to start. The address
 is never logged, stored or returned (see send_email's recipient redaction).
 
-Per-user amount override (env FRAUD_USER_AMOUNT_LIMITS, "69:170,70:270"; unset = those two defaults): a payment by a
+Per-user amount override (env FRAUD_USER_AMOUNT_LIMITS, "4:60,69:170,70:270"; unset or blank = those three defaults): a payment by a
 listed passenger for an amount STRICTLY above that passenger's limit is flagged ("user_limit_override: amount X > limit
 Y") and needs the email OTP in every mode, like the 10-minute rule. It only ever adds a flag; the model keeps scoring
-everyone. Invalid entries are ignored and logged once; parsing never raises.
+everyone. Invalid entries are ignored and logged once; parsing never raises. For every assessed payment of a listed
+passenger one extra line is logged (display only):
+  fraud_assessment user_id=69 amount=171.00 mode=shadow ml_risk=0.57 base_limit=170 base_rule_flag=true decision=otp_required
 
 Fail-safe: evaluate_payment never raises for fraud-code problems. An unexpected error returns otp_required for a
 passenger that is enforced and proceed for everyone else (payment unchanged).
@@ -135,7 +137,7 @@ def newuser_otp_above() -> Decimal:
     return value
 
 
-DEFAULT_USER_AMOUNT_LIMITS = "69:170,70:270"
+DEFAULT_USER_AMOUNT_LIMITS = "4:60,69:170,70:270"
 
 
 @lru_cache(maxsize=16)
@@ -181,6 +183,22 @@ def user_limit_override(passenger_id, amount: Decimal, amount_ok: bool):
     except Exception:  # noqa: BLE001
         pass
     return None
+
+
+def _log_user_limit_line(passenger_id, amount, mode_label, risk_score, flagged, action) -> None:
+    """One display-only line per assessed payment of a passenger with a limit (ids, amount, mode, score, limit, flag,
+    decision; nothing else). It can never change or break a payment."""
+    try:
+        limit = user_amount_limits().get(passenger_id)
+        if limit is None:
+            return
+        _ensure_handler()
+        score = "n/a" if risk_score is None else f"{float(risk_score):.2f}"
+        logger.info(f"fraud_assessment user_id={passenger_id} amount={Decimal(amount):.2f} mode={mode_label} "
+                    f"ml_risk={score} base_limit={format(limit.normalize(), 'f')} "
+                    f"base_rule_flag={'true' if flagged else 'false'} decision={action}")
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def effective_mode(passenger_id):
@@ -345,6 +363,8 @@ def evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_k
         clean_amt, amt_ok = _clean_amount(amount)
         override = user_limit_override(getattr(passenger, "id", None), clean_amt, amt_ok)
         enforced = mode == "enforce" or policy_otp or ten_minute_rule_enforced() or bool(override)     # the mandatory rules fail closed too
+        _log_user_limit_line(getattr(passenger, "id", None), clean_amt, mode_label, None, bool(override),
+                             "otp_required" if enforced else "proceed")
         return {"action": "otp_required" if enforced else "proceed", "would_require_otp": mode != "off" or enforced, "mode": mode_label,
                 "enforced_by_allowlist": by_allowlist, "reasons": ["ml_failure:gate_error"] + ([override] if override else []), "risk_score": None,
                 "model_flag": None, "rule_10min": False, "elapsed_seconds": None, "ml_status": "gate_error",
@@ -470,6 +490,7 @@ def _assess_and_store(db, passenger_id, driver, amount, amount_ok, now, idempote
         }, default=str))
     except Exception:  # noqa: BLE001
         pass
+    _log_user_limit_line(passenger_id, amount, mode_label, decision["risk_score"], bool(override), action)
     return decision
 
 

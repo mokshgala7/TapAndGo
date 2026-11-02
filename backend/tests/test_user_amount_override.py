@@ -1,22 +1,46 @@
 """
 test_user_amount_override.py
 ────────────────────────────
-Per-user fraud amount override (app/services/fraud_gate.py, env FRAUD_USER_AMOUNT_LIMITS, default "69:170,70:270"):
+Per-user fraud amount override (app/services/fraud_gate.py, env FRAUD_USER_AMOUNT_LIMITS, default "4:60,69:170,70:270"):
 a payment by a listed passenger for an amount STRICTLY above that passenger's limit is flagged and needs the email OTP
 on every channel; equal to the limit is not flagged. Everyone else behaves exactly as before. Mail is mocked.
 """
+import logging
+import re
 import uuid
 from decimal import Decimal
 
 import pytest
 
-from app.models import FraudAssessment, NFCCard, User
+from app.models import FraudAssessment, NFCCard, PaymentOtpChallenge, User
 from app.services import fraud_gate
 from tests.helpers import Env
 from tests.test_fraud_gate import last_otp, mail, rows  # noqa: F401 - fixture imported by name so pytest finds it here
 
 SECRET = "unit-test-secret-not-a-real-one"
-UIDS = {69: "04A2B3C4D5E669", 70: "04A2B3C4D5E670", 5: "04A2B3C4D5E605"}
+UIDS = {4: "04A2B3C4D5E604", 69: "04A2B3C4D5E669", 70: "04A2B3C4D5E670", 5: "04A2B3C4D5E605"}
+LIMITS = {4: 60, 69: 170, 70: 270}
+
+
+@pytest.fixture
+def logs():
+    """Everything the fraud gate logs (its handler stops propagation, so caplog would miss it)."""
+    class _Capture(logging.Handler):
+        def __init__(self):
+            super().__init__(logging.DEBUG)
+            self.lines = []
+
+        def emit(self, record):
+            self.lines.append(record.getMessage())
+
+    handler, lg = _Capture(), logging.getLogger("tapgo.fraud_gate")
+    lg.addHandler(handler)
+    yield handler.lines
+    lg.removeHandler(handler)
+
+
+def score_lines(lines, uid=None):
+    return [ln for ln in lines if ln.startswith("fraud_assessment user_id=" + (f"{uid} " if uid else ""))]
 
 
 @pytest.fixture(autouse=True)
@@ -43,7 +67,7 @@ def scene(mail):
         db.commit()
     finally:
         db.close()
-    assert pax == {69: 69, 70: 70, 5: 5}
+    assert pax == {4: 4, 69: 69, 70: 70, 5: 5}
     return {"env": env, "driver_id": driver_id, "driver_headers": env.user_headers(driver_id), "mail": mail}
 
 
@@ -83,6 +107,7 @@ def override_reasons(row):
 
 @pytest.mark.parametrize("channel", ["nfc", "qr", "wallet"])
 @pytest.mark.parametrize("uid,amount,flagged", [
+    (4, 60, False), (4, 61, True), (4, 60.5, True),
     (69, 170, False), (69, 171, True), (69, 170.5, True),
     (70, 270, False), (70, 271, True), (70, 270.01, True),
 ])
@@ -93,7 +118,7 @@ def test_limit_is_strictly_greater_than_on_every_channel(scene, channel, uid, am
         assert outcome(body) == "otp"
         assert row.decision == "otp_required"
         assert len(override_reasons(row)) == 1
-        assert f"> limit {'170' if uid == 69 else '270'}" in row.reasons
+        assert f"> limit {LIMITS[uid]}" in row.reasons
         assert len(scene["mail"]["otp"]) == 1
     else:
         assert outcome(body) == "paid"
@@ -139,21 +164,34 @@ def test_the_override_runs_with_the_ml_in_enforce_mode_and_never_removes_a_flag(
 
 
 @pytest.mark.parametrize("mode", ["off", "shadow", "enforce"])
-def test_the_override_applies_in_every_mode(scene, monkeypatch, mode):
+@pytest.mark.parametrize("uid,over,at_limit", [(4, 61, 60), (69, 171, 170), (70, 271, 270)])
+def test_the_override_applies_in_every_mode(scene, monkeypatch, mode, uid, over, at_limit):
     monkeypatch.setenv("TAPGO_FRAUD_MODE", mode)
-    assert outcome(pay(scene, 70, "wallet", 271)) == "otp"
-    assert latest(scene, 70).mode == mode
+    assert outcome(pay(scene, uid, "wallet", over)) == "otp"
+    assert latest(scene, uid).mode == mode
+    assert outcome(pay(scene, 5, "wallet", at_limit)) == "paid"      # not listed: untouched
+
+
+@pytest.mark.parametrize("channel", ["nfc", "qr", "wallet"])
+@pytest.mark.parametrize("mode", ["shadow", "enforce"])
+def test_a_listed_user_who_is_also_enforced_gets_one_otp_not_two(scene, monkeypatch, mode, channel):
+    monkeypatch.setenv("TAPGO_FRAUD_MODE", mode)
+    monkeypatch.setenv("TAPGO_FRAUD_ENFORCE_USER_IDS", "4,69,70")
+    body = pay(scene, 4, channel, 61)
+    assert outcome(body) == "otp" and len(scene["mail"]["otp"]) == 1
+    assert len(rows(scene, PaymentOtpChallenge, passenger_id=4)) == 1
+    assert len(override_reasons(latest(scene, 4))) == 1
 
 
 # ── configuration ───────────────────────────────────────────────────────────────────────────────────
 
 def test_defaults_when_the_variable_is_unset():
-    assert fraud_gate.user_amount_limits() == {69: Decimal("170"), 70: Decimal("270")}
+    assert fraud_gate.user_amount_limits() == {4: Decimal("60"), 69: Decimal("170"), 70: Decimal("270")}
 
 
 def test_blank_value_uses_the_defaults(monkeypatch):
     monkeypatch.setenv("FRAUD_USER_AMOUNT_LIMITS", "   ")
-    assert fraud_gate.user_amount_limits() == {69: Decimal("170"), 70: Decimal("270")}
+    assert fraud_gate.user_amount_limits() == {4: Decimal("60"), 69: Decimal("170"), 70: Decimal("270")}
 
 
 def test_env_value_replaces_the_defaults(monkeypatch):
@@ -178,12 +216,54 @@ def test_bad_entries_are_ignored_and_never_crash(monkeypatch, raw, expected):
     assert fraud_gate.user_amount_limits() == {k: Decimal(v) for k, v in expected.items()}
 
 
-def test_a_bad_value_is_logged_and_a_payment_still_works(scene, monkeypatch, caplog):
+def test_a_bad_value_is_logged_and_a_payment_still_works(scene, monkeypatch, logs):
     monkeypatch.setenv("FRAUD_USER_AMOUNT_LIMITS", f"69:oops-{uuid.uuid4().hex[:6]},70:270")
-    with caplog.at_level("WARNING", logger="tapgo.fraud_gate"):
-        assert outcome(pay(scene, 69, "nfc", 5000)) == "paid"      # entry ignored: no override for 69
-        assert outcome(pay(scene, 70, "nfc", 271)) == "otp"        # valid entry still works
-    assert any("user_amount_limit_ignored" in r.getMessage() for r in caplog.records)
+    assert outcome(pay(scene, 69, "nfc", 5000)) == "paid"          # entry ignored: no override for 69
+    assert outcome(pay(scene, 70, "nfc", 271)) == "otp"            # valid entry still works
+    assert any("user_amount_limit_ignored" in ln for ln in logs)
+
+
+# ── the risk-score line in the Render logs ─────────────────────────────────────────────────────────
+
+LINE = re.compile(r"^fraud_assessment user_id=(\d+) amount=(\d+\.\d{2}) mode=(off|shadow|enforce) "
+                  r"ml_risk=(n/a|\d\.\d{2}) base_limit=(\d+) base_rule_flag=(true|false) decision=(proceed|otp_required)$")
+
+
+@pytest.mark.parametrize("channel", ["nfc", "qr", "wallet"])
+@pytest.mark.parametrize("uid,amount,flag", [(4, 60, "false"), (4, 61, "true"), (69, 170, "false"), (69, 171, "true"),
+                                              (70, 270, "false"), (70, 271, "true")])
+def test_the_risk_score_line_is_logged_for_flagged_and_unflagged_payments(scene, logs, channel, uid, amount, flag):
+    pay(scene, uid, channel, amount)
+    lines = score_lines(logs, uid)
+    assert len(lines) == 1, lines
+    m = LINE.match(lines[0])
+    assert m, lines[0]
+    assert (int(m[1]), float(m[2]), m[5], m[6]) == (uid, float(amount), str(LIMITS[uid]), flag)
+    assert m[7] == ("otp_required" if flag == "true" else "proceed")
+    assert m[4] != "n/a"                                           # the model scored it
+
+
+@pytest.mark.parametrize("mode,expected", [("off", "n/a"), ("shadow", None), ("enforce", None)])
+def test_the_line_shows_n_a_only_when_there_is_no_score(scene, monkeypatch, logs, mode, expected):
+    monkeypatch.setenv("TAPGO_FRAUD_MODE", mode)
+    pay(scene, 69, "nfc", 100)
+    (line,) = score_lines(logs, 69)
+    assert (expected is None) == ("ml_risk=n/a" not in line)
+    assert f"mode={mode}" in line
+
+
+def test_no_score_line_for_unlisted_users_and_no_sensitive_data_in_it(scene, logs):
+    pay(scene, 5, "nfc", 5000)
+    assert score_lines(logs, 5) == []
+    pay(scene, 4, "nfc", 61)
+    (line,) = score_lines(logs, 4)
+    assert not any(tok in line for tok in (UIDS[4], "@", "otp=", "challenge", "postgres", "password"))
+
+
+def test_a_failing_log_helper_never_breaks_a_payment(scene, monkeypatch):
+    monkeypatch.setattr(fraud_gate.logger, "info", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
+    assert outcome(pay(scene, 4, "nfc", 61)) == "otp"
+    assert outcome(pay(scene, 5, "nfc", 100)) == "paid"
 
 
 def test_an_unreadable_limit_lookup_never_breaks_a_payment(scene, monkeypatch):
