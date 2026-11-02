@@ -38,6 +38,11 @@ allowlist go to that one address instead of the passenger's own (never withdrawa
 (with a warning) in mode off and in mode enforce; it must be one valid address or the app refuses to start. The address
 is never logged, stored or returned (see send_email's recipient redaction).
 
+Per-user amount override (env FRAUD_USER_AMOUNT_LIMITS, "69:170,70:270"; unset = those two defaults): a payment by a
+listed passenger for an amount STRICTLY above that passenger's limit is flagged ("user_limit_override: amount X > limit
+Y") and needs the email OTP in every mode, like the 10-minute rule. It only ever adds a flag; the model keeps scoring
+everyone. Invalid entries are ignored and logged once; parsing never raises.
+
 Fail-safe: evaluate_payment never raises for fraud-code problems. An unexpected error returns otp_required for a
 passenger that is enforced and proceed for everyone else (payment unchanged).
 
@@ -51,6 +56,7 @@ import re
 import sys
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from types import SimpleNamespace
 
 from sqlalchemy import or_
@@ -127,6 +133,54 @@ def newuser_otp_above() -> Decimal:
         raise FraudConfigError(f"TAPGO_NEWUSER_OTP_ABOVE={raw[:20]!r} is not valid. Expected a positive amount in "
                                f"rupees up to {MAX_NEWUSER_OTP_ABOVE}, e.g. 300 (unset means 300).")
     return value
+
+
+DEFAULT_USER_AMOUNT_LIMITS = "69:170,70:270"
+
+
+@lru_cache(maxsize=16)
+def _parse_user_amount_limits(raw: str) -> tuple:
+    """((passenger id, limit), ...) from "id:limit,id:limit". Invalid entries are ignored and logged (once per raw
+    value, never the whole value); this never raises."""
+    limits = {}
+    for item in raw.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            uid_s, limit_s = item.split(":")
+            uid_s, limit_s = uid_s.strip(), limit_s.strip()
+            if not uid_s.isascii() or not uid_s.isdigit() or int(uid_s) < 1:
+                raise ValueError("user id")
+            limit = Decimal(limit_s)
+            if not limit.is_finite() or limit <= 0:
+                raise ValueError("limit")
+            limits[int(uid_s)] = limit
+        except (ValueError, InvalidOperation):
+            logger.warning(json.dumps({"status": "user_amount_limit_ignored", "entry": item[:20]}))
+    return tuple(limits.items())
+
+
+def user_amount_limits() -> dict:
+    """{passenger id: limit} from FRAUD_USER_AMOUNT_LIMITS (unset or blank = the built-in defaults). Never raises."""
+    try:
+        raw = os.getenv("FRAUD_USER_AMOUNT_LIMITS", "").strip() or DEFAULT_USER_AMOUNT_LIMITS
+        return dict(_parse_user_amount_limits(raw))
+    except Exception:  # noqa: BLE001 - a config problem must never break a payment
+        return {}
+
+
+def user_limit_override(passenger_id, amount: Decimal, amount_ok: bool):
+    """The reason string when this passenger has a limit and the amount is strictly above it, else None."""
+    try:
+        if not amount_ok:
+            return None
+        limit = user_amount_limits().get(passenger_id)
+        if limit is not None and amount > limit:
+            return f"user_limit_override: amount {amount:f} > limit {limit:f}"
+    except Exception:  # noqa: BLE001
+        pass
+    return None
 
 
 def effective_mode(passenger_id):
@@ -288,9 +342,11 @@ def evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_k
         except FraudConfigError:
             mode, by_allowlist, mode_label, policy_on, policy_otp = "enforce", False, "enforce", False, False  # unreadable configuration: fail closed
         logger.error(json.dumps({"status": "gate_error", "error": type(exc).__name__, "mode": mode_label}))
-        enforced = mode == "enforce" or policy_otp or ten_minute_rule_enforced()      # the mandatory rule fails closed too
+        clean_amt, amt_ok = _clean_amount(amount)
+        override = user_limit_override(getattr(passenger, "id", None), clean_amt, amt_ok)
+        enforced = mode == "enforce" or policy_otp or ten_minute_rule_enforced() or bool(override)     # the mandatory rules fail closed too
         return {"action": "otp_required" if enforced else "proceed", "would_require_otp": mode != "off" or enforced, "mode": mode_label,
-                "enforced_by_allowlist": by_allowlist, "reasons": ["ml_failure:gate_error"], "risk_score": None,
+                "enforced_by_allowlist": by_allowlist, "reasons": ["ml_failure:gate_error"] + ([override] if override else []), "risk_score": None,
                 "model_flag": None, "rule_10min": False, "elapsed_seconds": None, "ml_status": "gate_error",
                 "model_version": None, "threshold": None, "assessment_id": None}
 
@@ -303,14 +359,15 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
     policy_on = mode == "shadow" and newuser_policy() == "enforce"
     policy_otp = policy_on and ((not amount_ok) or amount > newuser_otp_above())
     mode_label = "newuser" if policy_on else mode
+    override = user_limit_override(passenger.id, amount, amount_ok)
 
     # The mandatory 10-minute rule is a single indexed query and is always decided before the answer; only the model
     # scoring and the record may be deferred, and only when the rule does not fire.
     rule_now = False
-    if mode == "shadow" and not policy_otp and background_tasks is not None and ten_minute_rule_enforced():
+    if mode == "shadow" and not policy_otp and not override and background_tasks is not None and ten_minute_rule_enforced():
         rule_now, _ = ten_minute_rule(db, passenger.id, now)
 
-    if mode == "shadow" and not policy_otp and not rule_now and background_tasks is not None:
+    if mode == "shadow" and not policy_otp and not override and not rule_now and background_tasks is not None:
         # Nothing here depends on the scoring: answer now, score and record after the response.
         background_tasks.add_task(_record_after_response, db.get_bind(), passenger.id, driver.id, driver.vehicle_type,
                                   amount, amount_ok, now, idempotency_key, channel, payment_request_id, mode_label,
@@ -320,11 +377,12 @@ def _evaluate_payment(db, passenger, driver, amount, now: datetime, idempotency_
                 "ml_status": "deferred", "model_version": None, "threshold": None, "assessment_id": None}
 
     return _assess_and_store(db, passenger.id, driver, amount, amount_ok, now, idempotency_key, channel,
-                             payment_request_id, mode, mode_label, by_allowlist, policy_on, policy_otp)
+                             payment_request_id, mode, mode_label, by_allowlist, policy_on, policy_otp,
+                             override=override)
 
 
 def _assess_and_store(db, passenger_id, driver, amount, amount_ok, now, idempotency_key, channel, payment_request_id,
-                      mode, mode_label, by_allowlist, policy_on, policy_otp, exclude_key=None) -> dict:
+                      mode, mode_label, by_allowlist, policy_on, policy_otp, exclude_key=None, override=None) -> dict:
     """Score (rule + model), decide, store one fraud_assessments row and log one line. `driver` needs .id and
     .vehicle_type. A scoring failure never decides for shadow / new-account passengers."""
     rule_fired, elapsed = ten_minute_rule(db, passenger_id, now, exclude_key)
@@ -358,6 +416,8 @@ def _assess_and_store(db, passenger_id, driver, amount, amount_ok, now, idempote
             reasons.append("new_account_policy")
         if rule_forces_otp:
             reasons.append("rule_10min")
+        if override:
+            reasons.append(override)
         action = "otp_required" if reasons else "proceed"
         would = bool(reasons)
     else:
@@ -368,8 +428,10 @@ def _assess_and_store(db, passenger_id, driver, amount, amount_ok, now, idempote
             reasons.append("model_flag")
         if ml_status not in ("scored", "disabled", "off"):
             reasons.append(f"ml_failure:{ml_status}")
-        action = "otp_required" if ((mode == "enforce" and reasons) or rule_forces_otp) else "proceed"
-        would = bool(reasons) and (mode != "off" or rule_forces_otp)
+        if override:
+            reasons.append(override)                    # only ever adds a flag; never clears one the model raised
+        action = "otp_required" if ((mode == "enforce" and reasons) or rule_forces_otp or override) else "proceed"
+        would = bool(reasons) and (mode != "off" or rule_forces_otp or bool(override))
     decision = {
         "action": action,
         "would_require_otp": would,
