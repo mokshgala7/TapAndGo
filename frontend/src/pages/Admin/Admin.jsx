@@ -1,8 +1,6 @@
 import { Component, useEffect, useState } from 'react'
 import { Link, useNavigate } from '../../routes/navigation.jsx'
 import { adminRequest, adminAuthHeaders, API_BASE, fileUrl } from './api.js'
-import DatabaseViewer from './database/DatabaseViewer.jsx'
-import FraudCentre from './FraudCentre.jsx'
 import EditRequestsAdmin from './EditRequestsAdmin.jsx'
 import TransactionsAdmin from './TransactionsAdmin.jsx'
 import PosDevicesAdmin from './PosDevicesAdmin.jsx'
@@ -42,13 +40,13 @@ class AdminErrorBoundary extends Component {
 const navigation = [
   ['dashboard', 'Overview', '▦'], ['drivers', 'Driver Management', '♙'], ['passengers', 'Passenger Management', '♟'],
   ['nfc-orders', 'NFC Card Orders', '💳'], ['nfc-cards', 'NFC Cards', '◈'], ['pos-devices', 'POS Devices', '▣'], ['documents', 'Driver Documents', '▤'], ['requests', 'Edit Requests', '✓'],
-  ['transactions', 'Transactions', '⇄'], ['wallets', 'Wallets', '◉'], ['fraud', 'Fraud Centre', '⚑'],
+  ['transactions', 'Transactions', '⇄'], ['wallets', 'Wallets', '◉'],
   ['withdrawals', 'Withdrawal Requests', '💸'], ['support', 'Support Tickets', '🎫'],
-  ['logs', 'Activity Logs', '◷'], ['settings', 'Settings', '⚙'], ['database', 'Database Viewer', '▤'],
+  ['logs', 'Activity Logs', '◷'],
 ]
 const resourceConfig = {
   documents: ['Driver Documents', '/documents'], requests: ['Edit Requests', '/edit-requests'], transactions: ['Transactions', '/transactions'],
-  wallets: ['Wallet Management', '/wallets'], fraud: ['Fraud Management', '/fraud-alerts'], logs: ['Activity Logs', '/activity-logs'],
+  wallets: ['Wallet Management', '/wallets'], logs: ['Activity Logs', '/activity-logs'],
 }
 
 const number = (value) => new Intl.NumberFormat('en-IN').format(value || 0)
@@ -132,7 +130,7 @@ function Dashboard({ adminId }) {
   const cards = stats && [
     ['Total Drivers', stats.total_drivers, 'Driver accounts'], ['Active Drivers', stats.active_drivers, `${stats.pending_drivers} pending approval`], ['Suspended Drivers', stats.suspended_drivers, 'Restricted accounts'],
     ['Total Passengers', stats.total_passengers, `${stats.active_passengers} active`], ['Transactions', stats.total_transactions, `${stats.today_transactions} today · ${stats.failed_today || 0} failed today`], ['Wallet Balance', money(stats.wallet_balance), 'Across live wallets'],
-    ['Revenue', money(stats.revenue), 'Completed transactions'], ['Fraud Alerts', stats.fraud_alerts, 'Awaiting review'], ['Edit Requests', stats.pending_edit_requests, 'Awaiting action'],
+    ['Revenue', money(stats.revenue), 'Completed transactions'], ['Edit Requests', stats.pending_edit_requests, 'Awaiting action'],
   ]
   return <section className="admin-section"><div className="section-heading"><div><span className="eyebrow">Operations at a glance</span><h2>Dashboard Overview</h2><p>Live counts from the Tap&Go backend database.</p></div></div><LoadState error={error}>{!stats ? <Empty text="Loading live operations…" /> : <div className="metric-grid">{cards.map(([label, value, hint]) => <article className="metric-card" key={label}><div className="metric-icon">◈</div><p>{label}</p><strong>{typeof value === 'number' ? number(value) : value}</strong><small>{hint}</small></article>)}</div>}</LoadState></section>
 }
@@ -173,76 +171,6 @@ function SimpleResource({ adminId, kind }) {
   const exportCsv = async () => { try { const response = await fetch(`${API_BASE}/api/admin/transactions/export`, { headers: adminAuthHeaders() }); if (!response.ok) throw new Error('Could not export transactions.'); const blob = await response.blob(); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'tapgo-transactions.csv'; link.click(); URL.revokeObjectURL(url) } catch (err) { setError(err.message) } }
   const rows = result.items || []; const columns = Object.keys(rows[0] || {}).filter((column) => !['proof_path', 'file_path', 'user_id', 'transaction_id'].includes(column))
   return <section className="admin-section"><div className="section-heading"><div><span className="eyebrow">Live operational records</span><h2>{config[0]}</h2><p>{kind === 'documents' ? 'All uploaded files, generated dynamically from database fields.' : kind === 'fraud' ? 'Risk alerts ready for AI-generated signals.' : 'Search and act on records stored in MySQL.'}</p></div>{kind === 'transactions' && <button className="primary-button" onClick={exportCsv}>Export CSV</button>}</div>{['documents', 'transactions', 'wallets'].includes(kind) && <div className="table-controls"><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && load()} placeholder="Search live records" /><button className="secondary-button" onClick={load}>Search</button></div>}<LoadState error={error}>{loading ? <Empty text="Loading live records…" /> : <div className="table-wrap"><table><thead><tr>{columns.map((column) => <th key={column}>{column.replaceAll('_', ' ')}</th>)}<th>Actions</th></tr></thead><tbody>{rows.length ? rows.map((row, index) => <tr key={row.id || index}>{columns.map((column) => <td key={column}>{typeof row[column] === 'boolean' ? (row[column] ? 'Yes' : 'No') : column.includes('amount') || column === 'balance' ? money(row[column]) : /_at$/.test(column) ? date(row[column]) : row[column] || '—'}</td>)}<td className="actions">{kind === 'documents' && row.file_path && <a href={fileUrl(row.file_path)} target="_blank" rel="noreferrer">Open</a>}{kind === 'requests' && row.status === 'pending' && <><button onClick={() => act(row.id, `/edit-requests/${row.id}/review`, { action: 'approve' })}>Approve</button><button onClick={() => act(row.id, `/edit-requests/${row.id}/review`, { action: 'reject' })}>Reject</button></>}{kind === 'wallets' && <button onClick={() => act(row.id, `/wallets/${row.id}`, { frozen: !row.is_frozen })}>{row.is_frozen ? 'Unfreeze' : 'Freeze'}</button>}{kind === 'fraud' && row.status === 'open' && <><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'safe' })}>Mark safe</button><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'block' })}>Block</button><button onClick={() => act(row.id, `/fraud-alerts/${row.id}/review`, { action: 'freeze' })}>Freeze</button></>}</td></tr>) : <tr><td colSpan={Math.max(columns.length + 1, 1)}><Empty /></td></tr>}</tbody></table></div>}</LoadState></section>
-}
-
-function Settings({ adminId }) {
-  const [items, setItems] = useState([])
-  const [projectName, setProjectName] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
-
-  const load = () => {
-    setLoading(true)
-    adminRequest('/settings', adminId)
-      .then((data) => {
-        setItems(data?.items || [])
-        setProjectName((data?.items || []).find((item) => item.key === 'project_name')?.value || '')
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }
-
-  useEffect(() => { load() }, [adminId])
-
-  const save = async () => {
-    try {
-      await adminRequest('/settings/project_name', adminId, { method: 'PUT', body: JSON.stringify({ value: projectName }) })
-      load()
-    } catch (err) {
-      setError(err.message)
-    }
-  }
-
-  return (
-    <section className="admin-section narrow-section">
-      <div className="section-heading">
-        <div>
-          <span className="eyebrow">Configuration</span>
-          <h2>Settings</h2>
-          <p>Project configuration is stored in MySQL and ready for future controls.</p>
-        </div>
-      </div>
-      <LoadState error={error}>
-        {loading ? (
-          <Empty text="Loading settings…" />
-        ) : (
-          <div>
-            <label>
-              Project name
-              <input value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Tap&Go" />
-            </label>
-            <button className="primary-button" onClick={save}>Save project name</button>
-            <h3>Saved settings</h3>
-            {items.length ? (
-              <ul className="settings-list">
-                {items.map((item) => (
-                  <li key={item.key}>
-                    <b>{item.key}</b>
-                    <span>{item.value || '—'}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Empty text="No additional settings saved." />
-            )}
-          </div>
-        )}
-      </LoadState>
-    </section>
-  )
 }
 
 function NFCOrdersAdmin({ adminId }) {
@@ -721,7 +649,10 @@ function SupportTicketsAdmin({ adminId }) {
 }
 
 function AdminShell({ admin, onLogout }) {
-  const [page, setPageState] = useState(() => sessionStorage.getItem('admin_page') || 'dashboard')
+  const [page, setPageState] = useState(() => {
+    const stored = sessionStorage.getItem('admin_page')
+    return navigation.some(([id]) => id === stored) ? stored : 'dashboard'
+  })
   const setPage = (newPage) => {
     setPageState(newPage)
     try { sessionStorage.setItem('admin_page', newPage) } catch {}
@@ -732,11 +663,8 @@ function AdminShell({ admin, onLogout }) {
     if (page === 'drivers' || page === 'passengers') return <UserDirectory {...props} type={page === 'drivers' ? 'driver' : 'passenger'} />
     if (page === 'nfc-orders') return <NFCOrdersAdmin {...props} />
     if (page === 'nfc-cards') return <NFCCardsAdmin {...props} />
-    if (page === 'database') return <DatabaseViewer {...props} />
-    if (page === 'settings') return <Settings {...props} />
     if (page === 'withdrawals') return <WithdrawalRequestsAdmin {...props} />
     if (page === 'support') return <SupportTicketsAdmin {...props} />
-    if (page === 'fraud') return <FraudCentre {...props} />
     if (page === 'requests') return <EditRequestsAdmin {...props} />
     if (page === 'transactions') return <TransactionsAdmin {...props} />
     if (page === 'pos-devices') return <PosDevicesAdmin {...props} />
