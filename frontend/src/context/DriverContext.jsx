@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { useLiveRefresh } from '../hooks/useLiveRefresh.js'
 import { useAuth } from './AuthContext.jsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.thetapandgo.in'
@@ -13,6 +14,17 @@ const DAY = 1000 * 60 * 60 * 24
 
 const DriverContext = createContext(null)
 
+// How a withdrawal from the history is counted and labelled. "pending" covers both waiting for approval and
+// approved-but-not-yet-paid; "success" is paid out; "rejected" was refunded to the wallet.
+function withdrawalState(rawStatus) {
+  switch (String(rawStatus || '').toLowerCase()) {
+    case 'completed': return { status: 'success', statusLabel: 'Successful' }
+    case 'approved': return { status: 'pending', statusLabel: 'Approved - payout in progress' }
+    case 'cancelled': case 'rejected': return { status: 'rejected', statusLabel: 'Rejected - returned to your wallet' }
+    default: return { status: 'pending', statusLabel: 'Pending admin approval' }
+  }
+}
+
 export function DriverProvider({ children }) {
   const { user } = useAuth()
   const [walletBalance, setWalletBalance] = useState(0)
@@ -23,7 +35,8 @@ export function DriverProvider({ children }) {
   const [reviews] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const fetchDriverData = useCallback(async () => {
+  // `silent` refreshes in the background without the loading flag (used by the live refresh).
+  const fetchDriverData = useCallback(async (silent = false) => {
     if (!user?.id || user?.account_type !== 'driver') {
       setWalletBalance(0)
       setIsFrozen(false)
@@ -32,7 +45,7 @@ export function DriverProvider({ children }) {
       setWithdrawals([])
       return
     }
-    setLoading(true)
+    if (silent !== true) setLoading(true)
     try {
       const [wRes, tRes] = await Promise.all([
         fetch(`${API_BASE}/api/wallet/${user.id}`, { headers: authHeaders() }),
@@ -57,7 +70,8 @@ export function DriverProvider({ children }) {
             realWithdrawals.push({
               id: t.reference || `WD-${t.id}`,
               amount: t.amount,
-              status: t.status === 'Completed' || t.status === 'completed' ? 'success' : t.status,
+              ...withdrawalState(t.status),
+              payoutReference: t.payout_reference || null,
               timestamp: t.timestamp || Date.now(),
             })
           } else {
@@ -78,13 +92,16 @@ export function DriverProvider({ children }) {
     } catch {
       // Ignore background errors
     } finally {
-      setLoading(false)
+      if (silent !== true) setLoading(false)
     }
   }, [user?.id, user?.account_type])
 
   useEffect(() => {
     fetchDriverData()
   }, [fetchDriverData])
+
+  // Pick up administrator actions (withdrawal approved / paid / rejected, wallet frozen) without a reload.
+  useLiveRefresh(() => fetchDriverData(true), Boolean(user?.id) && user?.account_type === 'driver')
 
   const completedTrips = useMemo(() => trips.filter((t) => t.status === 'completed'), [trips])
   const pendingTrips = useMemo(() => trips.filter((t) => t.status === 'pending'), [trips])

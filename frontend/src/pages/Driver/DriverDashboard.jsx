@@ -315,6 +315,11 @@ function DriverDashboard({ flash, openModal, goToEarnings }) {
                 <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 8, padding: '2px 8px', borderRadius: 99, background: t.is_credit ? '#e2f3e8' : '#fce8e5', color: t.is_credit ? '#177a47' : '#a52b23' }}>
                   {t.status === 'Failed' ? 'FAILED' : t.is_credit ? 'CREDIT' : 'DEBIT'}
                 </span>
+                {t.type === 'Withdrawal' && (() => {
+                  // The administrator's decision on this withdrawal, shown as it changes.
+                  const shown = { Pending: ['Pending approval', '#fff2c5', '#8a6400'], Approved: ['Approved - payout in progress', '#fff2c5', '#8a6400'], Completed: ['Paid', '#e2f3e8', '#177a47'], Cancelled: ['Rejected - refunded', '#fce8e5', '#a52b23'] }[t.status]
+                  return shown ? <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 6, padding: '2px 8px', borderRadius: 99, background: shown[1], color: shown[2] }}>{shown[0]}</span> : null
+                })()}
               </div>
               <strong className={t.is_credit ? 'credit' : ''} style={{ fontSize: 16, color: t.is_credit ? '#177a47' : 'var(--text)', ...(t.status === 'Failed' ? { color: 'var(--muted)', textDecoration: 'line-through' } : {}) }}>
                 {t.status === 'Failed' ? '' : t.is_credit ? '+' : '-'}₹{t.amount.toFixed(2)}

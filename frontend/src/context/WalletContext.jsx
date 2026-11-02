@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { useLiveRefresh } from '../hooks/useLiveRefresh.js'
 import { useAuth } from './AuthContext.jsx'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.thetapandgo.in'
@@ -20,7 +21,8 @@ export function WalletProvider({ children }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const fetchWallet = useCallback(async (optimisticBalance) => {
+  // `silent` refreshes in the background without the loading flag or an error banner (used by the live refresh).
+  const fetchWallet = useCallback(async (optimisticBalance, silent = false) => {
     if (typeof optimisticBalance === 'number' && !isNaN(optimisticBalance)) {
       setBalance(optimisticBalance)
     }
@@ -30,8 +32,7 @@ export function WalletProvider({ children }) {
       setTransactions([])
       return
     }
-    setLoading(true)
-    setError('')
+    if (!silent) { setLoading(true); setError('') }
     try {
       const [wRes, tRes] = await Promise.all([
         fetch(`${API_BASE}/api/wallet/${user.id}`, { headers: authHeaders() }),
@@ -61,15 +62,18 @@ export function WalletProvider({ children }) {
         setTransactions(formatted)
       }
     } catch (err) {
-      setError('Could not sync wallet with database.')
+      if (!silent) setError('Could not sync wallet with database.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [user?.id])
 
   useEffect(() => {
     fetchWallet()
   }, [fetchWallet])
+
+  // Pick up administrator actions (withdrawal approved / paid / rejected, wallet frozen) without a reload.
+  useLiveRefresh(() => fetchWallet(undefined, true), Boolean(user?.id))
 
   const addMoney = async (amount) => {
     if (!user?.id) return { success: false, message: 'User not logged in' }

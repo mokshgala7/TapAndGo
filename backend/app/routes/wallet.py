@@ -127,6 +127,27 @@ def get_user_wallet(user_id: int, current_user: User = Depends(get_current_user)
     return {"success": True, "wallet": wallet_to_dict(wallet)}
 
 
+# What the user's history shows for a withdrawal, taken from the administrator's current decision on the request.
+# (The text stored on the hold transaction was written at request time and says "pending admin approval" forever.)
+_WITHDRAWAL_SHOWN = {"pending": "Pending", "approved": "Approved", "paid": "Completed", "rejected": "Cancelled"}
+
+
+def _withdrawal_view(wr: WithdrawalRequest, amount: Decimal):
+    """(description, status, payout_reference) for one withdrawal row of the user's history."""
+    money = f"\u20b9{float(abs(amount)):.2f}"
+    where = wr.destination_desc or "your bank account"
+    if wr.status == "paid":
+        ref = f" (reference {wr.payout_reference})" if wr.payout_reference else ""
+        text = f"{money} paid out to {where}{ref}"
+    elif wr.status == "approved":
+        text = f"{money} withdrawal approved - payout to {where} in progress"
+    elif wr.status == "rejected":
+        text = f"{money} withdrawal rejected - amount returned to your wallet"
+    else:
+        text = f"{money} withdrawal requested - awaiting admin approval to {where}"
+    return text, _WITHDRAWAL_SHOWN.get(wr.status, (wr.status or "pending").title()), wr.payout_reference
+
+
 @router.get("/{user_id}/transactions")
 def get_user_transactions(user_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user_id != current_user.id:
@@ -156,6 +177,11 @@ def get_user_transactions(user_id: int, current_user: User = Depends(get_current
     if user_ids:
         users = db.query(User).filter(User.id.in_(user_ids)).all()
         user_map = {u.id: u.name for u in users}
+
+    # The administrator's decision on each of this user's withdrawals, keyed by the shared reference.
+    withdrawals_by_ref = {
+        wr.reference: wr for wr in db.query(WithdrawalRequest).filter(WithdrawalRequest.user_id == user_id).all()
+    }
 
     formatted_txns = []
     running_balance = Decimal("0.00")
@@ -245,6 +271,12 @@ def get_user_transactions(user_id: int, current_user: User = Depends(get_current
             type_label = "Deposit" if is_credit else "Payment"
             description = t.description or f"₹{float(change):.2f} {'credited to' if is_credit else 'debited from'} wallet"
 
+        shown_status = t.status.title() if t.status else "Completed"
+        payout_reference = None
+        wr = withdrawals_by_ref.get(t.reference) if type_label == "Withdrawal" else None
+        if wr is not None:
+            description, shown_status, payout_reference = _withdrawal_view(wr, change)
+
         if is_credit:
             running_balance += change
         else:
@@ -262,7 +294,8 @@ def get_user_transactions(user_id: int, current_user: User = Depends(get_current
             "fare": -float(change) if is_credit else float(change),
             "is_credit": is_credit,
             "payment_method": t.payment_method.upper() if t.payment_method else "WALLET",
-            "status": t.status.title() if t.status else "Completed",
+            "status": shown_status,
+            "payout_reference": payout_reference,
             "balance_after": final_balance_after,
             "created_at": t.created_at.isoformat() if t.created_at else None,
             "timestamp": int(t.created_at.timestamp() * 1000) if t.created_at else 0,

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useLiveRefresh } from '../hooks/useLiveRefresh.js'
 
 const STORAGE_KEY = 'tapgo_user'
 const TOKEN_KEY = 'tapgo_token'
@@ -142,6 +143,24 @@ export function AuthProvider({ children }) {
         .catch(() => {})
     }
   }, [])
+
+  // Pick up administrator actions on the account (edit request approved or rejected, status changes) without a
+  // reload. The user state is replaced only when the server data actually differs.
+  useLiveRefresh(async () => {
+    const stored = readStoredUser()
+    if (!stored?.id || stored.account_type === 'admin') return
+    try {
+      const token = sessionStorage.getItem(TOKEN_KEY)
+      const res = await fetch(`${API_BASE}/api/auth/profile/${stored.id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      const data = await res.json()
+      if (res.ok && data?.success && data?.user) {
+        const nextUser = normalizeUser(data.user)
+        setUser((current) => (current && JSON.stringify(current) === JSON.stringify(nextUser) ? current : nextUser))
+      }
+    } catch {
+      // Ignore background network failure
+    }
+  }, Boolean(user?.id))
 
   const login = async ({ account, password }) => {
     try {

@@ -256,7 +256,8 @@ function DriverEarnings({ flash }) {
           </div>
           <div style={{ textAlign: 'right', display: 'grid', gap: 4 }}>
             <strong>{inr(w.amount)}</strong>
-            <small className="muted">{w.status === 'success' ? 'Successful' : 'Pending'}</small>
+            <small className="muted">{w.statusLabel || (w.status === 'success' ? 'Successful' : 'Pending')}</small>
+            {w.payoutReference && <small className="muted">Ref: {w.payoutReference}</small>}
           </div>
         </article>
       ))}

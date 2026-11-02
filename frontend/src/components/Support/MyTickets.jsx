@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import SupportTicketModal from './SupportTicketModal.jsx'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.thetapandgo.in'
 function getToken() { try { return sessionStorage.getItem('tapgo_token') || '' } catch { return '' } }
@@ -26,6 +27,7 @@ export default function MyTickets({ user, compose = false, refreshKey = 0 }) {
     } catch (err) { setError(err.message || 'Could not load your tickets.') }
   }, [])
   useEffect(() => { load() }, [load, refreshKey])
+  useLiveRefresh(load)   // an administrator's reply appears without a reload
 
   return (
     <section style={{ margin: '8px 0 24px' }}>

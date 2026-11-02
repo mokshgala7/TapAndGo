@@ -622,6 +622,11 @@ function Passenger() {
             <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 8, padding: '2px 8px', borderRadius: 99, background: isCredit ? '#e2f3e8' : '#fce8e5', color: isCredit ? '#177a47' : '#a52b23' }}>
               {isFailed ? 'FAILED' : isCredit ? 'CREDIT' : 'DEBIT'}
             </span>
+            {t.raw && typeText === 'Withdrawal' && (() => {
+              // The administrator's decision on this withdrawal, shown as it changes.
+              const shown = { Pending: ['Pending approval', '#fff2c5', '#8a6400'], Approved: ['Approved - payout in progress', '#fff2c5', '#8a6400'], Completed: ['Paid', '#e2f3e8', '#177a47'], Cancelled: ['Rejected - refunded', '#fce8e5', '#a52b23'] }[t.raw.status]
+              return shown ? <span style={{ fontSize: 11, fontWeight: 700, marginLeft: 6, padding: '2px 8px', borderRadius: 99, background: shown[1], color: shown[2] }}>{shown[0]}</span> : null
+            })()}
           </div>
           <strong className={isCredit ? 'credit' : ''} style={{ fontSize: 16, color: isCredit ? '#177a47' : 'var(--text)', ...(isFailed ? { color: 'var(--muted)', textDecoration: 'line-through' } : {}) }}>
             {isFailed ? '' : isCredit ? '+' : '-'}₹{Math.abs(t.amount || t.fare).toFixed(2)}
