@@ -20,14 +20,16 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.services import admin_login_security as login_security
 from app.database import get_db
 from app.models import (
-    ActivityLog, Admin, AdminSession, EditRequest, FraudAlert, FraudAssessment, ProjectSetting, SupportTicket,
-    Transaction, User, UserDocument, Wallet, WithdrawalRequest,
+    ActivityLog, Admin, AdminSession, EditRequest, FraudAlert, FraudAssessment, NFCCard, NFCCardOrder, PaymentOrder,
+    PaymentOtpChallenge, PaymentRequest, PosDevice, ProjectSetting, SupportTicket, Transaction, User, UserDocument,
+    UserSession, Wallet, WithdrawalRequest,
 )
 from app.utils.security import hash_password, verify_password
 from app.utils.storage_service import get_signed_url
@@ -390,23 +392,63 @@ def update_user(user_id: int, payload: UserUpdate, admin: Admin = Depends(curren
     return user_row(user, db, detailed=True)
 
 
+# Records that make up an account's financial history. A user who has any of them is never deleted (suspend instead).
+FINANCIAL_HISTORY_MESSAGE = "This account has financial history. Suspend it instead."
+LINKED_RECORDS_MESSAGE = "This account is still linked to other records and cannot be deleted. Suspend it instead."
+_FINANCIAL_LINKS = (
+    (Transaction, ("passenger_id", "driver_id")),
+    (WithdrawalRequest, ("user_id",)),
+    (PaymentOrder, ("user_id",)),
+    (PaymentRequest, ("user_id",)),
+    (NFCCardOrder, ("user_id",)),
+    (FraudAssessment, ("passenger_id", "driver_id")),
+    (PaymentOtpChallenge, ("passenger_id", "driver_id")),
+)
+
+
+def _delete_user(db: Session, user: User) -> None:
+    """Delete an account that has no financial history. Nothing financial is ever deleted or detached:
+    a balance above zero, a transaction, a withdrawal, a top-up or a card order refuses with HTTP 409 before any
+    change is made. Sessions, documents, edit requests, support tickets and NFC cards are removed with the account;
+    fraud alerts, activity logs and POS device assignments only lose their link to it."""
+    wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
+    has_history = wallet is not None and (wallet.balance or 0) > 0
+    if wallet is not None and not has_history:
+        has_history = db.query(Transaction.id).filter(Transaction.wallet_id == wallet.id).first() is not None
+    for model, columns in _FINANCIAL_LINKS:
+        if has_history:
+            break
+        has_history = db.query(model.id).filter(or_(*[getattr(model, column) == user.id for column in columns])).first() is not None
+    if has_history:
+        raise HTTPException(status_code=409, detail=FINANCIAL_HISTORY_MESSAGE)
+
+    for model in (UserSession, UserDocument, EditRequest, SupportTicket, NFCCard):
+        db.query(model).filter(model.user_id == user.id).delete(synchronize_session=False)
+    db.query(FraudAlert).filter(FraudAlert.user_id == user.id).update({FraudAlert.user_id: None}, synchronize_session=False)
+    db.query(ActivityLog).filter(ActivityLog.user_id == user.id).update({ActivityLog.user_id: None}, synchronize_session=False)
+    db.query(PosDevice).filter(PosDevice.driver_id == user.id).update({PosDevice.driver_id: None}, synchronize_session=False)
+    if wallet is not None:
+        # Executed immediately (not queued) so the wallet row is gone before the user row it points at.
+        db.query(Wallet).filter(Wallet.id == wallet.id).delete(synchronize_session=False)
+        db.expunge(wallet)
+    db.delete(user)
+
+
 @router.post("/users/{user_id}/action")
 def user_action(user_id: int, payload: ActionRequest, admin: Admin = Depends(current_admin), db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
     if payload.action == "delete":
-        wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
-        if wallet:
-            db.query(Transaction).filter(Transaction.wallet_id == wallet.id).update({Transaction.wallet_id: None}, synchronize_session=False)
-            db.delete(wallet)
-        db.query(UserDocument).filter(UserDocument.user_id == user.id).delete()
-        db.query(EditRequest).filter(EditRequest.user_id == user.id).delete()
-        db.query(Transaction).filter(Transaction.passenger_id == user.id).update({Transaction.passenger_id: None}, synchronize_session=False)
-        db.query(Transaction).filter(Transaction.driver_id == user.id).update({Transaction.driver_id: None}, synchronize_session=False)
-        db.query(FraudAlert).filter(FraudAlert.user_id == user.id).update({FraudAlert.user_id: None}, synchronize_session=False)
-        db.query(ActivityLog).filter(ActivityLog.user_id == user.id).update({ActivityLog.user_id: None}, synchronize_session=False)
-        db.delete(user)
+        try:
+            _delete_user(db, user)
+            log(db, admin, "delete", "user", user_id, "Delete user")
+            db.commit()
+        except IntegrityError:
+            # Something we do not know about still references this user: refuse cleanly instead of a 500.
+            db.rollback()
+            raise HTTPException(status_code=409, detail=LINKED_RECORDS_MESSAGE)
+        return {"success": True, "action": "delete"}
     elif payload.action == "approve":
         user.status = "active"
     elif payload.action == "reject":
